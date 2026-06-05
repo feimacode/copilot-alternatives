@@ -182,6 +182,7 @@ Terminal-based and agentic coding tools that operate in your shell, often capabl
 | [OpenHands](https://github.com/All-Hands-AI/OpenHands) | MIT | Yes (BYOK) | Formerly OpenDevin, browser + terminal agent |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Apache 2.0 | Yes (free quota) | Google's official CLI agent, 1M token context |
 | [Codex CLI](https://github.com/openai/codex) | Apache 2.0 | No (API usage) | OpenAI's open-source CLI agent |
+| [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models) | Proprietary | Yes (BYOK) | GitHub's CLI agent with BYOK support for custom models |
 | [Amazon Q Developer CLI](https://aws.amazon.com/q/developer/) | Proprietary | Yes | AWS-integrated, free for individual use |
 | [Goose](https://github.com/block/goose) | Apache 2.0 | Yes (BYOK) | Block's open-source autonomous dev agent |
 | [Amp](https://ampcode.com) | Proprietary | Yes (beta) | Sourcegraph's terminal-first agent |
@@ -218,6 +219,7 @@ Bring-Your-Own-Key tools that use API keys you supply, giving you full control o
 | [Aider](https://aider.chat) | CLI Agent | Anthropic, OpenAI, Gemini, Groq, Ollama, DeepSeek, + more |
 | [Cline](https://cline.bot) | CLI Agent / Extension | Anthropic, OpenAI, Google, OpenRouter, AWS Bedrock, Azure/GCP Vertex, Ollama, any OpenAI-compatible API |
 | [Cursor](https://cursor.sh) | IDE | Anthropic, OpenAI, Gemini (via API key mode) |
+| [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models) | CLI Agent | Anthropic, OpenAI, Google, Azure OpenAI, any OpenAI-compatible endpoint |
 | [Void](https://voideditor.com) | IDE | Any OpenAI-compatible endpoint, Ollama |
 | [Avante.nvim](https://github.com/yetone/avante.nvim) | Neovim extension | Anthropic, OpenAI, Gemini, Groq, Ollama |
 | [Jan](https://jan.ai) | Desktop app | Local models (llama.cpp), remote API endpoints |
@@ -294,6 +296,8 @@ Underlying LLM providers that power coding assistants. Many BYOK tools let you p
 | [Groq](https://groq.com) | Llama, Mixtral (hosted) | Yes (limited) | Extremely fast inference via custom hardware |
 | [Fireworks AI](https://fireworks.ai) | Llama, DeepSeek, Qwen | No (API) | Fast inference, competitive pricing |
 | [Together AI](https://together.ai) | Many open models | No (API) | Broad open-model support, fine-tuning |
+
+> **BYOK Setup Guide:** For detailed instructions on configuring custom model endpoints in VS Code, see [Add a custom endpoint model](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model).
 
 ---
 
@@ -419,6 +423,16 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 ---
 
 ## Migration Guides
+
+### Setting Up BYOK / Custom Endpoints for VSCode
+For detailed instructions on configuring custom model endpoints in VS Code, see [Add a custom endpoint model](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model)
+
+### Setting Up BYOK for GitHub Copilot CLI
+1. Install GitHub Copilot CLI: `gh extension install github/gh-copilot`
+2. Configure custom models following the [Use BYOK models guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models)
+3. Supported providers include Anthropic, OpenAI, Google, Azure OpenAI, and any OpenAI-compatible endpoint
+4. Add your API keys via environment variables or configuration files
+5. Use `gh copilot` in your terminal with your chosen model
 
 ### From GitHub Copilot to Cursor
 1. Install [Cursor](https://cursor.sh) — it's a VS Code fork, so your extensions and settings transfer
