@@ -63,8 +63,8 @@ Subscriptions tied to specific AI-powered IDEs, often including model access and
 | Plan | Price | Included Quota | Notable Features |
 |---|---|---|---|
 | [Cursor Pro](https://cursor.com/pricing) | $20/mo | Usage-based allowance | Agent mode, frontier models (Claude, GPT, Gemini), MCP support, cloud agents |
-| [Cursor Pro+](https://cursor.com/pricing) | $40/mo | Extended limits | Everything in Pro + higher quotas |
-| [Cursor Ultra](https://cursor.com/pricing) | Custom | Maximum limits | Enterprise features, pooled usage |
+| [Cursor Pro+](https://cursor.com/pricing) | $60/mo | 3x usage on all OpenAI, Claude, Gemini models | Everything in Pro + higher quotas |
+| [Cursor Ultra](https://cursor.com/pricing) | $200/mo | 20x usage, priority access | Enterprise features, pooled usage |
 | [Devin Pro](https://devin.ai/pricing) | $20/mo | Daily/weekly quota | Devin Cloud agents, full model access, unlimited Tab completions |
 | [Devin Max](https://devin.ai/pricing) | $200/mo | Significantly higher | Power user quotas, all premium models |
 | [Devin Teams](https://devin.ai/pricing) | $80/mo + $40/user | Shared quotas | Unlimited team members, collaboration, centralized billing |
@@ -81,15 +81,26 @@ Subscriptions designed for terminal-based coding agents and CLI workflows.
 
 | Plan | Price | Included Quota | Notable Features |
 |---|---|---|---|
-| [Codex (ChatGPT Go)](https://chatgpt.com/codex/pricing/) | $10/mo | Limited trial access | GPT-5.5 access, more messages/uploads than free, latest models |
-| [Codex (ChatGPT Plus)](https://chatgpt.com/codex/pricing/) | $20/mo | 30-150 local messages/5h, 10-60 cloud tasks/5h | GPT-5.3-Codex, code reviews, macOS/Windows app, plugin integrations |
-| [Codex (ChatGPT Pro)](https://chatgpt.com/codex/pricing/) | $100/mo | 5x-20x Plus usage, maximum Codex tasks | GPT-5.5 Pro, unlimited GPT-5.5, maximum cloud tasks |
+| [Codex (ChatGPT Go)](https://chatgpt.com/codex/pricing/) | $8/mo | More messages/uploads, longer memory | GPT-5.5 Instant access, may include ads |
+| [Codex (ChatGPT Plus)](https://chatgpt.com/codex/pricing/) | $20/mo | 30-150 local messages/5h, 10-60 cloud tasks/5h | GPT-5.5 Thinking, deep research, projects, tasks |
+| [Codex (ChatGPT Pro)](https://chatgpt.com/codex/pricing/) | From $100/mo | 5x-20x Plus usage, maximum Codex tasks | GPT-5.5 Pro, unlimited GPT-5.3, maximum cloud tasks |
 | [Codex Business](https://chatgpt.com/codex/pricing/) | Pay-as-you-go | No fixed seat fee | Multi-agent workflows, worktrees, cloud environments, SAML SSO |
-| [Google AI Pro](https://geminicli.com/plans/) | $19.99/mo | Higher usage limits | Gemini CLI, Antigravity IDE, Gemini Code Assist, Gemini in Gmail/Docs |
-| [Google AI Ultra](https://geminicli.com/plans/) | $249.99/mo | Highest usage limits | Deep Think for complex reasoning, maximum quotas |
+| [Google AI Plus](https://geminicli.com/plans/) | $4.99/mo | 2x higher usage than Free | Video gen, Daily Brief, 200 Flow credits, 400 GB storage, Gemini in Gmail/Chrome |
+| [Google AI Pro](https://geminicli.com/plans/) | $19.99/mo | Higher 3.1 Pro access, 1,000 AI credits/mo | Gemini CLI, Antigravity IDE, Gemini Code Assist, 5 TB storage, Jules coding agent |
+| [Google AI Ultra](https://geminicli.com/plans/) | From $99.99/mo | 5x-20x higher usage vs Pro | Deep Think, Gemini Spark, Jules, Antigravity, Project Genie, YouTube Premium, 20-30 TB storage |
 | [Claude Pro](https://claude.ai) | $20/mo | Claude Code CLI access | Claude Opus 4.7, Sonnet 4.6, strong reasoning, 1M context |
 | [Claude Pro Max 5X](https://claude.ai) | $100/mo | 5x Pro usage | Everything in Pro, expanded limits |
 | [Claude Pro Max 20X](https://claude.ai) | $200/mo | 20x Pro usage | Everything in Pro, maximum limits |
+| [xAI SuperGrok Lite](https://x.ai/grok) | $10/mo | Limited web + X search, limited video gen | Grok 4, Imagine image gen |
+| [xAI SuperGrok](https://x.ai/grok) | $30/mo | 1K text prompts/mo, 128K context | Full Grok 4 & 4.1, DeepSearch, Imagine, Expert web search |
+| [xAI SuperGrok Heavy](https://x.ai/grok) | $300/mo | 256K-428K context, unlimited text | Grok 4 Heavy preview, max compute priority |
+| [Mistral AI Free](https://mistral.ai) | $0/mo | 500 memories, 40+ connectors | Vibe — SOTA models, image gen, projects |
+| [Mistral AI Pro](https://mistral.ai) | $14.99/mo (Students $5.99/mo) | Higher limits, 15 GB storage, 1,000 projects | Mistral Vibe coding |
+| [Mistral AI Team](https://mistral.ai) | $24.99/mo per user | 30 GB storage/user | Domain verify, data export, collaboration |
+| [StepFun Flash Mini](https://stepfun.com) | $6.99/mo | 100 prompts (~1,500 req)/5h | 2x OpenAI Go usage, multi-device login, concurrent agents |
+| [StepFun Flash Plus](https://stepfun.com) | $9.99/mo | 400 prompts (~6,000 req)/5h | Priority API access, priority support, 4x Flash Mini |
+| [StepFun Flash Pro](https://stepfun.com) | $29/mo | 1,500 prompts (~22,500 req)/5h | Priority API access, priority support, 15x Flash Mini |
+| [StepFun Flash Max](https://stepfun.com) | $99/mo | 5,000 prompts (~75,000 req)/5h | Priority API access, priority support, 50x Flash Mini |
 
 ### Multi-Model Coding Plans (BYOK-Friendly)
 
@@ -99,6 +110,10 @@ Subscriptions that provide access to multiple models through OpenAI/Anthropic-co
 
 | Plan | Price | Quota | Models | Notable Features |
 |---|---|---|---|---|
+| [Xiaomi MiMo Lite](https://mimo.xiaomi.com) | $6/mo | 4.1B credits | MiMo-V2.5-Pro + 7 other models | OpenClaw, Claude Code, OpenCode, KiloCode; 20% off off-peak (9AM-5PM PDT) |
+| [Xiaomi MiMo Standard](https://mimo.xiaomi.com) | $16/mo | 11B credits (2.7x Lite) | Same as Lite | 20% off off-peak, free TTS |
+| [Xiaomi MiMo Pro](https://mimo.xiaomi.com) | $50/mo | 38B credits (9.3x Lite) | Same as Lite | 20% off off-peak, free TTS |
+| [Xiaomi MiMo Max](https://mimo.xiaomi.com) | $100/mo | 82B credits (20x Lite) | Same as Lite | 20% off off-peak, free TTS |
 | [BytePlus ModelArk Lite](https://www.byteplus.com/en/activity/codingplan) | $10/mo ($30/quarter) | ~3x Claude Pro equivalent | DeepSeek-V4, GLM-5.1, Kimi-K2.5, GPT-OSS, Dola-Seed-2.0-pro | Claude Code, Cursor, Roo Code support; flexible model selection |
 | [BytePlus ModelArk Pro](https://www.byteplus.com/en/activity/codingplan) | $50/mo ($150/quarter) | 5x Lite usage | Same as Lite | ArkClaw AI companion (Lark integration), large-scale programming |
 | [Alibaba Coding Plan Pro](https://www.alibabacloud.com/help/en/model-studio/coding-plan) | $50/mo | 6,000 req/5h, 45,000 req/week, 90,000 req/mo | Qwen3.7-plus, Kimi-K2.5, GLM-5, MiniMax-M2.5 | Claude Code, Cursor, OpenCode, Cline support; limited slots, daily restock |
@@ -116,6 +131,45 @@ Subscriptions that provide access to multiple models through OpenAI/Anthropic-co
 | [Kimi Allegro](https://www.kimi.com/membership/pricing) | $79/mo (annual) / $99/mo (monthly) | 15x Kimi Code credits | Kimi-K2.5 | 5x agent credits, Agent Swarm, Kimi Work scheduled tasks |
 | [Kimi Vivace](https://www.kimi.com/membership/pricing) | $159/mo (annual) / $199/mo (monthly) | 30x Kimi Code credits | Kimi-K2.5 | 10x agent credits, maximum concurrent tasks |
 
+### Aggregators & Plugins
+
+Platforms that aggregate multiple model providers behind a single subscription or API, or provide plugin-based access to coding models.
+
+| Plan | Price | Quota | Models | Notable Features |
+|---|---|---|---|---|
+| [Nous Portal Free](https://nousresearch.com) | $0/mo | $0 monthly credits | Free models only | — |
+| [Nous Portal Plus](https://nousresearch.com) | $20/mo | $22 monthly credits, $10 rollover cap | 300+ models | Hosted tool usage |
+| [Nous Portal Super](https://nousresearch.com) | $100/mo | $110 monthly credits, $50 rollover cap | 300+ models | Hosted tool usage |
+| [Nous Portal Ultra](https://nousresearch.com) | $200/mo | $220 monthly credits, $100 rollover cap | 300+ models | Hosted tool usage |
+| [OpenCode Go](https://opencode.ai) | $5 first mo, then $10/mo | Per 5h: GLM-5.1 880 / Qwen3.7 Max 950 / Kimi K2.7 Code 1,150 / MiMo-V2.5-Pro 3,250 / DeepSeek V4 Pro 3,450 / Qwen3.7 Plus 4,300 / MiniMax M3 9,600 / MiMo-V2.5 30,100 / DeepSeek V4 Flash 31,650 | Multi-model (GLM, Qwen, Kimi, MiMo, DeepSeek, MiniMax) | OpenCode's native subscription, usage varies by model |
+| [Command Code Go](https://commandcode.dev) | $1/mo | $10 credits, ~15K requests | taste-1, open-source models | Limited analytics |
+| [Command Code Pro](https://commandcode.dev) | $15/mo | $30 credits, ~25K requests | taste-1, open-source + premium models | Usage analytics |
+| [Command Code Max](https://commandcode.dev) | $100/mo | $150 credits, ~110K requests | taste-1, all models | Higher rate limits, priority support |
+| [Command Code Ultra](https://commandcode.dev) | $200/mo | $300 credits, ~200K requests | taste-1, all models | Highest rate limits, priority support |
+| [Venice Free](https://venice.ai) | $0/mo | 10 text + 15 image prompts/day | Base AI models | — |
+| [Venice Pro](https://venice.ai) | $18/mo | Unlimited text, 1,000 images/day, 100 credits/mo | All models | Video/music/API credits |
+| [Venice Plus](https://venice.ai) | $68/mo | 7,500 credits/mo, 2-month credit banking | All models | Higher image limits |
+| [Venice Max](https://venice.ai) | $200/mo | 22,500 credits/mo, 3-month credit banking | All models | Highest limits |
+| [Fireworks Fire Pass](https://fireworks.ai) | $49/mo | Personal use only | Kimi K2.6 Turbo | — |
+| [Kilo Pass Starter](https://kilocode.ai) | $19/mo | Up to $26.60/mo in credits | Multi-model | — |
+| [Kilo Pass Pro](https://kilocode.ai) | $49/mo | Up to $68.60/mo in credits | Multi-model | — |
+| [Kilo Pass Expert](https://kilocode.ai) | $199/mo | Up to $278.60/mo in credits | Multi-model | — |
+| [Routing.sh Free](https://routing.sh) | $0/mo | 100 req/5h | DeepSeek-V3.2, Qwen3.5 | Basic support |
+| [Routing.sh Lite](https://routing.sh) | $10/mo | 150 req/5h | Kimi K2.6, MiniMax M2.7 | Email support |
+| [Routing.sh Premium](https://routing.sh) | $20/mo | 300 req/5h | Preview models | Priority TPS, priority support |
+| [Routing.sh Max](https://routing.sh) | $50/mo | 600 req/5h | Full catalog | First access to preview models, dedicated support |
+| [LLM Gateway Lite](https://llmgateway.ai) | $29/mo | $87/mo in model usage (3x value) | 200+ models | Casual hobby work |
+| [LLM Gateway Pro](https://llmgateway.ai) | $79/mo | $237/mo in model usage (3x value) | 200+ models | Full-day agent runs |
+| [LLM Gateway Max](https://llmgateway.ai) | $179/mo | $537/mo in model usage (3x value) | 200+ models | Non-stop heavy sessions |
+| [Hugging Face Pro](https://huggingface.co/pricing) | $9/mo | 20x inference usage | All HF models | — |
+| [Baidu Cloud Lite](https://cloud.baidu.com) | ¥40/mo (~$5.50) | 18,000 req/mo | Multi-model | — |
+| [Baidu Cloud Pro](https://cloud.baidu.com) | ¥200/mo (~$27.50) | 90,000 req/mo | Multi-model | — |
+| [Ollama Cloud Pro](https://ollama.com) | $20/mo | 50x Starter usage | All Ollama models | — |
+| [Ollama Cloud Max](https://ollama.com) | $100/mo | 5x Pro usage | All Ollama models | — |
+| [Cerebras Pro](https://cerebras.ai) | $50/mo | 24M tokens/day | Cerebras models | — |
+| [Cerebras Max](https://cerebras.ai) | $200/mo | 120M tokens/day | Cerebras models | — |
+| [AI Router Unlimited](https://airouter.io) | CHF 39/mo | Unlimited Qwen3.6 + Gemma-4 | Qwen3.6, Gemma-4 | Swiss-hosted, no prompt logging, 3 parallel req, 240 req/min, 10M tok/min fair-use |
+
 ### Free Coding Options
 
 No-cost options with usage limits, suitable for light coding tasks or experimentation.
@@ -124,7 +178,8 @@ No-cost options with usage limits, suitable for light coding tasks or experiment
 |---|---|---|---|
 | [Feima Copilot](https://feimacode.com/pricing) | Free | 700 weighted requests (1st month), 300/month thereafter | Weighted request-based billing, multiple model tiers |
 | [Codex Free](https://chatgpt.com/codex/pricing/) | Free | Limited trial access | Test Codex capabilities, GPT-5.5 limited |
-| [Google AI Free](https://geminicli.com/plans/) | Free | 1000 req/day (Code Assist), 50 credits/day (Antigravity) | Gemini CLI, Gemini Code Assist IDE extension; transitions to Antigravity CLI on June 18, 2026 |
+| [Google AI Free](https://geminicli.com/plans/) | Free | 50 AI credits/day (Flow/Whisk), 15 GB storage | Gemini app with Flash, varying Pro access, image gen/editing, Deep Research, Gemini Live, Canvas, Gems |
+| [Mistral AI Free](https://mistral.ai) | Free | 500 memories, 40+ connectors | Vibe — SOTA models, image gen, projects |
 | [Amazon Q Developer Free](https://aws.amazon.com/q/developer/) | Free | 50 agentic requests/month | Claude models, IDE + CLI access |
 | [Kiro Free](https://kiro.dev/pricing) | Free | 50 credits/month | Open-weight models + Claude Sonnet 4.5 |
 | [Devin Free](https://devin.ai/pricing) | Free | Light quota | Limited models, unlimited Tab completions |
@@ -385,8 +440,44 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 | GPT-OSS | BytePlus ModelArk (Lite/Pro) | Cursor, Cline, Continue, Aider |
 | Dola-Seed-2.0-pro | BytePlus ModelArk (Lite/Pro) | Cursor, Cline, Continue, Aider |
 | Mixtral | Groq (hosted), Fireworks AI, Together AI | Cursor, Cline, Continue, Aider |
-| Codestral | Mistral AI (API) | Cursor, Cline, Continue, Aider |
-| Mistral Large | Mistral AI (API) | Cursor, Cline, Continue, Aider |
+| Codestral | Mistral AI (API), Mistral AI Pro | Cursor, Cline, Continue, Aider |
+| Mistral Large | Mistral AI (API), Mistral AI Pro | Cursor, Cline, Continue, Aider |
+
+### Grok Models
+
+| Model | Coding Plans | BYOK Tools |
+|---|---|---|
+| Grok 4 | xAI SuperGrok Lite, xAI SuperGrok | Cursor, Cline, Continue, Aider |
+| Grok 4.1 | xAI SuperGrok | Cursor, Cline, Continue, Aider |
+| Grok 4 Heavy | xAI SuperGrok Heavy | Cursor, Cline, Continue, Aider |
+
+### MiMo Models
+
+| Model | Coding Plans | BYOK Tools |
+|---|---|---|
+| MiMo-V2.5-Pro | Xiaomi MiMo (Lite/Standard/Pro/Max) | Cursor, Cline, Continue, Aider, OpenCode Go |
+| MiMo-V2.5 | Xiaomi MiMo (Lite/Standard/Pro/Max), OpenCode Go | Cursor, Cline, Continue, Aider |
+
+### StepFun Models
+
+| Model | Coding Plans | BYOK Tools |
+|---|---|---|
+| StepFun (all models) | StepFun Flash (Mini/Plus/Pro/Max) | Cursor, Cline, Continue, Aider |
+
+### Aggregator Models
+
+| Model | Coding Plans | BYOK Tools |
+|---|---|---|
+| DeepSeek V4 Pro | OpenCode Go | Cursor, Cline, Continue, Aider |
+| DeepSeek V4 Flash | OpenCode Go | Cursor, Cline, Continue, Aider |
+| Kimi K2.7 Code | OpenCode Go | Cursor, Cline, Continue, Aider |
+| Qwen3.7 Max | OpenCode Go | Cursor, Cline, Continue, Aider |
+| Qwen3.7 Plus | OpenCode Go | Cursor, Cline, Continue, Aider |
+| taste-1 | Command Code (Go/Pro/Max/Ultra) | Cursor, Cline, Continue, Aider |
+| Kimi K2.6 Turbo | Fireworks Fire Pass | Cursor, Cline, Continue, Aider |
+| DeepSeek-V3.2 | Routing.sh (Free) | Cursor, Cline, Continue, Aider |
+| Qwen3.6 | AI Router Unlimited | Cursor, Cline, Continue, Aider |
+| Gemma-4 | AI Router Unlimited | Cursor, Cline, Continue, Aider |
 
 ---
 
@@ -407,6 +498,22 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 | Aider | Free (OSS) | — | Pay only for API usage |
 | Claude Code | No | Pay-per-use (API) | ~$3–15/mo typical usage at current API rates |
 | Gemini CLI | Yes (free quota) | Pay-per-use beyond quota | Generous free quota via Google AI Studio |
+| xAI Grok | No | $10/mo (SuperGrok Lite) | $30/mo (SuperGrok), $300/mo (Heavy) |
+| Mistral AI | Yes (Free) | $14.99/mo (Pro) | Students $5.99/mo; Team $24.99/user/mo |
+| StepFun | No | $6.99/mo (Flash Mini) | $9.99/mo (Plus), $29/mo (Pro), $99/mo (Max) |
+| Xiaomi MiMo | No | $6/mo (Lite) | $16/mo (Standard), $50/mo (Pro), $100/mo (Max) |
+| OpenCode Go | No | $10/mo | $5 first month; usage varies by model |
+| Command Code | No | $1/mo (Go) | $15/mo (Pro), $100/mo (Max), $200/mo (Ultra) |
+| Venice | Yes (Free) | $18/mo (Pro) | $68/mo (Plus), $200/mo (Max) |
+| Fireworks Fire Pass | No | $49/mo | Kimi K2.6 Turbo, personal use only |
+| Kilo Pass | No | $19/mo (Starter) | $49/mo (Pro), $199/mo (Expert) |
+| Routing.sh | Yes (Free) | $10/mo (Lite) | $20/mo (Premium), $50/mo (Max) |
+| LLM Gateway | No | $29/mo (Lite) | $79/mo (Pro), $179/mo (Max) |
+| Hugging Face Pro | No | $9/mo | 20x inference usage |
+| Baidu Cloud | No | ¥40/mo (~$5.50, Lite) | ¥200/mo (~$27.50, Pro) |
+| Ollama Cloud | No | $20/mo (Pro) | $100/mo (Max) |
+| Cerebras | No | $50/mo (Pro) | $200/mo (Max) |
+| AI Router | No | CHF 39/mo (Unlimited) | Swiss-hosted, no prompt logging |
 
 ### Team / Enterprise Plans
 
@@ -473,5 +580,3 @@ Contributions are welcome. Please help keep information accurate, current, and v
 - Include pricing tier, supported models, and key capabilities where known
 - Flag outdated entries with an issue rather than deleting them
 - Avoid promotional language — describe what a tool does, not how great it is
-
-> **Note:** This repository has no affiliation with any of the tools listed. All trademarks belong to their respective owners.
