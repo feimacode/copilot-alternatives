@@ -123,9 +123,9 @@ Subscriptions that provide access to multiple models through OpenAI/Anthropic-co
 | [MiniMax Token Plan Lite](https://platform.minimax.io/docs/guides/pricing-token-plan) | $20/mo | 3-4 agents/5h window | MiniMax-M3, M2.7, all platform models | Agent workflows, multimodal support |
 | [MiniMax Token Plan Standard](https://platform.minimax.io/docs/guides/pricing-token-plan) | $50/mo | 4-5 agents/5h window | Same as Lite | Daily coding with agents, multimodal work |
 | [MiniMax Token Plan Pro](https://platform.minimax.io/docs/guides/pricing-token-plan) | $120/mo | 6-7 agents/5h window | Same as Lite | Heavy agent workflows, extended sessions |
-| [Feima Copilot Starter Pack](https://feimacode.com/pricing) | $10 (pay-as-you-go) | 500 weighted requests | Qwen3 Flash, Qwen3 Coder Plus, Qwen3 Max, Qwen3.5 Plus, MiniMax M2.5, Kimi K2.5, +2 more | VS Code extension, weighted request billing, 1M context on select models |
-| [Feima Copilot Value Pack](https://feimacode.com/pricing) | $20 (pay-as-you-go) | 1100 weighted requests (10% bonus) | Same as Starter | Higher quota, all models available |
-| [Feima Copilot Pro Pack](https://feimacode.com/pricing) | $50 (pay-as-you-go) | 3000 weighted requests (20% bonus) | Same as Starter | Maximum quota, premium model access |
+| [Feima Copilot Starter Pack](https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms) | $10 (pay-as-you-go) | 500 weighted requests | Qwen3 Flash, Qwen3 Coder Plus, Qwen3 Max, Qwen3.5 Plus, MiniMax M2.5, Kimi K2.5, +2 more | VS Code extension, weighted request billing, 1M context on select models |
+| [Feima Copilot Value Pack](https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms) | $20 (pay-as-you-go) | 1100 weighted requests (10% bonus) | Same as Starter | Higher quota, all models available |
+| [Feima Copilot Pro Pack](https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms) | $50 (pay-as-you-go) | 3000 weighted requests (20% bonus) | Same as Starter | Maximum quota, premium model access |
 | [Kimi Moderato](https://www.kimi.com/membership/pricing) | $15/mo (annual) / $19/mo (monthly) | 1x Kimi Code credits | Kimi-K2.5 | Kimi Code access, agent multi-tasking, deep research |
 | [Kimi Allegretto](https://www.kimi.com/membership/pricing) | $31/mo (annual) / $39/mo (monthly) | 5x Kimi Code credits | Kimi-K2.5 | Kimi Claw exclusive, 2x agent credits |
 | [Kimi Allegro](https://www.kimi.com/membership/pricing) | $79/mo (annual) / $99/mo (monthly) | 15x Kimi Code credits | Kimi-K2.5 | 5x agent credits, Agent Swarm, Kimi Work scheduled tasks |
@@ -142,6 +142,7 @@ Platforms that aggregate multiple model providers behind a single subscription o
 | [Nous Portal Super](https://nousresearch.com) | $100/mo | $110 monthly credits, $50 rollover cap | 300+ models | Hosted tool usage |
 | [Nous Portal Ultra](https://nousresearch.com) | $200/mo | $220 monthly credits, $100 rollover cap | 300+ models | Hosted tool usage |
 | [OpenCode Go](https://opencode.ai) | $5 first mo, then $10/mo | Per 5h: GLM-5.1 880 / Qwen3.7 Max 950 / Kimi K2.7 Code 1,150 / MiMo-V2.5-Pro 3,250 / DeepSeek V4 Pro 3,450 / Qwen3.7 Plus 4,300 / MiniMax M3 9,600 / MiMo-V2.5 30,100 / DeepSeek V4 Flash 31,650 | Multi-model (GLM, Qwen, Kimi, MiMo, DeepSeek, MiniMax) | OpenCode's native subscription, usage varies by model |
+| [ClinePass](https://cline.bot/cline-pass) | $4.99 first mo, then $9.99/mo | 2-5x standard API rate limits | GLM 5.2, Kimi K2.7 Code, Kimi K2.6, DeepSeek V4 Pro, DeepSeek V4 Flash, MiniMax M3, MiMo V2.5 Pro, MiMo V2.5, Qwen3.7-Max, Qwen3.7-Plus | Built for Cline IDE & CLI, also usable with other coding agents via API key; no separate provider setup needed |
 | [Command Code Go](https://commandcode.dev) | $1/mo | $10 credits, ~15K requests | taste-1, open-source models | Limited analytics |
 | [Command Code Pro](https://commandcode.dev) | $15/mo | $30 credits, ~25K requests | taste-1, open-source + premium models | Usage analytics |
 | [Command Code Max](https://commandcode.dev) | $100/mo | $150 credits, ~110K requests | taste-1, all models | Higher rate limits, priority support |
@@ -176,7 +177,7 @@ No-cost options with usage limits, suitable for light coding tasks or experiment
 
 | Option | Price | Limits | Notable Features |
 |---|---|---|---|
-| [Feima Copilot](https://feimacode.com/pricing) | Free | 700 weighted requests (1st month), 300/month thereafter | Weighted request-based billing, multiple model tiers |
+| [Feima Copilot](https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms) | Free | 700 weighted requests (1st month), 300/month thereafter | Weighted request-based billing, multiple model tiers |
 | [Codex Free](https://chatgpt.com/codex/pricing/) | Free | Limited trial access | Test Codex capabilities, GPT-5.5 limited |
 | [Google AI Free](https://geminicli.com/plans/) | Free | 50 AI credits/day (Flow/Whisk), 15 GB storage | Gemini app with Flash, varying Pro access, image gen/editing, Deep Research, Gemini Live, Canvas, Gems |
 | [Mistral AI Free](https://mistral.ai) | Free | 500 memories, 40+ connectors | Vibe — SOTA models, image gen, projects |
@@ -232,7 +233,7 @@ Terminal-based and agentic coding tools that operate in your shell, often capabl
 |---|---|---|---|
 | [Claude Code](https://claude.ai/code) | Proprietary | No (API usage) | Anthropic's official CLI agent, strong agentic reasoning |
 | [OpenCode](https://opencode.ai) | MIT | Yes (open source) | 170k+ GitHub stars, LSP-enabled, multi-session, share links, desktop app available, 75+ LLM providers |
-| [Cline](https://cline.bot) | Apache 2.0 | Yes (open source) | 62.7k+ GitHub stars, multi-agent teams, scheduled agents, MCP marketplace, Slack/Telegram/Discord connectors |
+| [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) | Apache 2.0 | Yes (open source) | 62.7k+ GitHub stars, multi-agent teams, scheduled agents, MCP marketplace, Slack/Telegram/Discord connectors |
 | [Aider](https://aider.chat) | Apache 2.0 | Yes (BYOK) | Git-aware, multi-file edits, supports many models |
 | [OpenHands](https://github.com/All-Hands-AI/OpenHands) | MIT | Yes (BYOK) | Formerly OpenDevin, browser + terminal agent |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Apache 2.0 | Yes (free quota) | Google's official CLI agent, 1M token context |
@@ -251,14 +252,14 @@ AI coding assistants delivered as extensions for existing editors — VS Code, J
 | Tool | Editors | Free Tier | Notable Features |
 |---|---|---|---|
 | [Feima Copilot](https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms) | VS Code | Yes (700 weighted requests 1st mo, 300/mo thereafter) | Weighted request-based billing, multiple model tiers (Qwen, MiniMax, Kimi), 1M context on select models |
-| [Cline](https://cline.bot/ide) | VS Code, JetBrains | Yes (open source) | Plan/Act modes, multi-agent teams, MCP servers, .clinerules for project-specific guidance |
-| [Codeium](https://codeium.com) | VS Code, JetBrains, Neovim, + more | Yes (generous) | Fast autocomplete, chat, free for individuals |
-| [Continue](https://continue.dev) | VS Code, JetBrains | Yes (OSS) | Open-source, BYOK, local model support |
-| [Tabnine](https://tabnine.com) | VS Code, JetBrains, + more | Yes (limited) | Privacy-focused, local inference option |
-| [Amazon Q Developer](https://aws.amazon.com/q/developer/) | VS Code, JetBrains | Yes | Free tier, AWS integration, security scanning |
-| [Google Gemini Code Assist](https://cloud.google.com/products/gemini/code-assist) | VS Code, JetBrains | Yes (free tier) | Gemini models, GCP integration |
-| [Supermaven](https://supermaven.com) | VS Code, JetBrains, Neovim | Yes | Very fast autocomplete, 1M token context |
-| [Cody](https://sourcegraph.com/cody) | VS Code, JetBrains | Yes | Sourcegraph-powered codebase context |
+| [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) | VS Code, JetBrains | Yes (open source) | Plan/Act modes, multi-agent teams, MCP servers, .clinerules for project-specific guidance |
+| [Codeium](https://marketplace.visualstudio.com/items?itemName=codeium.codeium) | VS Code, JetBrains, Neovim, + more | Yes (generous) | Fast autocomplete, chat, free for individuals |
+| [Continue](https://marketplace.visualstudio.com/items?itemName=continue.continue) | VS Code, JetBrains | Yes (OSS) | Open-source, BYOK, local model support |
+| [Tabnine](https://marketplace.visualstudio.com/items?itemName=tabnine.tabnine-vscode) | VS Code, JetBrains, + more | Yes (limited) | Privacy-focused, local inference option |
+| [Amazon Q Developer](https://marketplace.visualstudio.com/items?itemName=amazonwebservices.amazon-q-vscode) | VS Code, JetBrains | Yes | Free tier, AWS integration, security scanning |
+| [Google Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=google.geminicodeassist) | VS Code, JetBrains | Yes (free tier) | Gemini models, GCP integration |
+| [Supermaven](https://marketplace.visualstudio.com/items?itemName=supermaven.supermaven) | VS Code, JetBrains, Neovim | Yes | Very fast autocomplete, 1M token context |
+| [Cody](https://marketplace.visualstudio.com/items?itemName=sourcegraph.cody-ai) | VS Code, JetBrains | Yes | Sourcegraph-powered codebase context |
 | [Pieces for Developers](https://pieces.app) | VS Code, JetBrains, + more | Yes | Snippet management + AI, works offline |
 | [Avante.nvim](https://github.com/yetone/avante.nvim) | Neovim | Yes (OSS) | Cursor-like experience in Neovim, BYOK |
 
@@ -270,9 +271,9 @@ Bring-Your-Own-Key tools that use API keys you supply, giving you full control o
 
 | Tool | Type | Supported Models |
 |---|---|---|
-| [Continue](https://continue.dev) | Extension | Anthropic, OpenAI, Gemini, Ollama, any OpenAI-compatible endpoint |
+| [Continue](https://marketplace.visualstudio.com/items?itemName=continue.continue) | Extension | Anthropic, OpenAI, Gemini, Ollama, any OpenAI-compatible endpoint |
 | [Aider](https://aider.chat) | CLI Agent | Anthropic, OpenAI, Gemini, Groq, Ollama, DeepSeek, + more |
-| [Cline](https://cline.bot) | CLI Agent / Extension | Anthropic, OpenAI, Google, OpenRouter, AWS Bedrock, Azure/GCP Vertex, Ollama, any OpenAI-compatible API |
+| [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) | CLI Agent / Extension | Anthropic, OpenAI, Google, OpenRouter, AWS Bedrock, Azure/GCP Vertex, Ollama, any OpenAI-compatible API |
 | [Cursor](https://cursor.sh) | IDE | Anthropic, OpenAI, Gemini (via API key mode) |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models) | CLI Agent | Anthropic, OpenAI, Google, Azure OpenAI, any OpenAI-compatible endpoint |
 | [Void](https://voideditor.com) | IDE | Any OpenAI-compatible endpoint, Ollama |
@@ -390,6 +391,8 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
 | DeepSeek V4 | BytePlus ModelArk (Lite/Pro), NVIDIA NIM (free tier) | Cursor, Cline, Continue, Aider, Fireworks AI, Together AI |
+| DeepSeek V4 Pro | ClinePass | Cursor, Cline, Continue, Aider |
+| DeepSeek V4 Flash | ClinePass | Cursor, Cline, Continue, Aider |
 | DeepSeek V3 | Alibaba Coding Plan Pro | Cursor, Cline, Continue, Aider |
 | DeepSeek R1 | Alibaba Coding Plan Pro | Cursor, Cline, Continue, Aider |
 
@@ -398,6 +401,8 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
 | Qwen3.7-plus | Alibaba Coding Plan Pro | Cursor, Cline, Continue, Aider |
+| Qwen3.7-Max | ClinePass | Cursor, Cline, Continue, Aider |
+| Qwen3.7-Plus | ClinePass | Cursor, Cline, Continue, Aider |
 | Qwen3 Coder Plus | Feima Copilot (Starter/Value/Pro) | Cursor, Cline, Continue, Aider |
 | Qwen3 Flash | Feima Copilot (Starter/Value/Pro) | Cursor, Cline, Continue, Aider |
 | Qwen3 Max | Feima Copilot (Starter/Value/Pro) | Cursor, Cline, Continue, Aider |
@@ -408,6 +413,7 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
+| GLM-5.2 | ClinePass | Cursor, Cline, Continue, Aider |
 | GLM-5.1 | BytePlus ModelArk (Lite/Pro), Z.ai GLM (Lite/Pro/Max) | Cursor, Cline, Continue, Aider |
 | GLM-5 | Alibaba Coding Plan Pro | Cursor, Cline, Continue, Aider |
 
@@ -415,6 +421,8 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
+| Kimi K2.7 Code | ClinePass | Cursor, Cline, Continue, Aider |
+| Kimi K2.6 | ClinePass | Cursor, Cline, Continue, Aider |
 | Kimi-K2.5 | BytePlus ModelArk (Lite/Pro), Alibaba Coding Plan Pro, Feima Copilot (Starter/Value/Pro) | Cursor, Cline, Continue, Aider |
 | Kimi-K2.5 (Kimi Code) | Kimi Moderato, Kimi Allegretto, Kimi Allegro, Kimi Vivace | Cursor, Cline, Continue, Aider |
 
@@ -422,7 +430,7 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
-| MiniMax-M3 | MiniMax Token Plan (Lite/Standard/Pro) | Cursor, Cline, Continue, Aider |
+| MiniMax-M3 | MiniMax Token Plan (Lite/Standard/Pro), ClinePass | Cursor, Cline, Continue, Aider |
 | MiniMax-M2.7 | MiniMax Token Plan (Lite/Standard/Pro) | Cursor, Cline, Continue, Aider |
 | MiniMax-M2.5 | Alibaba Coding Plan Pro, Feima Copilot (Starter/Value/Pro) | Cursor, Cline, Continue, Aider |
 
@@ -455,8 +463,8 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 
 | Model | Coding Plans | BYOK Tools |
 |---|---|---|
-| MiMo-V2.5-Pro | Xiaomi MiMo (Lite/Standard/Pro/Max) | Cursor, Cline, Continue, Aider, OpenCode Go |
-| MiMo-V2.5 | Xiaomi MiMo (Lite/Standard/Pro/Max), OpenCode Go | Cursor, Cline, Continue, Aider |
+| MiMo-V2.5-Pro | Xiaomi MiMo (Lite/Standard/Pro/Max), ClinePass | Cursor, Cline, Continue, Aider, OpenCode Go |
+| MiMo-V2.5 | Xiaomi MiMo (Lite/Standard/Pro/Max), ClinePass | Cursor, Cline, Continue, Aider, OpenCode Go |
 
 ### StepFun Models
 
@@ -498,6 +506,7 @@ Which coding plans include access to specific models. BYOK tools (Cursor, Cline,
 | Aider | Free (OSS) | — | Pay only for API usage |
 | Claude Code | No | Pay-per-use (API) | ~$3–15/mo typical usage at current API rates |
 | Gemini CLI | Yes (free quota) | Pay-per-use beyond quota | Generous free quota via Google AI Studio |
+| ClinePass | No | $4.99 first mo, then $9.99/mo | 2-5x standard API rate limits; open weight models (GLM, DeepSeek, Kimi, MiniMax, MiMo, Qwen) |
 | xAI Grok | No | $10/mo (SuperGrok Lite) | $30/mo (SuperGrok), $300/mo (Heavy) |
 | Mistral AI | Yes (Free) | $14.99/mo (Pro) | Students $5.99/mo; Team $24.99/user/mo |
 | StepFun | No | $6.99/mo (Flash Mini) | $9.99/mo (Plus), $29/mo (Pro), $99/mo (Max) |
