@@ -1,0 +1,200 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (without v prefix, e.g., 0.1.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Build and validate without creating release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+
+          # Validate semver format
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: $VERSION (expected X.Y.Z)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Version: $VERSION"
+
+      - name: Validate version match
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "❌ Version mismatch: tag=$VERSION, package.json=$PACKAGE_VERSION"
+            exit 1
+          fi
+          echo "✅ Version match confirmed: $VERSION"
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run compile
+
+      - name: Package VSIX
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          echo "📦 Packaging VSIX v$VERSION..."
+
+          mkdir -p dist
+
+          npx @vscode/vsce package \
+            --allow-star-activation \
+            --out "dist/copilot-alternatives-$VERSION.vsix"
+
+          echo "✅ VSIX packaged: dist/copilot-alternatives-$VERSION.vsix"
+
+      - name: Generate SHA-256 checksum
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+
+          sha256sum "$VSIX" > "${VSIX}.sha256"
+          echo "Checksum: $(cat ${VSIX}.sha256)"
+
+      - name: Validate VSIX
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+
+          # Check file size
+          SIZE=$(stat -c%s "$VSIX")
+          MAX_SIZE=$((5 * 1024 * 1024))
+          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+            echo "⚠️  VSIX exceeds 5 MB: $SIZE bytes"
+          else
+            echo "✅ VSIX size: $SIZE bytes (under 5 MB limit)"
+          fi
+
+          # Validate VSIX structure
+          echo "🔍 Validating VSIX structure..."
+          unzip -l "$VSIX" | grep -E "extension.vsixmanifest|package.json" || {
+            echo "❌ VSIX is missing required files"
+            exit 1
+          }
+          echo "✅ VSIX structure validated"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: |
+            dist/*.vsix
+            dist/*.sha256
+
+  release:
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.dry_run != 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+          path: dist
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          if [ -f "CHANGELOG.md" ]; then
+            CHANGELOG=$(sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | head -n -1)
+
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="## [${VERSION}]\n\nRelease notes will be added soon."
+            fi
+          else
+            CHANGELOG="## [${VERSION}]\n\nRelease notes will be added soon."
+          fi
+
+          echo "$CHANGELOG" > /tmp/release_body.md
+          echo "body_file=/tmp/release_body.md" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: v${{ needs.validate.outputs.version }}
+          generate_release_notes: true
+          body_path: ${{ steps.changelog.outputs.body_file }}
+          files: |
+            dist/*.vsix
+            dist/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release Summary
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-$VERSION.vsix.sha256\`" >> $GITHUB_STEP_SUMMARY

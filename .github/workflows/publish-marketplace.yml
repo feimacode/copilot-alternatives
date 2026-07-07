@@ -1,0 +1,190 @@
+name: Publish to Marketplace
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without v prefix, e.g., 0.1.0)'
+        required: true
+        type: string
+      confirmation:
+        description: 'Type "PUBLISH" to confirm marketplace publication'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmation }}" != "PUBLISH" ]; then
+            echo "❌ Confirmation failed. You must type 'PUBLISH' to proceed."
+            exit 1
+          fi
+          echo "✅ Confirmation accepted"
+
+      - name: Validate version format
+        id: validate
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: $VERSION (must be X.Y.Z)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Version validated: $VERSION"
+
+  check-release:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check GitHub Release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          RELEASE=$(gh release view "v$VERSION" --repo "$REPO" --json tagName 2>/dev/null || echo "")
+
+          if [ -z "$RELEASE" ]; then
+            echo "❌ GitHub Release v$VERSION not found. Please create a release first."
+            echo ""
+            echo "📋 Next steps:"
+            echo "1. Tag a commit: git tag v$VERSION && git push origin v$VERSION"
+            echo "2. Or run the 'Release' workflow manually"
+            echo "3. Once the release is complete, re-run this 'Publish to Marketplace' workflow"
+            exit 1
+          fi
+
+          echo "✅ GitHub Release v$VERSION exists"
+
+      - name: Verify VSIX in release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          echo "🔍 Checking release assets..."
+          ASSETS=$(gh release view "v$VERSION" --repo "$REPO" --json assets --jq '.assets[].name')
+          echo "Available assets:"
+          echo "$ASSETS"
+
+          if ! echo "$ASSETS" | grep -q "copilot-alternatives-$VERSION.vsix"; then
+            echo ""
+            echo "❌ ERROR: copilot-alternatives-$VERSION.vsix not found in release!"
+            exit 1
+          fi
+          echo "✅ Found: copilot-alternatives-$VERSION.vsix"
+
+      - name: Check VSCE_PAT secret
+        run: |
+          if [ -z "${{ secrets.VSCE_PAT }}" ]; then
+            echo "❌ VSCE_PAT secret is not set"
+            exit 1
+          fi
+          echo "✅ VSCE_PAT secret is configured"
+
+  download-and-publish:
+    needs: [validate, check-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Download VSIX from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          mkdir -p dist
+          cd dist
+
+          echo "📥 Downloading VSIX and checksum from release v$VERSION..."
+          gh release download "v$VERSION" --repo "$REPO" \
+            --pattern "copilot-alternatives-$VERSION.vsix*" \
+            --dir .
+
+          echo "✅ Download complete"
+          ls -lah
+
+          if [ ! -f "copilot-alternatives-$VERSION.vsix" ]; then
+            echo "❌ VSIX file not found after download"
+            exit 1
+          fi
+
+      - name: Verify checksum
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+          SHA="dist/copilot-alternatives-$VERSION.vsix.sha256"
+
+          if [ ! -f "$SHA" ]; then
+            echo "⚠️  Checksum file not found, skipping verification"
+          else
+            echo "🔍 Verifying checksum..."
+            EXPECTED_HASH=$(awk '{print $1}' "$SHA")
+            ACTUAL_HASH=$(sha256sum "$VSIX" | awk '{print $1}')
+
+            if [ "$EXPECTED_HASH" == "$ACTUAL_HASH" ]; then
+              echo "✅ Checksum verified"
+            else
+              echo "❌ Checksum mismatch!"
+              echo "Expected: $EXPECTED_HASH"
+              echo "Actual:   $ACTUAL_HASH"
+              exit 1
+            fi
+          fi
+
+      - name: Publish to Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+
+          echo "📦 Publishing to VS Code Marketplace: $VSIX"
+          vsce publish --packagePath "$VSIX"
+
+          echo "✅ Published successfully"
+          echo "🔗 Marketplace: https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives"
+
+  summary:
+    needs: [validate, download-and-publish]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Summary
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          echo "## 📦 Marketplace Publication Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.download-and-publish.result }}" == "success" ]; then
+            echo "✅ **Published**: [copilot-alternatives](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Publication failed**" >> $GITHUB_STEP_SUMMARY
+          fi
