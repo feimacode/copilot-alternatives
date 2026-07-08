@@ -1,0 +1,10 @@
+{
+	"name": "opencode-go",
+	"displayName": "OpenCode Go (single key)",
+	"description": "OpenCode Go — $5 first month, $10/month. 11 curated open coding models across 2 API formats. The same key is used for both OpenAI and Anthropic groups.",
+	"keyUrl": "https://opencode.ai/auth",
+	"keyInstructions": "Subscribe to OpenCode Go at https://opencode.ai/auth, then copy your API key. The same key is used for both the OpenAI and Anthropic groups.",
+	"keyCount": 1,
+	"keyLabels": ["OpenCode Go API Key"],
+	"chatLanguageModelsFile": "opencode-go.single.chatLanguageModels.json"
+}

@@ -1,0 +1,10 @@
+{
+	"name": "mistral",
+	"displayName": "Mistral",
+	"description": "Mistral API — Mistral Large, Codestral",
+	"keyUrl": "https://console.mistral.ai/api-keys/",
+	"keyInstructions": "Get your API key from https://console.mistral.ai/api-keys/",
+	"keyCount": 1,
+	"keyLabels": ["Mistral API Key"],
+	"chatLanguageModelsFile": "mistral.chatLanguageModels.json"
+}

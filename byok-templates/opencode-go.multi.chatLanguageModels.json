@@ -1,0 +1,380 @@
+[
+	{
+		"name": "OpenCode Go 1 - OpenAI",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "mimo-v2.5-pro",
+				"name": "MiMo V2.5 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "mimo-v2.5",
+				"name": "MiMo V2.5",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go 1 - Anthropic",
+		"vendor": "customendpoint",
+		"apiType": "messages",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "minimax-m3",
+				"name": "MiniMax M3",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "minimax-m2.7",
+				"name": "MiniMax M2.7",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go 2 - OpenAI",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "mimo-v2.5-pro",
+				"name": "MiMo V2.5 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "mimo-v2.5",
+				"name": "MiMo V2.5",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go 2 - Anthropic",
+		"vendor": "customendpoint",
+		"apiType": "messages",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "minimax-m3",
+				"name": "MiniMax M3",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "minimax-m2.7",
+				"name": "MiniMax M2.7",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go 3 - OpenAI",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "mimo-v2.5-pro",
+				"name": "MiMo V2.5 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "mimo-v2.5",
+				"name": "MiMo V2.5",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go 3 - Anthropic",
+		"vendor": "customendpoint",
+		"apiType": "messages",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "minimax-m3",
+				"name": "MiniMax M3",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "minimax-m2.7",
+				"name": "MiniMax M2.7",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://opencode.ai/zen/go/v1/messages",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			}
+		]
+	}
+]

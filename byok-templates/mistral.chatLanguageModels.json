@@ -1,0 +1,28 @@
+[
+	{
+		"name": "Mistral",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "mistral-large-latest",
+				"name": "Mistral Large",
+				"url": "https://api.mistral.ai/v1/chat/completions",
+				"toolCalling": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 32768
+			},
+			{
+				"id": "codestral-latest",
+				"name": "Codestral",
+				"url": "https://api.mistral.ai/v1/chat/completions",
+				"toolCalling": true,
+				"vision": false,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 32768
+			}
+		]
+	}
+]

@@ -1,0 +1,10 @@
+{
+	"name": "openrouter",
+	"displayName": "OpenRouter",
+	"description": "OpenRouter — Access 200+ models via a single API",
+	"keyUrl": "https://openrouter.ai/keys",
+	"keyInstructions": "Get your API key from https://openrouter.ai/keys",
+	"keyCount": 1,
+	"keyLabels": ["OpenRouter API Key"],
+	"chatLanguageModelsFile": "openrouter.chatLanguageModels.json"
+}

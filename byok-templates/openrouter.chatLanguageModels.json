@@ -1,0 +1,37 @@
+[
+	{
+		"name": "OpenRouter",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "anthropic/claude-sonnet-4",
+				"name": "Claude Sonnet 4 (via OpenRouter)",
+				"url": "https://openrouter.ai/api/v1/chat/completions",
+				"toolCalling": true,
+				"vision": true,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "openai/gpt-4o",
+				"name": "GPT-4o (via OpenRouter)",
+				"url": "https://openrouter.ai/api/v1/chat/completions",
+				"toolCalling": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "google/gemini-2.5-pro-preview",
+				"name": "Gemini 2.5 Pro (via OpenRouter)",
+				"url": "https://openrouter.ai/api/v1/chat/completions",
+				"toolCalling": true,
+				"vision": true,
+				"maxInputTokens": 1048576,
+				"maxOutputTokens": 65536
+			}
+		]
+	}
+]

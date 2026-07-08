@@ -18,11 +18,32 @@ The focus is on solutions that support one or more of the following:
 
 ---
 
-## Table of Contents
+## BYOK Chat Language Model Templates
 
-- [Goals](#goals)
-- [Categories](#categories)
-- [Contributing](#contributing)
+Pre-configured `chatLanguageModels.json` templates for popular AI providers. Copy-paste into VS Code's chat language model configuration to use your own API keys.
+
+| Provider | Template | Description | API Key |
+|---|---|---|---|
+| **OpenCode Go** | [`opencode-go.single.chatLanguageModels.json`](byok-templates/opencode-go.single.chatLanguageModels.json) | $5 first month, $10/mo. 11 models across OpenAI + Anthropic formats | [Get key](https://opencode.ai/auth) |
+| **OpenCode Go (multi)** | [`opencode-go.multi.chatLanguageModels.json`](byok-templates/opencode-go.multi.chatLanguageModels.json) | Multi-key variant — 3 accounts, 6 groups | [Get key](https://opencode.ai/auth) |
+| **ClinePass** | [`clinepass.single.chatLanguageModels.json`](byok-templates/clinepass.single.chatLanguageModels.json) | $9.99/mo. 10 curated models via OpenAI-compatible API | [Get key](https://app.cline.bot) |
+| **ClinePass (multi)** | [`clinepass.multi.chatLanguageModels.json`](byok-templates/clinepass.multi.chatLanguageModels.json) | Multi-key variant — 3 accounts, 3 groups | [Get key](https://app.cline.bot) |
+| **Feima Code** | [`feimacode.chatLanguageModels.json`](byok-templates/feimacode.chatLanguageModels.json) | 15 curated coding models via OpenAI-compatible API | [Get key](https://feimacode.com/use-api-keys) |
+| **DeepSeek** | [`deepseek.chatLanguageModels.json`](byok-templates/deepseek.chatLanguageModels.json) | DeepSeek API — V4 Pro, V4 Flash, R1 | [Get key](https://platform.deepseek.com/api_keys) |
+| **Mistral** | [`mistral.chatLanguageModels.json`](byok-templates/mistral.chatLanguageModels.json) | Mistral API — Mistral Large, Codestral | [Get key](https://console.mistral.ai/api-keys/) |
+| **OpenRouter** | [`openrouter.chatLanguageModels.json`](byok-templates/openrouter.chatLanguageModels.json) | Access 200+ models via a single API | [Get key](https://openrouter.ai/keys) |
+
+### How to Use Manually
+
+1. Open a `.chatLanguageModels.json` file from the table above
+2. Copy the entire contents (a JSON array `[...]`)
+3. Paste it into your `chatLanguageModels.json` (append to existing array, or replace it entirely)
+4. Open VS Code's **Chat: Manage Language Models** command
+5. For each group, click the gear icon and enter your API key
+6. VS Code encrypts the key in the OS keystore and replaces `"YOUR_API_KEY_HERE"` with `"${input:chat.lm.secret.xxx}"`
+
+> **Tip:** You can also import templates programmatically via the companion VS Code extension. Run `BYOK: Add Provider` from the command palette. See [`byok-templates/README.md`](byok-templates/README.md) for details.
+
 
 ---
 

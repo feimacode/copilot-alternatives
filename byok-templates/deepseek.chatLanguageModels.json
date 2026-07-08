@@ -1,0 +1,37 @@
+[
+	{
+		"name": "DeepSeek",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://api.deepseek.com/chat/completions",
+				"toolCalling": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 32000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://api.deepseek.com/chat/completions",
+				"toolCalling": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 32000
+			},
+			{
+				"id": "deepseek-reasoner",
+				"name": "DeepSeek R1",
+				"url": "https://api.deepseek.com/chat/completions",
+				"toolCalling": true,
+				"vision": false,
+				"maxInputTokens": 64000,
+				"maxOutputTokens": 16384
+			}
+		]
+	}
+]

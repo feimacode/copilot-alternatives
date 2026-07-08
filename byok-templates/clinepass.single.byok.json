@@ -1,0 +1,10 @@
+{
+	"name": "clinepass",
+	"displayName": "ClinePass (single key)",
+	"description": "ClinePass — $9.99/month. 10 curated open coding models via OpenAI-compatible API. Model IDs use the 'cline-pass/' prefix.",
+	"keyUrl": "https://app.cline.bot",
+	"keyInstructions": "Subscribe to ClinePass at https://app.cline.bot/dashboard/subscription, then create an API key at Settings > API Keys.",
+	"keyCount": 1,
+	"keyLabels": ["ClinePass API Key"],
+	"chatLanguageModelsFile": "clinepass.single.chatLanguageModels.json"
+}

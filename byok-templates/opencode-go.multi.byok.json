@@ -1,0 +1,10 @@
+{
+	"name": "opencode-go",
+	"displayName": "OpenCode Go (multi-key)",
+	"description": "OpenCode Go with multiple API keys for load distribution. Each account gets 2 groups (OpenAI + Anthropic format). Useful when you have several subscriptions with limited per-key quota.",
+	"keyUrl": "https://opencode.ai/auth",
+	"keyInstructions": "Subscribe to multiple OpenCode Go accounts (or share with team members). For each account: copy the API key from https://opencode.ai/auth and provide it when prompted. Keys are stored separately in VS Code's keystore.",
+	"keyCount": 3,
+	"keyLabels": ["Account 1", "Account 2", "Account 3"],
+	"chatLanguageModelsFile": "opencode-go.multi.chatLanguageModels.json"
+}

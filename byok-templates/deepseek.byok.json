@@ -1,0 +1,10 @@
+{
+	"name": "deepseek",
+	"displayName": "DeepSeek",
+	"description": "DeepSeek API — V4 Pro, V4 Flash, R1",
+	"keyUrl": "https://platform.deepseek.com/api_keys",
+	"keyInstructions": "Get your API key from https://platform.deepseek.com/api_keys",
+	"keyCount": 1,
+	"keyLabels": ["DeepSeek API Key"],
+	"chatLanguageModelsFile": "deepseek.chatLanguageModels.json"
+}

@@ -1,0 +1,10 @@
+{
+	"name": "clinepass",
+	"displayName": "ClinePass (multi-key)",
+	"description": "ClinePass with multiple API keys for load distribution. Each account gets its own group. Useful when you have several subscriptions with limited per-key quota.",
+	"keyUrl": "https://app.cline.bot",
+	"keyInstructions": "Subscribe to multiple ClinePass accounts. For each account: create an API key at Settings > API Keys and provide it when prompted. Keys are stored separately in VS Code's keystore.",
+	"keyCount": 3,
+	"keyLabels": ["Account 1", "Account 2", "Account 3"],
+	"chatLanguageModelsFile": "clinepass.multi.chatLanguageModels.json"
+}

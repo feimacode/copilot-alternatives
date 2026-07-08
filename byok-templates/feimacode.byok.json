@@ -1,0 +1,10 @@
+{
+	"name": "feimacode",
+	"displayName": "Feima Code",
+	"description": "Feima Code — OpenAI-compatible API with 15 curated coding models including GLM-5, GLM 5.1, GLM 5.2, and Qwen3.6 Flash.",
+	"keyUrl": "https://feimacode.com/use-api-keys",
+	"keyInstructions": "Get your API key from Feima Code and enter it when prompted.",
+	"keyCount": 1,
+	"keyLabels": ["Feima Code API Key"],
+	"chatLanguageModelsFile": "feimacode.chatLanguageModels.json"
+}
