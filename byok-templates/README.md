@@ -33,7 +33,11 @@ byok-templates/
 ├── mistral.byok.json
 ├── mistral.chatLanguageModels.json
 ├── openrouter.byok.json
-└── openrouter.chatLanguageModels.json
+├── openrouter.chatLanguageModels.json
+├── byteplus.single.byok.json
+├── byteplus.single.chatLanguageModels.json
+├── byteplus.multi.byok.json
+└── byteplus.multi.chatLanguageModels.json
 ```
 
 ## How to Use Manually

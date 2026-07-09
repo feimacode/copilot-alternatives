@@ -1,0 +1,10 @@
+{
+	"name": "byteplus",
+	"displayName": "BytePlus (single key)",
+	"description": "BytePlus Coding Plan — 8 models via OpenAI-compatible API. Includes DeepSeek V4, GLM 5.1, Dola Seed, ByteDance Seed, and GPT OSS models.",
+	"keyUrl": "https://console.byteplus.com",
+	"keyInstructions": "Create a BytePlus API key at https://console.byteplus.com/ark. Use the coding plan endpoint.",
+	"keyCount": 1,
+	"keyLabels": ["BytePlus API Key"],
+	"chatLanguageModelsFile": "byteplus.single.chatLanguageModels.json"
+}

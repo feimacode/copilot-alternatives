@@ -24,14 +24,13 @@ Pre-configured `chatLanguageModels.json` templates for popular AI providers. Cop
 
 | Provider | Template | Description | API Key |
 |---|---|---|---|
-| **OpenCode Go** | [`opencode-go.single.chatLanguageModels.json`](byok-templates/opencode-go.single.chatLanguageModels.json) | $5 first month, $10/mo. 11 models across OpenAI + Anthropic formats | [Get key](https://opencode.ai/auth) |
-| **OpenCode Go (multi)** | [`opencode-go.multi.chatLanguageModels.json`](byok-templates/opencode-go.multi.chatLanguageModels.json) | Multi-key variant — 3 accounts, 6 groups | [Get key](https://opencode.ai/auth) |
-| **ClinePass** | [`clinepass.single.chatLanguageModels.json`](byok-templates/clinepass.single.chatLanguageModels.json) | $9.99/mo. 10 curated models via OpenAI-compatible API | [Get key](https://app.cline.bot) |
-| **ClinePass (multi)** | [`clinepass.multi.chatLanguageModels.json`](byok-templates/clinepass.multi.chatLanguageModels.json) | Multi-key variant — 3 accounts, 3 groups | [Get key](https://app.cline.bot) |
+| **OpenCode Go** | [single](byok-templates/opencode-go.single.chatLanguageModels.json) · [multi](byok-templates/opencode-go.multi.chatLanguageModels.json) | $5 first month, $10/mo. 11 models across OpenAI + Anthropic formats | [Get key](https://opencode.ai/auth) |
+| **ClinePass** | [single](byok-templates/clinepass.single.chatLanguageModels.json) · [multi](byok-templates/clinepass.multi.chatLanguageModels.json) | $9.99/mo. 10 curated models via OpenAI-compatible API | [Get key](https://app.cline.bot) |
 | **Feima Code** | [`feimacode.chatLanguageModels.json`](byok-templates/feimacode.chatLanguageModels.json) | 15 curated coding models via OpenAI-compatible API | [Get key](https://feimacode.com/use-api-keys) |
 | **DeepSeek** | [`deepseek.chatLanguageModels.json`](byok-templates/deepseek.chatLanguageModels.json) | DeepSeek API — V4 Pro, V4 Flash, R1 | [Get key](https://platform.deepseek.com/api_keys) |
 | **Mistral** | [`mistral.chatLanguageModels.json`](byok-templates/mistral.chatLanguageModels.json) | Mistral API — Mistral Large, Codestral | [Get key](https://console.mistral.ai/api-keys/) |
 | **OpenRouter** | [`openrouter.chatLanguageModels.json`](byok-templates/openrouter.chatLanguageModels.json) | Access 200+ models via a single API | [Get key](https://openrouter.ai/keys) |
+| **BytePlus** | [single](byok-templates/byteplus.single.chatLanguageModels.json) · [multi](byok-templates/byteplus.multi.chatLanguageModels.json) | BytePlus Coding Plan — 8 models via OpenAI-compatible API | [Get key](https://console.byteplus.com) |
 
 ### How to Use Manually
 

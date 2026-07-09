@@ -1,0 +1,90 @@
+[
+	{
+		"name": "BytePlus",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1024000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1024000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "glm-5.1",
+				"name": "GLM 5.1",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "dola-seed-2.0-pro",
+				"name": "Dola Seed 2.0 Pro",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "dola-seed-2.0-lite",
+				"name": "Dola Seed 2.0 Lite",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "dola-seed-2.0-code",
+				"name": "Dola Seed 2.0 Code",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "bytedance-seed-code",
+				"name": "ByteDance Seed Code",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 169984,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "gpt-oss-120b",
+				"name": "GPT OSS 120B",
+				"url": "https://ark.ap-southeast.bytepluses.com/api/coding/v3/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 128000
+			}
+		]
+	}
+]

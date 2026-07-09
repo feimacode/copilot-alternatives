@@ -1,0 +1,10 @@
+{
+	"name": "byteplus",
+	"displayName": "BytePlus (multi-key)",
+	"description": "BytePlus Coding Plan with multiple API keys for load distribution. Each account gets its own group. Useful when you have several subscriptions with limited per-key quota.",
+	"keyUrl": "https://console.byteplus.com",
+	"keyInstructions": "Create multiple BytePlus API keys at https://console.byteplus.com/ark. For each account, provide the key when prompted. Keys are stored separately in VS Code's keystore.",
+	"keyCount": 3,
+	"keyLabels": ["Account 1", "Account 2", "Account 3"],
+	"chatLanguageModelsFile": "byteplus.multi.chatLanguageModels.json"
+}
