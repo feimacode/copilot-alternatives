@@ -1,0 +1,10 @@
+{
+	"name": "ali-coding-plan",
+	"displayName": "Alibaba Coding Plan (CN)",
+	"description": "Alibaba Coding Plan — 9 curated models via OpenAI-compatible API. CN endpoint for users in China.",
+	"keyUrl": "https://www.alibabacloud.com/help/en/model-studio/coding-plan",
+	"keyInstructions": "Subscribe to Alibaba Coding Plan at https://www.alibabacloud.com/help/en/model-studio/coding-plan, then create an API key at DashScope console.",
+	"keyCount": 1,
+	"keyLabels": ["Alibaba Coding Plan API Key"],
+	"chatLanguageModelsFile": "ali-coding-plan.single.cn.chatLanguageModels.json"
+}

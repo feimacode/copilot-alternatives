@@ -1,0 +1,296 @@
+[
+	{
+		"name": "Alibaba Coding Plan 1",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3-max-2026-01-23",
+				"name": "Qwen3 Max",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 8192
+			},
+			{
+				"id": "qwen3-coder-next",
+				"name": "Qwen3 Coder Next",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "qwen3-coder-plus",
+				"name": "Qwen3 Coder Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-4.7",
+				"name": "GLM-4.7",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "Alibaba Coding Plan 2",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3-max-2026-01-23",
+				"name": "Qwen3 Max",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 8192
+			},
+			{
+				"id": "qwen3-coder-next",
+				"name": "Qwen3 Coder Next",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "qwen3-coder-plus",
+				"name": "Qwen3 Coder Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-4.7",
+				"name": "GLM-4.7",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "Alibaba Coding Plan 3",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3-max-2026-01-23",
+				"name": "Qwen3 Max",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 8192
+			},
+			{
+				"id": "qwen3-coder-next",
+				"name": "Qwen3 Coder Next",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "qwen3-coder-plus",
+				"name": "Qwen3 Coder Plus",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16384
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-4.7",
+				"name": "GLM-4.7",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	}
+]

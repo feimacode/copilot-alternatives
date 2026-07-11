@@ -1,0 +1,416 @@
+[
+	{
+		"name": "Alibaba Token Plan 1",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-flash",
+				"name": "Qwen3.6 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5.2",
+				"name": "GLM 5.2",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5.1",
+				"name": "GLM 5.1",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "Alibaba Token Plan 2",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-flash",
+				"name": "Qwen3.6 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5.2",
+				"name": "GLM 5.2",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5.1",
+				"name": "GLM 5.1",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "Alibaba Token Plan 3",
+		"vendor": "customendpoint",
+		"apiType": "chat-completions",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.7-max",
+				"name": "Qwen3.7 Max",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-plus",
+				"name": "Qwen3.6 Plus",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.6-flash",
+				"name": "Qwen3.6 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "deepseek-v4-pro",
+				"name": "DeepSeek V4 Pro",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "deepseek-v4-flash",
+				"name": "DeepSeek V4 Flash",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
+				"id": "kimi-k2.7-code",
+				"name": "Kimi K2.7 Code",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.6",
+				"name": "Kimi K2.6",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 224000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "kimi-k2.5",
+				"name": "Kimi K2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 128000,
+				"maxOutputTokens": 16000
+			},
+			{
+				"id": "glm-5.2",
+				"name": "GLM 5.2",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5.1",
+				"name": "GLM 5.1",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5",
+				"name": "GLM-5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 202000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "MiniMax-M2.5",
+				"name": "MiniMax M2.5",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 200000,
+				"maxOutputTokens": 128000
+			}
+		]
+	}
+]

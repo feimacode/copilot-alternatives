@@ -52,22 +52,335 @@
 		"type": "git",
 		"url": "https://github.com/feimacode/copilot-alternatives"
 	},
-	"activationEvents": [],
+	"activationEvents": [
+		"onView:copilotAlternatives.main"
+	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "copilotAlternatives",
+					"title": "Copilot Alternatives",
+					"icon": "assets/icon.svg"
+				}
+			]
+		},
+		"views": {
+			"copilotAlternatives": [
+				{
+					"type": "tree",
+					"id": "copilotAlternatives.main",
+					"name": "Directory"
+				}
+			]
+		},
 		"commands": [
+			{
+				"command": "copilotAlternatives.openSidebar",
+				"title": "Open Sidebar",
+				"category": "Copilot Alternatives",
+				"icon": "$(extensions)"
+			},
 			{
 				"command": "copilotAlternatives.open",
 				"title": "Open Copilot Alternatives Directory",
 				"category": "Copilot Alternatives",
 				"icon": "$(extensions)"
+			},
+			{
+				"command": "copilotAlternatives.byok.add",
+				"title": "BYOK: Add Provider",
+				"category": "Copilot Alternatives",
+				"icon": "$(key)"
+			},
+			{
+				"command": "copilotAlternatives.byok.list",
+				"title": "BYOK: List Providers",
+				"category": "Copilot Alternatives",
+				"icon": "$(list-flat)"
+			},
+			{
+				"command": "copilotAlternatives.byok.remove",
+				"title": "BYOK: Remove Provider",
+				"category": "Copilot Alternatives",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "copilotAlternatives.byok.openTemplatesFolder",
+				"title": "BYOK: Open Templates Folder",
+				"category": "Copilot Alternatives",
+				"icon": "$(folder-opened)"
+			},
+			{
+				"command": "copilotAlternatives.openUrl",
+				"title": "Open URL",
+				"icon": "$(link-external)"
+			},
+			{
+				"command": "copilotAlternatives.copyLink",
+				"title": "Copy Link",
+				"icon": "$(copy)"
+			},
+			{
+				"command": "copilotAlternatives.viewDetails",
+				"title": "View Details",
+				"icon": "$(info)"
+			},
+			{
+				"command": "copilotAlternatives.copyToClipboard",
+				"title": "Copy to Clipboard",
+				"icon": "$(copy)"
+			},
+			{
+				"command": "copilotAlternatives.copyEndpointUrl",
+				"title": "Copy Endpoint URL",
+				"icon": "$(link)"
+			},
+			{
+				"command": "copilotAlternatives.installExtension",
+				"title": "Install Extension",
+				"icon": "$(cloud-download)"
+			},
+			{
+				"command": "copilotAlternatives.byok.openJsonFile",
+				"title": "Open chatLanguageModels.json",
+				"category": "Copilot Alternatives",
+				"icon": "$(go-to-file)"
+			},
+			{
+				"command": "copilotAlternatives.byok.addProviderInline",
+				"title": "Add BYOK Provider (Single Key)",
+				"category": "Copilot Alternatives",
+				"icon": "$(plus)"
+			},
+			{
+				"command": "copilotAlternatives.byok.addMultiKeyProvider",
+				"title": "Add BYOK Provider (Multi Key)",
+				"category": "Copilot Alternatives",
+				"icon": "$(combine)"
+			},
+			{
+				"command": "copilotAlternatives.byok.editProvider",
+				"title": "Edit Provider",
+				"category": "Copilot Alternatives",
+				"icon": "$(edit)"
+			},
+			{
+				"command": "copilotAlternatives.byok.addModel",
+				"title": "Add Model",
+				"category": "Copilot Alternatives",
+				"icon": "$(plus)"
+			},
+			{
+				"command": "copilotAlternatives.byok.editModel",
+				"title": "Edit Model",
+				"category": "Copilot Alternatives",
+				"icon": "$(edit)"
+			},
+			{
+				"command": "copilotAlternatives.byok.deleteProvider",
+				"title": "Delete Provider",
+				"category": "Copilot Alternatives",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "copilotAlternatives.byok.deleteModel",
+				"title": "Delete Model",
+				"category": "Copilot Alternatives",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "copilotAlternatives.openReadme",
+				"title": "Open README",
+				"category": "Copilot Alternatives",
+				"icon": "$(markdown)"
 			}
 		],
 		"menus": {
 			"commandPalette": [
 				{
-					"command": "copilotAlternatives.open",
+					"command": "copilotAlternatives.openSidebar",
 					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.open",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.add",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.byok.list",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.byok.remove",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.byok.openTemplatesFolder",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.openUrl",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.copyLink",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.viewDetails",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.copyToClipboard",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.copyEndpointUrl",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.installExtension",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.openJsonFile",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.addProviderInline",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.addMultiKeyProvider",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.editProvider",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.addModel",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.editModel",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.deleteProvider",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.byok.deleteModel",
+					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.openReadme",
+					"when": "false"
+				}
+			],
+			"view/title": [
+				{
+					"command": "copilotAlternatives.byok.addProviderInline",
+					"when": "view == copilotAlternatives.main",
+					"group": "navigation"
+				},
+				{
+					"command": "copilotAlternatives.byok.openJsonFile",
+					"when": "view == copilotAlternatives.main",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "copilotAlternatives.byok.addProviderInline",
+					"when": "view == copilotAlternatives.main && viewItem == byokSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.addMultiKeyProvider",
+					"when": "view == copilotAlternatives.main && viewItem == byokSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.openJsonFile",
+					"when": "view == copilotAlternatives.main && viewItem == byokSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.openUrl",
+					"when": "view == copilotAlternatives.main && viewItem == catalogItem",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.viewDetails",
+					"when": "view == copilotAlternatives.main && viewItem == catalogItem",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.copyLink",
+					"when": "view == copilotAlternatives.main && viewItem == catalogItem"
+				},
+				{
+					"command": "copilotAlternatives.byok.editProvider",
+					"when": "view == copilotAlternatives.main && viewItem == byokProvider",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.addModel",
+					"when": "view == copilotAlternatives.main && viewItem == byokProvider",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.deleteProvider",
+					"when": "view == copilotAlternatives.main && viewItem == byokProvider",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.openJsonFile",
+					"when": "view == copilotAlternatives.main && viewItem == byokProvider",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.remove",
+					"when": "view == copilotAlternatives.main && viewItem == byokProvider"
+				},
+				{
+					"command": "copilotAlternatives.byok.editModel",
+					"when": "view == copilotAlternatives.main && viewItem == byokModel",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.byok.deleteModel",
+					"when": "view == copilotAlternatives.main && viewItem == byokModel",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.copyEndpointUrl",
+					"when": "view == copilotAlternatives.main && viewItem == byokModel"
+				},
+				{
+					"command": "copilotAlternatives.installExtension",
+					"when": "view == copilotAlternatives.main && viewItem == extensionItem",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.openUrl",
+					"when": "view == copilotAlternatives.main && viewItem == extensionItem"
+				},
+				{
+					"command": "copilotAlternatives.viewDetails",
+					"when": "view == copilotAlternatives.main && viewItem == extensionItem"
+				},
+				{
+					"command": "copilotAlternatives.openReadme",
+					"when": "view == copilotAlternatives.main && viewItem == moreInfoSection",
+					"group": "inline"
 				}
 			]
 		}
@@ -76,12 +389,15 @@
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"package": "vsce package --allow-star-activation"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^2.22.0",
-		"typescript": "^5.3.0"
+		"typescript": "^5.3.0",
+		"vitest": "^4.1.10"
 	}
 }

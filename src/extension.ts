@@ -6,14 +6,64 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { registerByokCommands } from './byok/byokCommands';
+import { TreeProvider } from './tree/treeProvider';
+import { registerNodeActions, setExtensionPath, setTreeRefresher } from './tree/nodeActions';
+import { findChatLanguageModelsFile } from './byok/chatLanguageModels';
 
 export function activate(context: vscode.ExtensionContext) {
+	// ─── Tree View ──────────────────────────────────────────────────────
+	const treeProvider = new TreeProvider(context.extensionPath);
+	const treeView = vscode.window.createTreeView('copilotAlternatives.main', {
+		treeDataProvider: treeProvider,
+		showCollapseAll: true,
+	});
+	context.subscriptions.push(treeView);
+
+	// Refresh BYOK section when providers change (after add/remove)
+	treeView.onDidChangeVisibility(() => {
+		if (treeView.visible) {
+			treeProvider.refresh();
+		}
+	});
+
+	// Watch chatLanguageModels.json for external changes
+	const jsonFileUri = findChatLanguageModelsFile();
+	if (jsonFileUri) {
+		const watcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(jsonFileUri.fsPath, '*'),
+			false, // ignoreCreate
+			false, // ignoreChange — we want changes
+			false  // ignoreDelete
+		);
+		watcher.onDidChange(() => treeProvider.refresh());
+		watcher.onDidCreate(() => treeProvider.refresh());
+		watcher.onDidDelete(() => treeProvider.refresh());
+		context.subscriptions.push(watcher);
+	}
+
+	// ─── Commands ───────────────────────────────────────────────────────
+	setExtensionPath(context.extensionPath);
+	setTreeRefresher(() => treeProvider.refresh());
+	registerNodeActions(context);
+	registerByokCommands(context);
+
+	// Command to open/focus the sidebar view
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.openSidebar', () => {
+			vscode.commands.executeCommand('workbench.view.extension.copilotAlternatives');
+		})
+	);
+
+	// Legacy webview directory (kept as fallback)
 	context.subscriptions.push(
 		vscode.commands.registerCommand('copilotAlternatives.open', () => {
 			openDirectory(context);
 		})
 	);
 }
+
+// ─── Legacy webview (kept as fallback) ──────────────────────────────────────
 
 function openDirectory(context: vscode.ExtensionContext) {
 	const panel = vscode.window.createWebviewPanel(
@@ -43,7 +93,6 @@ interface TableSection {
 
 function parseTableSections(md: string): TableSection[] {
 	const sections: TableSection[] = [];
-	// Split on ### headings that contain a table
 	const parts = md.split(/(?=^### )/gm);
 
 	for (const part of parts) {
@@ -67,9 +116,7 @@ function markdownTableToHtml(tableMd: string): string {
 	const lines = tableMd.split(/\r?\n/).filter(l => l.trim());
 	if (lines.length < 2) return '';
 
-	// Parse header
 	const headers = parseRow(lines[0]);
-	// Skip separator line (line 1)
 	const rows = lines.slice(2).map(parseRow);
 
 	let html = '<table><thead><tr>';
@@ -93,19 +140,14 @@ function parseRow(line: string): string[] {
 }
 
 function renderInlineMd(text: string): string {
-	// Links: [text](url)
 	let out = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1<\/a>');
-	// Bold
 	out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-	// Italic
 	out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-	// Inline code
 	out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
 	return out;
 }
 
 function getHtml(sections: TableSection[], rawReadme: string): string {
-	// Also extract the intro and choosing guide
 	const introMatch = rawReadme.match(/^# .+([\s\S]+?)(?=^## )/m);
 	const intro = introMatch ? renderInlineMd(introMatch[1].trim().split('\n').filter(l => !l.startsWith('The focus') && !l.startsWith('- AI-powered')).join('\n')) : '';
 
@@ -128,7 +170,6 @@ function getHtml(sections: TableSection[], rawReadme: string): string {
 	--border: var(--vscode-widget-border, #334155);
 	--card: var(--vscode-editorWidget-background, #282840);
 	--card-hover: var(--vscode-list-hoverBackground, #32325a);
-	--green: var(--vscode-terminal-ansiGreen, #22c55e);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -139,31 +180,27 @@ body {
 	font-size: 13px;
 	line-height: 1.5;
 }
-h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; background: linear-gradient(135deg, var(--accent), var(--accent-bg)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
-.subtitle { color: var(--dim); font-size: 14px; margin-bottom: 24px; }
-h2 { font-size: 18px; font-weight: 600; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--accent-bg); }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; color: var(--vscode-textLink-foreground); }
+.subtitle { color: var(--vscode-descriptionForeground); font-size: 14px; margin-bottom: 24px; }
+h2 { font-size: 18px; font-weight: 600; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--vscode-widget-border); }
 table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 12.5px; }
-th { text-align: left; padding: 8px 10px; background: var(--card); border: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
-td { padding: 7px 10px; border: 1px solid var(--border); vertical-align: top; }
-tr:hover td { background: var(--card-hover); }
-a { color: var(--accent); text-decoration: none; }
+th { text-align: left; padding: 8px 10px; background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border); font-weight: 600; white-space: nowrap; }
+td { padding: 7px 10px; border: 1px solid var(--vscode-widget-border); vertical-align: top; }
+tr:hover td { background: var(--vscode-list-hoverBackground); }
+a { color: var(--vscode-textLink-foreground); text-decoration: none; }
 a:hover { text-decoration: underline; }
-code { background: var(--card); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
-strong { font-weight: 600; }
-em { font-style: italic; }
-.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
+code { background: var(--vscode-editorWidget-background); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.toc { background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
 .toc h2 { margin-top: 0; border: none; padding: 0; }
 .toc ul { list-style: none; padding: 0; columns: 2; }
 .toc li { padding: 2px 0; }
-.toc a { font-size: 13px; }
-@media (max-width: 700px) { .toc ul { columns: 1; } table { font-size: 11px; } th, td { padding: 4px 6px; } }
-.note { background: var(--card); border-left: 3px solid var(--accent); padding: 10px 14px; margin: 10px 0; border-radius: 0 6px 6px 0; font-size: 12.5px; }
+@media (max-width: 700px) { .toc ul { columns: 1; } }
+.note { background: var(--vscode-editorWidget-background); border-left: 3px solid var(--vscode-textLink-foreground); padding: 10px 14px; margin: 10px 0; border-radius: 0 6px 6px 0; font-size: 12.5px; }
 </style>
 </head>
 <body>
 <h1>🧩 Copilot Alternatives</h1>
-<p class="subtitle">A curated directory of GitHub Copilot alternatives — pricing, models, and capabilities at a glance.</p>
+<p class="subtitle">A curated directory of GitHub Copilot alternatives.</p>
 
 <div class="toc"><h2>Contents</h2><ul>
 ${sections.map(s => `<li><a href="#${slug(s.title)}">${s.title}</a></li>`).join('\n')}

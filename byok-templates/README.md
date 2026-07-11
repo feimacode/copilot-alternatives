@@ -26,6 +26,18 @@ byok-templates/
 ├── clinepass.single.chatLanguageModels.json     # ClinePass single-key array
 ├── clinepass.multi.byok.json                   # ClinePass multi-key metadata
 ├── clinepass.multi.chatLanguageModels.json      # ClinePass multi-key array (3 groups)
+├── ali-coding-plan.cn.byok.json               # Alibaba Coding Plan (CN) metadata
+├── ali-coding-plan.cn.single.chatLanguageModels.json
+├── ali-coding-plan.cn.multi.chatLanguageModels.json
+├── ali-coding-plan.global.byok.json            # Alibaba Coding Plan (Global) metadata
+├── ali-coding-plan.global.single.chatLanguageModels.json
+├── ali-coding-plan.global.multi.chatLanguageModels.json
+├── ali-token-plan.cn.byok.json                # Alibaba Token Plan (CN) metadata
+├── ali-token-plan.cn.single.chatLanguageModels.json
+├── ali-token-plan.cn.multi.chatLanguageModels.json
+├── ali-token-plan.global.byok.json             # Alibaba Token Plan (Global) metadata
+├── ali-token-plan.global.single.chatLanguageModels.json
+├── ali-token-plan.global.multi.chatLanguageModels.json
 ├── feimacode.byok.json                          # Feima Code metadata
 ├── feimacode.chatLanguageModels.json            # Feima Code model array
 ├── deepseek.byok.json

@@ -1,0 +1,522 @@
+{
+	"version": "1.0.0",
+	"groups": [
+		{
+			"id": "coding-plans",
+			"name": "Coding Plans",
+			"icon": "symbol-constant",
+			"subgroups": [
+				{
+					"id": "ide-native",
+					"name": "IDE-Native Coding Plans",
+					"items": [
+						{ "id": "cursor-pro", "name": "Cursor Pro", "price": "$20/mo", "quota": "Usage-based allowance", "features": ["Agent mode", "frontier models (Claude, GPT, Gemini)", "MCP support", "cloud agents"], "url": "https://cursor.com/pricing" },
+						{ "id": "cursor-pro-plus", "name": "Cursor Pro+", "price": "$60/mo", "quota": "3x usage on all OpenAI, Claude, Gemini models", "features": ["Everything in Pro + higher quotas"], "url": "https://cursor.com/pricing" },
+						{ "id": "cursor-ultra", "name": "Cursor Ultra", "price": "$200/mo", "quota": "20x usage, priority access", "features": ["Enterprise features", "pooled usage"], "url": "https://cursor.com/pricing" },
+						{ "id": "devin-pro", "name": "Devin Pro", "price": "$20/mo", "quota": "Daily/weekly quota", "features": ["Devin Cloud agents", "full model access", "unlimited Tab completions"], "url": "https://devin.ai/pricing" },
+						{ "id": "devin-max", "name": "Devin Max", "price": "$200/mo", "quota": "Significantly higher", "features": ["Power user quotas", "all premium models"], "url": "https://devin.ai/pricing" },
+						{ "id": "devin-teams", "name": "Devin Teams", "price": "$80/mo + $40/user", "quota": "Shared quotas", "features": ["Unlimited team members", "collaboration", "centralized billing"], "url": "https://devin.ai/pricing" },
+						{ "id": "kiro-pro", "name": "Kiro Pro", "price": "$20/mo", "quota": "1,000 credits", "features": ["AWS's agentic IDE", "premium models", "pay-per-use overage ($0.04/credit)"], "url": "https://kiro.dev/pricing" },
+						{ "id": "kiro-pro-plus", "name": "Kiro Pro+", "price": "$40/mo", "quota": "2,000 credits", "features": ["Higher quota", "same premium model access"], "url": "https://kiro.dev/pricing" },
+						{ "id": "kiro-power", "name": "Kiro Power", "price": "$200/mo", "quota": "10,000 credits", "features": ["Maximum individual quota"], "url": "https://kiro.dev/pricing" },
+						{ "id": "amazon-q-developer-pro", "name": "Amazon Q Developer Pro", "price": "$19/mo", "quota": "Increased agentic requests", "features": ["Claude models", "IDE + CLI", "admin controls", "IP indemnity"], "url": "https://aws.amazon.com/q/developer/pricing/" },
+						{ "id": "zed-pro", "name": "Zed Pro", "price": "$10/mo", "quota": "$5 of tokens included", "features": ["Unlimited edit predictions", "usage-based beyond included"], "url": "https://zed.dev/pricing" },
+						{ "id": "trae-pro", "name": "Trae Pro", "price": "$10/mo", "quota": "$20 basic + bonus usage", "features": ["Unlimited autocomplete", "7-day free trial"], "url": "https://trae.ai/pricing" }
+					]
+				},
+				{
+					"id": "cli-native",
+					"name": "CLI-Native Coding Plans",
+					"items": [
+						{ "id": "codex-chatgpt-go", "name": "Codex (ChatGPT Go)", "price": "$8/mo", "quota": "More messages/uploads, longer memory", "features": ["GPT-5.5 Instant access", "may include ads"], "url": "https://chatgpt.com/codex/pricing/" },
+						{ "id": "codex-chatgpt-plus", "name": "Codex (ChatGPT Plus)", "price": "$20/mo", "quota": "30-150 local messages/5h, 10-60 cloud tasks/5h", "features": ["GPT-5.5 Thinking", "deep research", "projects", "tasks"], "url": "https://chatgpt.com/codex/pricing/" },
+						{ "id": "codex-chatgpt-pro", "name": "Codex (ChatGPT Pro)", "price": "From $100/mo", "quota": "5x-20x Plus usage, maximum Codex tasks", "features": ["GPT-5.5 Pro", "unlimited GPT-5.3", "maximum cloud tasks"], "url": "https://chatgpt.com/codex/pricing/" },
+						{ "id": "codex-business", "name": "Codex Business", "price": "Pay-as-you-go", "quota": "No fixed seat fee", "features": ["Multi-agent workflows", "worktrees", "cloud environments", "SAML SSO"], "url": "https://chatgpt.com/codex/pricing/" },
+						{ "id": "google-ai-plus", "name": "Google AI Plus", "price": "$4.99/mo", "quota": "2x higher usage than Free", "features": ["Video gen", "Daily Brief", "200 Flow credits", "400 GB storage", "Gemini in Gmail/Chrome"], "url": "https://geminicli.com/plans/" },
+						{ "id": "google-ai-pro", "name": "Google AI Pro", "price": "$19.99/mo", "quota": "Higher 3.1 Pro access, 1,000 AI credits/mo", "features": ["Gemini CLI", "Antigravity IDE", "Gemini Code Assist", "5 TB storage", "Jules coding agent"], "url": "https://geminicli.com/plans/" },
+						{ "id": "google-ai-ultra", "name": "Google AI Ultra", "price": "From $99.99/mo", "quota": "5x-20x higher usage vs Pro", "features": ["Deep Think", "Gemini Spark", "Jules", "Antigravity", "Project Genie", "YouTube Premium", "20-30 TB storage"], "url": "https://geminicli.com/plans/" },
+						{ "id": "claude-pro", "name": "Claude Pro", "price": "$20/mo", "quota": "Claude Code CLI access", "features": ["Claude Opus 4.7", "Sonnet 4.6", "strong reasoning", "1M context"], "url": "https://claude.ai" },
+						{ "id": "claude-pro-max-5x", "name": "Claude Pro Max 5X", "price": "$100/mo", "quota": "5x Pro usage", "features": ["Everything in Pro", "expanded limits"], "url": "https://claude.ai" },
+						{ "id": "claude-pro-max-20x", "name": "Claude Pro Max 20X", "price": "$200/mo", "quota": "20x Pro usage", "features": ["Everything in Pro", "maximum limits"], "url": "https://claude.ai" },
+						{ "id": "xai-supergrok-lite", "name": "xAI SuperGrok Lite", "price": "$10/mo", "quota": "Limited web + X search, limited video gen", "features": ["Grok 4", "Imagine image gen"], "url": "https://x.ai/grok" },
+						{ "id": "xai-supergrok", "name": "xAI SuperGrok", "price": "$30/mo", "quota": "1K text prompts/mo, 128K context", "features": ["Full Grok 4 & 4.1", "DeepSearch", "Imagine", "Expert web search"], "url": "https://x.ai/grok" },
+						{ "id": "xai-supergrok-heavy", "name": "xAI SuperGrok Heavy", "price": "$300/mo", "quota": "256K-428K context, unlimited text", "features": ["Grok 4 Heavy preview", "max compute priority"], "url": "https://x.ai/grok" },
+						{ "id": "mistral-ai-free", "name": "Mistral AI Free", "price": "$0/mo", "quota": "500 memories, 40+ connectors", "features": ["Vibe", "SOTA models", "image gen", "projects"], "url": "https://mistral.ai" },
+						{ "id": "mistral-ai-pro", "name": "Mistral AI Pro", "price": "$14.99/mo (Students $5.99/mo)", "quota": "Higher limits, 15 GB storage, 1,000 projects", "features": ["Mistral Vibe coding"], "url": "https://mistral.ai" },
+						{ "id": "mistral-ai-team", "name": "Mistral AI Team", "price": "$24.99/mo per user", "quota": "30 GB storage/user", "features": ["Domain verify", "data export", "collaboration"], "url": "https://mistral.ai" },
+						{ "id": "stepfun-flash-mini", "name": "StepFun Flash Mini", "price": "$6.99/mo", "quota": "100 prompts (~1,500 req)/5h", "features": ["2x OpenAI Go usage", "multi-device login", "concurrent agents"], "url": "https://stepfun.com" },
+						{ "id": "stepfun-flash-plus", "name": "StepFun Flash Plus", "price": "$9.99/mo", "quota": "400 prompts (~6,000 req)/5h", "features": ["Priority API access", "priority support", "4x Flash Mini"], "url": "https://stepfun.com" },
+						{ "id": "stepfun-flash-pro", "name": "StepFun Flash Pro", "price": "$29/mo", "quota": "1,500 prompts (~22,500 req)/5h", "features": ["Priority API access", "priority support", "15x Flash Mini"], "url": "https://stepfun.com" },
+						{ "id": "stepfun-flash-max", "name": "StepFun Flash Max", "price": "$99/mo", "quota": "5,000 prompts (~75,000 req)/5h", "features": ["Priority API access", "priority support", "50x Flash Mini"], "url": "https://stepfun.com" }
+					]
+				},
+				{
+					"id": "multi-model-byok-friendly",
+					"name": "Multi-Model Coding Plans (BYOK-Friendly)",
+					"items": [
+						{ "id": "xiaomi-mimo-lite", "name": "Xiaomi MiMo Lite", "price": "$6/mo", "quota": "4.1B credits", "features": ["OpenClaw", "Claude Code", "OpenCode", "KiloCode", "20% off off-peak (9AM-5PM PDT)"], "models": ["MiMo-V2.5-Pro + 7 other models"], "url": "https://mimo.xiaomi.com" },
+						{ "id": "xiaomi-mimo-standard", "name": "Xiaomi MiMo Standard", "price": "$16/mo", "quota": "11B credits (2.7x Lite)", "features": ["20% off off-peak", "free TTS"], "models": ["Same as Lite"], "url": "https://mimo.xiaomi.com" },
+						{ "id": "xiaomi-mimo-pro", "name": "Xiaomi MiMo Pro", "price": "$50/mo", "quota": "38B credits (9.3x Lite)", "features": ["20% off off-peak", "free TTS"], "url": "https://mimo.xiaomi.com" },
+						{ "id": "xiaomi-mimo-max", "name": "Xiaomi MiMo Max", "price": "$100/mo", "quota": "82B credits (20x Lite)", "features": ["20% off off-peak", "free TTS"], "url": "https://mimo.xiaomi.com" },
+						{ "id": "byteplus-modelark-lite", "name": "BytePlus ModelArk Lite", "price": "$10/mo ($30/quarter)", "quota": "~3x Claude Pro equivalent", "features": ["Claude Code", "Cursor", "Roo Code support", "flexible model selection"], "models": ["DeepSeek-V4", "GLM-5.1", "Kimi-K2.5", "GPT-OSS", "Dola-Seed-2.0-pro"], "url": "https://www.byteplus.com/en/activity/codingplan" },
+						{ "id": "byteplus-modelark-pro", "name": "BytePlus ModelArk Pro", "price": "$50/mo ($150/quarter)", "quota": "5x Lite usage", "features": ["ArkClaw AI companion (Lark integration)", "large-scale programming"], "url": "https://www.byteplus.com/en/activity/codingplan" },
+						{ "id": "alibaba-coding-plan-pro", "name": "Alibaba Coding Plan Pro", "price": "$50/mo", "quota": "6,000 req/5h, 45,000 req/week, 90,000 req/mo", "features": ["Claude Code", "Cursor", "OpenCode", "Cline support", "limited slots, daily restock"], "models": ["Qwen3.7-plus", "Kimi-K2.5", "GLM-5", "MiniMax-M2.5"], "url": "https://www.alibabacloud.com/help/en/model-studio/coding-plan" },
+						{ "id": "z-ai-glm-lite", "name": "Z.ai GLM Lite", "price": "$18/mo ($16.2/mo quarterly)", "quota": "~3x Claude Pro equivalent", "features": ["20+ coding tools support", "MCP tools included"], "models": ["GLM-5.1 + other flagship models"], "url": "https://z.ai/subscribe" },
+						{ "id": "z-ai-glm-pro", "name": "Z.ai GLM Pro", "price": "$72/mo ($64.8/mo quarterly)", "quota": "5x Lite usage", "features": ["Priority model access", "faster generation", "curated MCP tools"], "url": "https://z.ai/subscribe" },
+						{ "id": "z-ai-glm-max", "name": "Z.ai GLM Max", "price": "$160/mo ($144/mo quarterly)", "quota": "20x Lite usage", "features": ["First access to new features", "dedicated peak-time resources"], "url": "https://z.ai/subscribe" },
+						{ "id": "minimax-token-plan-lite", "name": "MiniMax Token Plan Lite", "price": "$20/mo", "quota": "3-4 agents/5h window", "features": ["Agent workflows", "multimodal support"], "models": ["MiniMax-M3", "M2.7", "all platform models"], "url": "https://platform.minimax.io/docs/guides/pricing-token-plan" },
+						{ "id": "minimax-token-plan-standard", "name": "MiniMax Token Plan Standard", "price": "$50/mo", "quota": "4-5 agents/5h window", "features": ["Daily coding with agents", "multimodal work"], "url": "https://platform.minimax.io/docs/guides/pricing-token-plan" },
+						{ "id": "minimax-token-plan-pro", "name": "MiniMax Token Plan Pro", "price": "$120/mo", "quota": "6-7 agents/5h window", "features": ["Heavy agent workflows", "extended sessions"], "url": "https://platform.minimax.io/docs/guides/pricing-token-plan" },
+						{ "id": "feima-copilot-starter", "name": "Feima Copilot Starter Pack", "price": "$10 (pay-as-you-go)", "quota": "500 weighted requests", "features": ["VS Code extension", "weighted request billing", "1M context on select models"], "models": ["Qwen3 Flash", "Qwen3 Coder Plus", "Qwen3 Max", "Qwen3.5 Plus", "MiniMax M2.5", "Kimi K2.5", "+2 more"], "url": "https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms" },
+						{ "id": "feima-copilot-value", "name": "Feima Copilot Value Pack", "price": "$20 (pay-as-you-go)", "quota": "1100 weighted requests (10% bonus)", "features": ["Higher quota", "all models available"], "url": "https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms" },
+						{ "id": "feima-copilot-pro", "name": "Feima Copilot Pro Pack", "price": "$50 (pay-as-you-go)", "quota": "3000 weighted requests (20% bonus)", "features": ["Maximum quota", "premium model access"], "url": "https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms" },
+						{ "id": "kimi-moderato", "name": "Kimi Moderato", "price": "$15/mo (annual) / $19/mo (monthly)", "quota": "1x Kimi Code credits", "features": ["Kimi Code access", "agent multi-tasking", "deep research"], "models": ["Kimi-K2.5"], "url": "https://www.kimi.com/membership/pricing" },
+						{ "id": "kimi-allegretto", "name": "Kimi Allegretto", "price": "$31/mo (annual) / $39/mo (monthly)", "quota": "5x Kimi Code credits", "features": ["Kimi Claw exclusive", "2x agent credits"], "url": "https://www.kimi.com/membership/pricing" },
+						{ "id": "kimi-allegro", "name": "Kimi Allegro", "price": "$79/mo (annual) / $99/mo (monthly)", "quota": "15x Kimi Code credits", "features": ["5x agent credits", "Agent Swarm", "Kimi Work scheduled tasks"], "url": "https://www.kimi.com/membership/pricing" },
+						{ "id": "kimi-vivace", "name": "Kimi Vivace", "price": "$159/mo (annual) / $199/mo (monthly)", "quota": "30x Kimi Code credits", "features": ["10x agent credits", "maximum concurrent tasks"], "url": "https://www.kimi.com/membership/pricing" }
+					]
+				},
+				{
+					"id": "aggregators-plugins",
+					"name": "Aggregators & Plugins",
+					"items": [
+						{ "id": "nous-portal-free", "name": "Nous Portal Free", "price": "$0/mo", "quota": "$0 monthly credits", "features": ["Free models only"], "url": "https://nousresearch.com" },
+						{ "id": "nous-portal-plus", "name": "Nous Portal Plus", "price": "$20/mo", "quota": "$22 monthly credits, $10 rollover cap", "features": ["300+ models", "hosted tool usage"], "url": "https://nousresearch.com" },
+						{ "id": "nous-portal-super", "name": "Nous Portal Super", "price": "$100/mo", "quota": "$110 monthly credits, $50 rollover cap", "features": ["300+ models", "hosted tool usage"], "url": "https://nousresearch.com" },
+						{ "id": "nous-portal-ultra", "name": "Nous Portal Ultra", "price": "$200/mo", "quota": "$220 monthly credits, $100 rollover cap", "features": ["300+ models", "hosted tool usage"], "url": "https://nousresearch.com" },
+						{ "id": "opencode-go", "name": "OpenCode Go", "price": "$5 first mo, then $10/mo", "quota": "Multi-model usage-based", "features": ["Multi-model (GLM, Qwen, Kimi, MiMo, DeepSeek, MiniMax)", "OpenCode's native subscription"], "url": "https://opencode.ai" },
+						{ "id": "clinepass", "name": "ClinePass", "price": "$4.99 first mo, then $9.99/mo", "quota": "2-5x standard API rate limits", "features": ["Built for Cline IDE & CLI", "also usable with other coding agents via API key"], "models": ["GLM 5.2", "Kimi K2.7 Code", "Kimi K2.6", "DeepSeek V4 Pro", "DeepSeek V4 Flash", "MiniMax M3", "MiMo V2.5 Pro", "MiMo V2.5", "Qwen3.7-Max", "Qwen3.7-Plus"], "url": "https://cline.bot/cline-pass" },
+						{ "id": "command-code-go", "name": "Command Code Go", "price": "$1/mo", "quota": "$10 credits, ~15K requests", "features": ["Limited analytics"], "url": "https://commandcode.dev" },
+						{ "id": "command-code-pro", "name": "Command Code Pro", "price": "$15/mo", "quota": "$30 credits, ~25K requests", "features": ["Usage analytics"], "url": "https://commandcode.dev" },
+						{ "id": "command-code-max", "name": "Command Code Max", "price": "$100/mo", "quota": "$150 credits, ~110K requests", "features": ["Higher rate limits", "priority support"], "url": "https://commandcode.dev" },
+						{ "id": "command-code-ultra", "name": "Command Code Ultra", "price": "$200/mo", "quota": "$300 credits, ~200K requests", "features": ["Highest rate limits", "priority support"], "url": "https://commandcode.dev" },
+						{ "id": "venice-free", "name": "Venice Free", "price": "$0/mo", "quota": "10 text + 15 image prompts/day", "features": ["Base AI models"], "url": "https://venice.ai" },
+						{ "id": "venice-pro", "name": "Venice Pro", "price": "$18/mo", "quota": "Unlimited text, 1,000 images/day, 100 credits/mo", "features": ["All models", "video/music/API credits"], "url": "https://venice.ai" },
+						{ "id": "venice-plus", "name": "Venice Plus", "price": "$68/mo", "quota": "7,500 credits/mo, 2-month credit banking", "features": ["All models", "higher image limits"], "url": "https://venice.ai" },
+						{ "id": "venice-max", "name": "Venice Max", "price": "$200/mo", "quota": "22,500 credits/mo, 3-month credit banking", "features": ["All models", "highest limits"], "url": "https://venice.ai" },
+						{ "id": "fireworks-fire-pass", "name": "Fireworks Fire Pass", "price": "$49/mo", "quota": "Personal use only", "features": ["Kimi K2.6 Turbo"], "url": "https://fireworks.ai" },
+						{ "id": "kilo-pass-starter", "name": "Kilo Pass Starter", "price": "$19/mo", "quota": "Up to $26.60/mo in credits", "features": ["Multi-model"], "url": "https://kilocode.ai" },
+						{ "id": "kilo-pass-pro", "name": "Kilo Pass Pro", "price": "$49/mo", "quota": "Up to $68.60/mo in credits", "features": ["Multi-model"], "url": "https://kilocode.ai" },
+						{ "id": "kilo-pass-expert", "name": "Kilo Pass Expert", "price": "$199/mo", "quota": "Up to $278.60/mo in credits", "features": ["Multi-model"], "url": "https://kilocode.ai" },
+						{ "id": "routing-sh-free", "name": "Routing.sh Free", "price": "$0/mo", "quota": "100 req/5h", "features": ["DeepSeek-V3.2", "Qwen3.5", "Basic support"], "url": "https://routing.sh" },
+						{ "id": "routing-sh-lite", "name": "Routing.sh Lite", "price": "$10/mo", "quota": "150 req/5h", "features": ["Kimi K2.6", "MiniMax M2.7", "Email support"], "url": "https://routing.sh" },
+						{ "id": "routing-sh-premium", "name": "Routing.sh Premium", "price": "$20/mo", "quota": "300 req/5h", "features": ["Preview models", "Priority TPS", "priority support"], "url": "https://routing.sh" },
+						{ "id": "routing-sh-max", "name": "Routing.sh Max", "price": "$50/mo", "quota": "600 req/5h", "features": ["Full catalog", "first access to preview models", "dedicated support"], "url": "https://routing.sh" },
+						{ "id": "llm-gateway-lite", "name": "LLM Gateway Lite", "price": "$29/mo", "quota": "$87/mo in model usage (3x value)", "features": ["200+ models", "Casual hobby work"], "url": "https://llmgateway.ai" },
+						{ "id": "llm-gateway-pro", "name": "LLM Gateway Pro", "price": "$79/mo", "quota": "$237/mo in model usage (3x value)", "features": ["200+ models", "Full-day agent runs"], "url": "https://llmgateway.ai" },
+						{ "id": "llm-gateway-max", "name": "LLM Gateway Max", "price": "$179/mo", "quota": "$537/mo in model usage (3x value)", "features": ["200+ models", "Non-stop heavy sessions"], "url": "https://llmgateway.ai" },
+						{ "id": "hugging-face-pro", "name": "Hugging Face Pro", "price": "$9/mo", "quota": "20x inference usage", "features": ["All HF models"], "url": "https://huggingface.co/pricing" },
+						{ "id": "baidu-cloud-lite", "name": "Baidu Cloud Lite", "price": "¥40/mo (~$5.50)", "quota": "18,000 req/mo", "features": ["Multi-model"], "url": "https://cloud.baidu.com" },
+						{ "id": "baidu-cloud-pro", "name": "Baidu Cloud Pro", "price": "¥200/mo (~$27.50)", "quota": "90,000 req/mo", "features": ["Multi-model"], "url": "https://cloud.baidu.com" },
+						{ "id": "ollama-cloud-pro", "name": "Ollama Cloud Pro", "price": "$20/mo", "quota": "50x Starter usage", "features": ["All Ollama models"], "url": "https://ollama.com" },
+						{ "id": "ollama-cloud-max", "name": "Ollama Cloud Max", "price": "$100/mo", "quota": "5x Pro usage", "features": ["All Ollama models"], "url": "https://ollama.com" },
+						{ "id": "cerebras-pro", "name": "Cerebras Pro", "price": "$50/mo", "quota": "24M tokens/day", "features": ["Cerebras models"], "url": "https://cerebras.ai" },
+						{ "id": "cerebras-max", "name": "Cerebras Max", "price": "$200/mo", "quota": "120M tokens/day", "features": ["Cerebras models"], "url": "https://cerebras.ai" },
+						{ "id": "ai-router-unlimited", "name": "AI Router Unlimited", "price": "CHF 39/mo", "quota": "Unlimited", "features": ["Swiss-hosted", "no prompt logging", "3 parallel req", "240 req/min", "10M tok/min fair-use"], "models": ["Qwen3.6", "Gemma-4"], "url": "https://airouter.io" }
+					]
+				},
+				{
+					"id": "free-coding-options",
+					"name": "Free Coding Options",
+					"items": [
+						{ "id": "feima-copilot-free", "name": "Feima Copilot", "price": "Free", "quota": "700 weighted requests (1st month), 300/month thereafter", "features": ["Weighted request-based billing", "multiple model tiers"], "url": "https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms" },
+						{ "id": "codex-free", "name": "Codex Free", "price": "Free", "quota": "Limited trial access", "features": ["Test Codex capabilities", "GPT-5.5 limited"], "url": "https://chatgpt.com/codex/pricing/" },
+						{ "id": "google-ai-free", "name": "Google AI Free", "price": "Free", "quota": "50 AI credits/day (Flow/Whisk), 15 GB storage", "features": ["Gemini app with Flash", "varying Pro access", "image gen/editing", "Deep Research", "Gemini Live", "Canvas", "Gems"], "url": "https://geminicli.com/plans/" },
+						{ "id": "mistral-ai-free-tier", "name": "Mistral AI Free", "price": "Free", "quota": "500 memories, 40+ connectors", "features": ["Vibe", "SOTA models", "image gen", "projects"], "url": "https://mistral.ai" },
+						{ "id": "amazon-q-free", "name": "Amazon Q Developer Free", "price": "Free", "quota": "50 agentic requests/month", "features": ["Claude models", "IDE + CLI access"], "url": "https://aws.amazon.com/q/developer/" },
+						{ "id": "kiro-free", "name": "Kiro Free", "price": "Free", "quota": "50 credits/month", "features": ["Open-weight models + Claude Sonnet 4.5"], "url": "https://kiro.dev/pricing" },
+						{ "id": "devin-free", "name": "Devin Free", "price": "Free", "quota": "Light quota", "features": ["Limited models", "unlimited Tab completions"], "url": "https://devin.ai/pricing" },
+						{ "id": "cursor-hobby", "name": "Cursor Hobby", "price": "Free", "quota": "Limited Agent/Tab", "features": ["No credit card required"], "url": "https://cursor.com/pricing" },
+						{ "id": "nvidia-nim", "name": "NVIDIA NIM", "price": "Free", "quota": "Up to 40 rpm", "features": ["DeepSeek V4", "GLM", "MiniMax models", "rate-limited, no stability guarantee"], "url": "https://build.nvidia.com" },
+						{ "id": "ollama-free", "name": "Ollama", "price": "Free", "quota": "Unlimited local", "features": ["Run open-weight models locally (llama.cpp)"], "url": "https://ollama.com" }
+					]
+				}
+			]
+		},
+		{
+			"id": "ides-editors",
+			"name": "IDEs & Editors",
+			"icon": "server",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "IDEs & Editors",
+					"description": "Full AI-native development environments",
+					"items": [
+						{ "id": "cursor", "name": "Cursor", "features": ["Agent mode", "multi-file edits", "BYOK", "codebase indexing"], "extras": {"Based On": "VS Code fork", "Free Tier": "Yes (limited)"}, "url": "https://cursor.sh" },
+						{ "id": "antigravity", "name": "Antigravity", "features": ["Google's agent-first IDE", "Gemini 3.1 Pro + multi-model", "parallel multi-agent manager view", "artifact-based task verification"], "extras": {"Based On": "VS Code fork (possibly Windsurf fork)", "Free Tier": "Yes (free preview)"}, "url": "https://antigravity.google" },
+						{ "id": "kiro", "name": "Kiro", "features": ["AWS's agentic IDE", "spec-driven development", "agent hooks", "MCP support"], "extras": {"Based On": "VS Code fork", "Free Tier": "Yes (preview)"}, "url": "https://kiro.dev" },
+						{ "id": "windsurf-devin-desktop", "name": "Windsurf/Devin Desktop", "features": ["Cascade agent", "Codeium models + BYOK"], "extras": {"Based On": "VS Code fork", "Free Tier": "Yes"}, "url": "https://codeium.com/windsurf" },
+						{ "id": "void", "name": "Void", "features": ["Open-source Cursor alternative", "BYOK", "local models"], "extras": {"Based On": "VS Code fork", "Free Tier": "Yes (OSS)"}, "url": "https://voideditor.com" },
+						{ "id": "zed", "name": "Zed", "features": ["Built-in AI panel", "fast performance", "multi-model"], "extras": {"Based On": "Native (Rust)", "Free Tier": "Yes"}, "url": "https://zed.dev" },
+						{ "id": "pearai", "name": "PearAI", "features": ["Open-source", "BYOK", "Claude/GPT/local model support"], "extras": {"Based On": "VS Code fork", "Free Tier": "Yes"}, "url": "https://trypear.ai" }
+					]
+				}
+			]
+		},
+		{
+			"id": "cli-agents",
+			"name": "CLI Agents",
+			"icon": "terminal",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "CLI Agents",
+					"description": "Terminal-based and agentic coding tools",
+					"items": [
+						{ "id": "claude-code", "name": "Claude Code", "features": ["Anthropic's official CLI agent", "strong agentic reasoning"], "extras": {"License": "Proprietary", "Free Tier": "No (API usage)"}, "url": "https://claude.ai/code" },
+						{ "id": "opencode", "name": "OpenCode", "features": ["170k+ GitHub stars", "LSP-enabled", "multi-session", "share links", "desktop app available", "75+ LLM providers"], "extras": {"License": "MIT", "Free Tier": "Yes (open source)"}, "url": "https://opencode.ai" },
+						{ "id": "cline", "name": "Cline", "features": ["62.7k+ GitHub stars", "multi-agent teams", "scheduled agents", "MCP marketplace", "Slack/Telegram/Discord connectors"], "extras": {"License": "Apache 2.0", "Free Tier": "Yes (open source)"}, "url": "https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" },
+						{ "id": "aider", "name": "Aider", "features": ["Git-aware", "multi-file edits", "supports many models"], "extras": {"License": "Apache 2.0", "Free Tier": "Yes (BYOK)"}, "url": "https://aider.chat" },
+						{ "id": "openhands", "name": "OpenHands", "features": ["Formerly OpenDevin", "browser + terminal agent"], "extras": {"License": "MIT", "Free Tier": "Yes (BYOK)"}, "url": "https://github.com/All-Hands-AI/OpenHands" },
+						{ "id": "gemini-cli", "name": "Gemini CLI", "features": ["Google's official CLI agent", "1M token context"], "extras": {"License": "Apache 2.0", "Free Tier": "Yes (free quota)"}, "url": "https://github.com/google-gemini/gemini-cli" },
+						{ "id": "codex-cli", "name": "Codex CLI", "features": ["OpenAI's open-source CLI agent"], "extras": {"License": "Apache 2.0", "Free Tier": "No (API usage)"}, "url": "https://github.com/openai/codex" },
+						{ "id": "github-copilot-cli", "name": "GitHub Copilot CLI", "features": ["GitHub's CLI agent with BYOK support for custom models"], "extras": {"License": "Proprietary", "Free Tier": "Yes (BYOK)"}, "url": "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models" },
+						{ "id": "amazon-q-cli", "name": "Amazon Q Developer CLI", "features": ["AWS-integrated", "free for individual use"], "extras": {"License": "Proprietary", "Free Tier": "Yes"}, "url": "https://aws.amazon.com/q/developer/" },
+						{ "id": "goose", "name": "Goose", "features": ["Block's open-source autonomous dev agent"], "extras": {"License": "Apache 2.0", "Free Tier": "Yes (BYOK)"}, "url": "https://github.com/block/goose" },
+						{ "id": "amp", "name": "Amp", "features": ["Sourcegraph's terminal-first agent"], "extras": {"License": "Proprietary", "Free Tier": "Yes (beta)"}, "url": "https://ampcode.com" }
+					]
+				}
+			]
+		},
+		{
+			"id": "extensions-plugins",
+			"name": "Extensions & Plugins",
+			"icon": "extensions",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "Extensions & Plugins",
+					"description": "AI coding assistants delivered as extensions for existing editors",
+					"items": [
+						{ "id": "feima-copilot-ext", "name": "Feima Copilot", "features": ["Weighted request-based billing", "multiple model tiers (Qwen, MiniMax, Kimi)", "1M context on select models"], "extras": {"Editors": "VS Code", "Free Tier": "Yes (700 weighted requests 1st mo, 300/mo thereafter)", "vscodeExtensionId": "feima.copilot-more-llms"}, "url": "https://marketplace.visualstudio.com/items?itemName=feima.copilot-more-llms" },
+						{ "id": "cline-ext", "name": "Cline", "features": ["Plan/Act modes", "multi-agent teams", "MCP servers", ".clinerules for project-specific guidance"], "extras": {"Editors": "VS Code, JetBrains", "Free Tier": "Yes (open source)", "vscodeExtensionId": "saoudrizwan.claude-dev"}, "url": "https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" },
+						{ "id": "codeium", "name": "Codeium", "features": ["Fast autocomplete", "chat", "free for individuals"], "extras": {"Editors": "VS Code, JetBrains, Neovim, + more", "Free Tier": "Yes (generous)", "vscodeExtensionId": "codeium.codeium"}, "url": "https://marketplace.visualstudio.com/items?itemName=codeium.codeium" },
+						{ "id": "continue", "name": "Continue", "features": ["Open-source", "BYOK", "local model support"], "extras": {"Editors": "VS Code, JetBrains", "Free Tier": "Yes (OSS)", "vscodeExtensionId": "continue.continue"}, "url": "https://marketplace.visualstudio.com/items?itemName=continue.continue" },
+						{ "id": "tabnine", "name": "Tabnine", "features": ["Privacy-focused", "local inference option"], "extras": {"Editors": "VS Code, JetBrains, + more", "Free Tier": "Yes (limited)", "vscodeExtensionId": "tabnine.tabnine-vscode"}, "url": "https://marketplace.visualstudio.com/items?itemName=tabnine.tabnine-vscode" },
+						{ "id": "amazon-q-ext", "name": "Amazon Q Developer", "features": ["Free tier", "AWS integration", "security scanning"], "extras": {"Editors": "VS Code, JetBrains", "Free Tier": "Yes", "vscodeExtensionId": "amazonwebservices.amazon-q-vscode"}, "url": "https://marketplace.visualstudio.com/items?itemName=amazonwebservices.amazon-q-vscode" },
+						{ "id": "gemini-code-assist", "name": "Google Gemini Code Assist", "features": ["Gemini models", "GCP integration"], "extras": {"Editors": "VS Code, JetBrains", "Free Tier": "Yes (free tier)", "vscodeExtensionId": "google.geminicodeassist"}, "url": "https://marketplace.visualstudio.com/items?itemName=google.geminicodeassist" },
+						{ "id": "supermaven", "name": "Supermaven", "features": ["Very fast autocomplete", "1M token context"], "extras": {"Editors": "VS Code, JetBrains, Neovim", "Free Tier": "Yes", "vscodeExtensionId": "supermaven.supermaven"}, "url": "https://marketplace.visualstudio.com/items?itemName=supermaven.supermaven" },
+						{ "id": "cody", "name": "Cody", "features": ["Sourcegraph-powered codebase context"], "extras": {"Editors": "VS Code, JetBrains", "Free Tier": "Yes", "vscodeExtensionId": "sourcegraph.cody-ai"}, "url": "https://marketplace.visualstudio.com/items?itemName=sourcegraph.cody-ai" },
+						{ "id": "pieces", "name": "Pieces for Developers", "features": ["Snippet management + AI", "works offline"], "extras": {"Editors": "VS Code, JetBrains, + more", "Free Tier": "Yes"} },
+						{ "id": "avante-nvim", "name": "Avante.nvim", "features": ["Cursor-like experience in Neovim", "BYOK"], "extras": {"Editors": "Neovim", "Free Tier": "Yes (OSS)"}, "url": "https://github.com/yetone/avante.nvim" }
+					]
+				}
+			]
+		},
+		{
+			"id": "byok-solutions",
+			"name": "BYOK Solutions",
+			"icon": "key",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "BYOK Solutions",
+					"description": "Bring-Your-Own-Key tools that use API keys you supply",
+					"items": [
+						{ "id": "continue-byok", "name": "Continue", "features": ["Anthropic, OpenAI, Gemini, Ollama, any OpenAI-compatible endpoint"], "extras": {"Type": "Extension"}, "url": "https://marketplace.visualstudio.com/items?itemName=continue.continue" },
+						{ "id": "aider-byok", "name": "Aider", "features": ["Anthropic, OpenAI, Gemini, Groq, Ollama, DeepSeek, + more"], "extras": {"Type": "CLI Agent"}, "url": "https://aider.chat" },
+						{ "id": "cline-byok", "name": "Cline", "features": ["Anthropic, OpenAI, Google, OpenRouter, AWS Bedrock, Azure/GCP Vertex, Ollama, any OpenAI-compatible API"], "extras": {"Type": "CLI Agent / Extension"}, "url": "https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" },
+						{ "id": "cursor-byok", "name": "Cursor", "features": ["Anthropic, OpenAI, Gemini (via API key mode)"], "extras": {"Type": "IDE"}, "url": "https://cursor.sh" },
+						{ "id": "github-copilot-cli-byok", "name": "GitHub Copilot CLI", "features": ["Anthropic, OpenAI, Google, Azure OpenAI, any OpenAI-compatible endpoint"], "extras": {"Type": "CLI Agent"}, "url": "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models" },
+						{ "id": "void-byok", "name": "Void", "features": ["Any OpenAI-compatible endpoint", "Ollama"], "extras": {"Type": "IDE"}, "url": "https://voideditor.com" },
+						{ "id": "avante-nvim-byok", "name": "Avante.nvim", "features": ["Anthropic, OpenAI, Gemini, Groq, Ollama"], "extras": {"Type": "Neovim extension"}, "url": "https://github.com/yetone/avante.nvim" },
+						{ "id": "jan", "name": "Jan", "features": ["Local models (llama.cpp)", "remote API endpoints"], "extras": {"Type": "Desktop app"}, "url": "https://jan.ai" },
+						{ "id": "openhands-byok", "name": "OpenHands", "features": ["Anthropic, OpenAI, Gemini, Ollama, LiteLLM-compatible"], "extras": {"Type": "CLI Agent"}, "url": "https://github.com/All-Hands-AI/OpenHands" }
+					]
+				}
+			]
+		},
+		{
+			"id": "self-hosted",
+			"name": "Self-Hosted Platforms",
+			"icon": "vm",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "Self-Hosted Platforms",
+					"description": "On-premise and self-hosted options",
+					"items": [
+						{ "id": "tabby", "name": "Tabby", "features": ["Self-hosted code completion server", "VS Code + JetBrains clients"], "extras": {"License": "Apache 2.0", "Deployment": "Docker / Kubernetes"}, "url": "https://tabbyml.com" },
+						{ "id": "ollama-self", "name": "Ollama", "features": ["Run LLMs locally", "OpenAI-compatible API", "used by many tools"], "extras": {"License": "MIT", "Deployment": "Local binary"}, "url": "https://ollama.com" },
+						{ "id": "lm-studio", "name": "LM Studio", "features": ["GUI for local models", "OpenAI-compatible server"], "extras": {"License": "Proprietary (free)", "Deployment": "Local desktop app"}, "url": "https://lmstudio.ai" },
+						{ "id": "localai", "name": "LocalAI", "features": ["Drop-in OpenAI API replacement", "runs local models"], "extras": {"License": "MIT", "Deployment": "Docker"}, "url": "https://localai.io" },
+						{ "id": "continue-ollama", "name": "Continue + Ollama", "features": ["VS Code/JetBrains extension + local model backend"], "extras": {"License": "Apache 2.0", "Deployment": "Local"}, "url": "https://continue.dev" },
+						{ "id": "codeium-enterprise", "name": "Codeium Enterprise", "features": ["Enterprise self-hosted deployment of Codeium"], "extras": {"License": "Proprietary", "Deployment": "On-prem / VPC"}, "url": "https://codeium.com/enterprise" },
+						{ "id": "gitea", "name": "Gitea + Copilot-like backend", "features": ["Gitea has LSP + AI integrations for self-hosted git workflows"], "extras": {"License": "MIT", "Deployment": "Self-hosted"}, "url": "https://gitea.com" }
+					]
+				}
+			]
+		},
+		{
+			"id": "open-source",
+			"name": "Open-Source Projects",
+			"icon": "github",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "Open-Source Projects",
+					"description": "Community-maintained tools with open licenses",
+					"items": [
+						{ "id": "opencode-oss", "name": "OpenCode", "features": ["License: MIT", "Stars: 170k+", "Language: TypeScript"], "url": "https://github.com/anomalyco/opencode" },
+						{ "id": "ollama-oss", "name": "Ollama", "features": ["License: MIT", "Stars: 100k+", "Language: Go"], "url": "https://github.com/ollama/ollama" },
+						{ "id": "cline-oss", "name": "Cline", "features": ["License: Apache 2.0", "Stars: 62.7k+", "Language: TypeScript"], "url": "https://github.com/cline/cline" },
+						{ "id": "openhands-oss", "name": "OpenHands", "features": ["License: MIT", "Stars: 40k+", "Language: Python"], "url": "https://github.com/All-Hands-AI/OpenHands" },
+						{ "id": "tabby-oss", "name": "Tabby", "features": ["License: Apache 2.0", "Stars: 22k+", "Language: Rust"], "url": "https://github.com/TabbyML/tabby" },
+						{ "id": "aider-oss", "name": "Aider", "features": ["License: Apache 2.0", "Stars: 25k+", "Language: Python"], "url": "https://github.com/paul-gauthier/aider" },
+						{ "id": "continue-oss", "name": "Continue", "features": ["License: Apache 2.0", "Stars: 20k+", "Language: TypeScript"], "url": "https://github.com/continuedev/continue" },
+						{ "id": "localai-oss", "name": "LocalAI", "features": ["License: MIT", "Stars: 25k+", "Language: Go"], "url": "https://github.com/mudler/LocalAI" },
+						{ "id": "goose-oss", "name": "Goose", "features": ["License: Apache 2.0", "Stars: 12k+", "Language: Rust"], "url": "https://github.com/block/goose" },
+						{ "id": "avante-nvim-oss", "name": "Avante.nvim", "features": ["License: Apache 2.0", "Stars: 10k+", "Language: Lua"], "url": "https://github.com/yetone/avante.nvim" },
+						{ "id": "pearai-oss", "name": "PearAI", "features": ["License: Apache 2.0", "Stars: 5k+", "Language: TypeScript"], "url": "https://github.com/trypear/pearai-app" }
+					]
+				}
+			]
+		},
+		{
+			"id": "enterprise",
+			"name": "Enterprise Solutions",
+			"icon": "organization",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "Enterprise Solutions",
+					"description": "AI coding platforms designed for teams and organizations",
+					"items": [
+						{ "id": "github-copilot-enterprise", "name": "GitHub Copilot Enterprise", "features": ["Codebase context", "PR summaries", "knowledge bases"], "extras": {"Vendor": "GitHub / Microsoft", "Deployment": "Cloud"}, "url": "https://github.com/features/copilot" },
+						{ "id": "amazon-q-enterprise", "name": "Amazon Q Developer Pro", "features": ["Code reviews", "security scanning", "AWS integration"], "extras": {"Vendor": "AWS", "Deployment": "Cloud"}, "url": "https://aws.amazon.com/q/developer/" },
+						{ "id": "gemini-code-assist-enterprise", "name": "Google Gemini Code Assist Enterprise", "features": ["GCP integration", "custom model tuning"], "extras": {"Vendor": "Google", "Deployment": "Cloud"}, "url": "https://cloud.google.com/products/gemini/code-assist" },
+						{ "id": "codeium-enterprise-ent", "name": "Codeium Enterprise", "features": ["Self-hosted option", "SOC 2", "custom models"], "extras": {"Vendor": "Codeium", "Deployment": "Cloud / On-prem"}, "url": "https://codeium.com/enterprise" },
+						{ "id": "tabnine-enterprise", "name": "Tabnine Enterprise", "features": ["Private model training on your codebase"], "extras": {"Vendor": "Tabnine", "Deployment": "Cloud / On-prem"}, "url": "https://tabnine.com/enterprise" },
+						{ "id": "gitlab-duo", "name": "GitLab Duo", "features": ["Integrated into GitLab DevSecOps platform"], "extras": {"Vendor": "GitLab", "Deployment": "Cloud / Self-hosted"}, "url": "https://about.gitlab.com/gitlab-duo/" },
+						{ "id": "cody-enterprise", "name": "Sourcegraph Cody Enterprise", "features": ["Codebase-aware context via Sourcegraph index"], "extras": {"Vendor": "Sourcegraph", "Deployment": "Cloud / On-prem"}, "url": "https://sourcegraph.com/cody" },
+						{ "id": "jetbrains-ai-pro", "name": "JetBrains AI Pro", "features": ["Native JetBrains IDE integration", "team plans"], "extras": {"Vendor": "JetBrains", "Deployment": "Cloud"}, "url": "https://www.jetbrains.com/ai/" }
+					]
+				}
+			]
+		},
+		{
+			"id": "model-providers",
+			"name": "Model Providers",
+			"icon": "database",
+			"subgroups": [
+				{
+					"id": "all",
+					"name": "Model Providers",
+					"description": "Underlying LLM providers that power coding assistants",
+					"items": [
+						{ "id": "anthropic", "name": "Anthropic", "features": ["Strong at reasoning and long-context tasks"], "models": ["Claude Sonnet", "Claude Opus"], "extras": {"Free Tier": "No (API)"}, "url": "https://anthropic.com" },
+						{ "id": "openai", "name": "OpenAI", "features": ["Widely supported across all tools"], "models": ["GPT-4o", "o3", "o4-mini"], "extras": {"Free Tier": "No (API)"}, "url": "https://openai.com" },
+						{ "id": "google-deepmind", "name": "Google DeepMind", "features": ["1M+ token context", "free quota via AI Studio"], "models": ["Gemini 2.5 Pro", "Flash"], "extras": {"Free Tier": "Yes (AI Studio)"}, "url": "https://deepmind.google" },
+						{ "id": "mistral", "name": "Mistral AI", "features": ["Codestral specialized for code", "EU-based"], "models": ["Codestral", "Mistral Large"], "extras": {"Free Tier": "No (API)"}, "url": "https://mistral.ai" },
+						{ "id": "deepseek", "name": "DeepSeek", "features": ["Very cost-effective", "strong code performance"], "models": ["DeepSeek V3", "R1"], "extras": {"Free Tier": "No (API)"}, "url": "https://deepseek.com" },
+						{ "id": "meta-llama", "name": "Meta (Llama)", "features": ["Open weights", "runs locally via Ollama / LM Studio"], "models": ["Llama 3.x", "Llama 4"], "extras": {"Free Tier": "Yes (weights)"}, "url": "https://llama.meta.com" },
+						{ "id": "qwen", "name": "Qwen (Alibaba)", "features": ["Strong coding models", "open weights available"], "models": ["Qwen2.5-Coder", "Qwen3"], "extras": {"Free Tier": "Yes (weights)"}, "url": "https://qwen.readthedocs.io" },
+						{ "id": "groq", "name": "Groq", "features": ["Extremely fast inference via custom hardware"], "models": ["Llama", "Mixtral (hosted)"], "extras": {"Free Tier": "Yes (limited)"}, "url": "https://groq.com" },
+						{ "id": "fireworks", "name": "Fireworks AI", "features": ["Fast inference", "competitive pricing"], "models": ["Llama", "DeepSeek", "Qwen"], "extras": {"Free Tier": "No (API)"}, "url": "https://fireworks.ai" },
+						{ "id": "together", "name": "Together AI", "features": ["Broad open-model support", "fine-tuning"], "models": ["Many open models"], "extras": {"Free Tier": "No (API)"}, "url": "https://together.ai" }
+					]
+				}
+			]
+		},
+		{
+			"id": "model-plan-mapping",
+			"name": "Model → Plan Mapping",
+			"icon": "layers",
+			"subgroups": [
+				{
+					"id": "claude-models",
+					"name": "Claude Models",
+					"items": [
+						{ "id": "claude-opus-4-7", "name": "Claude Opus 4.7", "price": "Claude Pro, Claude Pro Max 5X, Claude Pro Max 20X", "features": ["BYOK: Cursor, Cline, Continue, Aider, Amazon Q Developer Pro"] },
+						{ "id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "price": "Claude Pro, Claude Pro Max 5X, Claude Pro Max 20X", "features": ["BYOK: Cursor, Cline, Continue, Aider, Amazon Q Developer Pro, Kiro Free"] },
+						{ "id": "claude-general", "name": "Claude (general)", "price": "Cursor Pro/Pro+/Ultra, Devin Pro/Max/Teams, Kiro Pro/Pro+/Power, Amazon Q Developer Pro", "features": ["BYOK: All BYOK tools"] }
+					]
+				},
+				{
+					"id": "gpt-models",
+					"name": "GPT Models",
+					"items": [
+						{ "id": "gpt-5-5", "name": "GPT-5.5", "price": "Codex (ChatGPT Go), Codex (ChatGPT Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "gpt-5-3-codex", "name": "GPT-5.3-Codex", "price": "Codex (ChatGPT Plus)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "gpt-5-5-pro", "name": "GPT-5.5 Pro", "price": "Codex (ChatGPT Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "gpt-4o", "name": "GPT-4o", "price": "Cursor Pro/Pro+/Ultra, Devin Pro/Max/Teams, Kiro Pro/Pro+/Power", "features": ["BYOK: All BYOK tools"] }
+					]
+				},
+				{
+					"id": "gemini-models",
+					"name": "Gemini Models",
+					"items": [
+						{ "id": "gemini-2-5-pro", "name": "Gemini 2.5 Pro", "price": "Google AI Pro, Google AI Ultra, Antigravity IDE", "features": ["BYOK: Cursor, Cline, Continue, Aider, Google Gemini Code Assist"] },
+						{ "id": "gemini-2-5-flash", "name": "Gemini 2.5 Flash", "price": "Google AI Pro, Google AI Ultra", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "gemini-general", "name": "Gemini (general)", "price": "Google AI Free (limited), Google Gemini Code Assist Enterprise", "features": ["BYOK: All BYOK tools"] }
+					]
+				},
+				{
+					"id": "deepseek-models",
+					"name": "DeepSeek Models",
+					"items": [
+						{ "id": "deepseek-v4", "name": "DeepSeek V4", "price": "BytePlus ModelArk (Lite/Pro), NVIDIA NIM (free tier)", "features": ["BYOK: Cursor, Cline, Continue, Aider, Fireworks AI, Together AI"] },
+						{ "id": "deepseek-v4-pro", "name": "DeepSeek V4 Pro", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "deepseek-v4-flash", "name": "DeepSeek V4 Flash", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "deepseek-v3", "name": "DeepSeek V3", "price": "Alibaba Coding Plan Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "deepseek-r1", "name": "DeepSeek R1", "price": "Alibaba Coding Plan Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "qwen-models",
+					"name": "Qwen Models",
+					"items": [
+						{ "id": "qwen3-7-plus", "name": "Qwen3.7-plus", "price": "Alibaba Coding Plan Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-7-max", "name": "Qwen3.7-Max", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-7-plus-alt", "name": "Qwen3.7-Plus", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-coder-plus", "name": "Qwen3 Coder Plus", "price": "Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-flash", "name": "Qwen3 Flash", "price": "Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-max", "name": "Qwen3 Max", "price": "Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-5-plus", "name": "Qwen3.5 Plus", "price": "Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen2-5-coder", "name": "Qwen2.5-Coder", "price": "Ollama (local), Fireworks AI, Together AI", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "glm-models",
+					"name": "GLM Models",
+					"items": [
+						{ "id": "glm-5-2", "name": "GLM-5.2", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "glm-5-1", "name": "GLM-5.1", "price": "BytePlus ModelArk (Lite/Pro), Z.ai GLM (Lite/Pro/Max)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "glm-5", "name": "GLM-5", "price": "Alibaba Coding Plan Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "kimi-models",
+					"name": "Kimi Models",
+					"items": [
+						{ "id": "kimi-k2-7-code", "name": "Kimi K2.7 Code", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "kimi-k2-6", "name": "Kimi K2.6", "price": "ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "kimi-k2-5", "name": "Kimi-K2.5", "price": "BytePlus ModelArk (Lite/Pro), Alibaba Coding Plan Pro, Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "kimi-k2-5-kimi-code", "name": "Kimi-K2.5 (Kimi Code)", "price": "Kimi Moderato, Kimi Allegretto, Kimi Allegro, Kimi Vivace", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "minimax-models",
+					"name": "MiniMax Models",
+					"items": [
+						{ "id": "minimax-m3", "name": "MiniMax-M3", "price": "MiniMax Token Plan (Lite/Standard/Pro), ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "minimax-m2-7", "name": "MiniMax-M2.7", "price": "MiniMax Token Plan (Lite/Standard/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "minimax-m2-5", "name": "MiniMax-M2.5", "price": "Alibaba Coding Plan Pro, Feima Copilot (Starter/Value/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "llama-models",
+					"name": "Llama Models",
+					"items": [
+						{ "id": "llama-3-x", "name": "Llama 3.x", "price": "Ollama (local), Groq (hosted), Fireworks AI, Together AI", "features": ["BYOK: All BYOK tools"] },
+						{ "id": "llama-4", "name": "Llama 4", "price": "Ollama (local), Fireworks AI, Together AI", "features": ["BYOK: All BYOK tools"] }
+					]
+				},
+				{
+					"id": "other-models",
+					"name": "Other Models",
+					"items": [
+						{ "id": "gpt-oss", "name": "GPT-OSS", "price": "BytePlus ModelArk (Lite/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "dola-seed-2-0-pro", "name": "Dola-Seed-2.0-pro", "price": "BytePlus ModelArk (Lite/Pro)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "mixtral", "name": "Mixtral", "price": "Groq (hosted), Fireworks AI, Together AI", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "codestral", "name": "Codestral", "price": "Mistral AI (API), Mistral AI Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "mistral-large", "name": "Mistral Large", "price": "Mistral AI (API), Mistral AI Pro", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "grok-models",
+					"name": "Grok Models",
+					"items": [
+						{ "id": "grok-4", "name": "Grok 4", "price": "xAI SuperGrok Lite, xAI SuperGrok", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "grok-4-1", "name": "Grok 4.1", "price": "xAI SuperGrok", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "grok-4-heavy", "name": "Grok 4 Heavy", "price": "xAI SuperGrok Heavy", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "mimo-models",
+					"name": "MiMo Models",
+					"items": [
+						{ "id": "mimo-v2-5-pro", "name": "MiMo-V2.5-Pro", "price": "Xiaomi MiMo (Lite/Standard/Pro/Max), ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider, OpenCode Go"] },
+						{ "id": "mimo-v2-5", "name": "MiMo-V2.5", "price": "Xiaomi MiMo (Lite/Standard/Pro/Max), ClinePass", "features": ["BYOK: Cursor, Cline, Continue, Aider, OpenCode Go"] }
+					]
+				},
+				{
+					"id": "stepfun-models",
+					"name": "StepFun Models",
+					"items": [
+						{ "id": "stepfun-all", "name": "StepFun (all models)", "price": "StepFun Flash (Mini/Plus/Pro/Max)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				},
+				{
+					"id": "aggregator-models",
+					"name": "Aggregator Models",
+					"items": [
+						{ "id": "ds-v4-pro-open", "name": "DeepSeek V4 Pro", "price": "OpenCode Go", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "ds-v4-flash-open", "name": "DeepSeek V4 Flash", "price": "OpenCode Go", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "kimi-k2-7-open", "name": "Kimi K2.7 Code", "price": "OpenCode Go", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-7-max-open", "name": "Qwen3.7 Max", "price": "OpenCode Go", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-7-plus-open", "name": "Qwen3.7 Plus", "price": "OpenCode Go", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "taste-1", "name": "taste-1", "price": "Command Code (Go/Pro/Max/Ultra)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "kimi-k2-6-turbo", "name": "Kimi K2.6 Turbo", "price": "Fireworks Fire Pass", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "ds-v3-2", "name": "DeepSeek-V3.2", "price": "Routing.sh (Free)", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "qwen3-6", "name": "Qwen3.6", "price": "AI Router Unlimited", "features": ["BYOK: Cursor, Cline, Continue, Aider"] },
+						{ "id": "gemma-4", "name": "Gemma-4", "price": "AI Router Unlimited", "features": ["BYOK: Cursor, Cline, Continue, Aider"] }
+					]
+				}
+			]
+		},
+		{
+			"id": "pricing-comparisons",
+			"name": "Pricing Comparisons",
+			"icon": "symbol-currency",
+			"subgroups": [
+				{
+					"id": "individual-plans",
+					"name": "Individual / Developer Plans",
+					"items": [
+						{ "id": "github-copilot-indiv", "name": "GitHub Copilot", "price": "$10/mo (Individual), $19/mo (Pro+)", "extras": {"Free Tier": "No (removed)"}, "features": ["Free tier discontinued; triggered many departures"] },
+						{ "id": "cursor-indiv", "name": "Cursor", "price": "$20/mo (Pro)", "extras": {"Free Tier": "Yes (2-week trial)"}, "features": ["500 fast requests/mo on Pro"] },
+						{ "id": "codeium-windsurf", "name": "Codeium / Windsurf", "price": "$15/mo (Pro)", "extras": {"Free Tier": "Yes (generous)"}, "features": ["Free tier includes unlimited autocomplete"] },
+						{ "id": "tabnine-indiv", "name": "Tabnine", "price": "$12/mo (Pro)", "extras": {"Free Tier": "Yes (limited)"} },
+						{ "id": "amazon-q-indiv", "name": "Amazon Q Developer", "price": "$19/mo (Pro)", "extras": {"Free Tier": "Yes"}, "features": ["Free tier covers most individual use"] },
+						{ "id": "continue-indiv", "name": "Continue", "price": "Free (OSS)", "extras": {"Free Tier": "Free (OSS)"}, "features": ["Pay only for API usage to your chosen provider"] },
+						{ "id": "aider-indiv", "name": "Aider", "price": "Free (OSS)", "extras": {"Free Tier": "Free (OSS)"}, "features": ["Pay only for API usage"] },
+						{ "id": "claude-code-indiv", "name": "Claude Code", "price": "Pay-per-use (API ~$3-15/mo typical)", "extras": {"Free Tier": "No"}, "features": ["Pay-per-use (API)"] },
+						{ "id": "gemini-cli-indiv", "name": "Gemini CLI", "price": "Pay-per-use beyond quota", "extras": {"Free Tier": "Yes (free quota)"}, "features": ["Generous free quota via Google AI Studio"] },
+						{ "id": "clinepass-indiv", "name": "ClinePass", "price": "$4.99 first mo, then $9.99/mo", "extras": {"Free Tier": "No"}, "features": ["2-5x standard API rate limits", "open weight models"] },
+						{ "id": "xai-grok-indiv", "name": "xAI Grok", "price": "$10/mo (SuperGrok Lite)", "extras": {"Free Tier": "No"}, "features": ["$30/mo (SuperGrok), $300/mo (Heavy)"] },
+						{ "id": "mistral-indiv", "name": "Mistral AI", "price": "$14.99/mo (Pro)", "extras": {"Free Tier": "Yes (Free)"}, "features": ["Students $5.99/mo; Team $24.99/user/mo"] },
+						{ "id": "stepfun-indiv", "name": "StepFun", "price": "$6.99/mo (Flash Mini)", "extras": {"Free Tier": "No"}, "features": ["$9.99/mo (Plus), $29/mo (Pro), $99/mo (Max)"] },
+						{ "id": "xiaomi-mimo-indiv", "name": "Xiaomi MiMo", "price": "$6/mo (Lite)", "extras": {"Free Tier": "No"}, "features": ["$16/mo (Standard), $50/mo (Pro), $100/mo (Max)"] },
+						{ "id": "opencode-go-indiv", "name": "OpenCode Go", "price": "$10/mo", "extras": {"Free Tier": "No"}, "features": ["$5 first month; usage varies by model"] },
+						{ "id": "command-code-indiv", "name": "Command Code", "price": "$1/mo (Go)", "extras": {"Free Tier": "No"}, "features": ["$15/mo (Pro), $100/mo (Max), $200/mo (Ultra)"] },
+						{ "id": "venice-indiv", "name": "Venice", "price": "$18/mo (Pro)", "extras": {"Free Tier": "Yes (Free)"}, "features": ["$68/mo (Plus), $200/mo (Max)"] },
+						{ "id": "fireworks-indiv", "name": "Fireworks Fire Pass", "price": "$49/mo", "extras": {"Free Tier": "No"}, "features": ["Kimi K2.6 Turbo, personal use only"] },
+						{ "id": "kilo-pass-indiv", "name": "Kilo Pass", "price": "$19/mo (Starter)", "extras": {"Free Tier": "No"}, "features": ["$49/mo (Pro), $199/mo (Expert)"] },
+						{ "id": "routing-indiv", "name": "Routing.sh", "price": "$10/mo (Lite)", "extras": {"Free Tier": "Yes (Free)"}, "features": ["$20/mo (Premium), $50/mo (Max)"] },
+						{ "id": "llm-gateway-indiv", "name": "LLM Gateway", "price": "$29/mo (Lite)", "extras": {"Free Tier": "No"}, "features": ["$79/mo (Pro), $179/mo (Max)"] },
+						{ "id": "huggingface-indiv", "name": "Hugging Face Pro", "price": "$9/mo", "extras": {"Free Tier": "No"}, "features": ["20x inference usage"] },
+						{ "id": "baidu-indiv", "name": "Baidu Cloud", "price": "¥40/mo (~$5.50, Lite)", "extras": {"Free Tier": "No"}, "features": ["¥200/mo (~$27.50, Pro)"] },
+						{ "id": "ollama-cloud-indiv", "name": "Ollama Cloud", "price": "$20/mo (Pro)", "extras": {"Free Tier": "No"}, "features": ["$100/mo (Max)"] },
+						{ "id": "cerebras-indiv", "name": "Cerebras", "price": "$50/mo (Pro)", "extras": {"Free Tier": "No"}, "features": ["$200/mo (Max)"] },
+						{ "id": "ai-router-indiv", "name": "AI Router", "price": "CHF 39/mo (Unlimited)", "extras": {"Free Tier": "No"}, "features": ["Swiss-hosted, no prompt logging"] }
+					]
+				},
+				{
+					"id": "team-enterprise-plans",
+					"name": "Team / Enterprise Plans",
+					"items": [
+						{ "id": "github-copilot-business", "name": "GitHub Copilot Business", "price": "$19/seat/mo", "extras": {"Min Seats": "1"} },
+						{ "id": "github-copilot-enterprise-p", "name": "GitHub Copilot Enterprise", "price": "$39/seat/mo", "extras": {"Min Seats": "1"} },
+						{ "id": "amazon-q-dev-pro-p", "name": "Amazon Q Developer Pro", "price": "$19/seat/mo", "extras": {"Min Seats": "1"} },
+						{ "id": "gemini-code-assist-ent-p", "name": "Google Gemini Code Assist Enterprise", "price": "$19/seat/mo", "extras": {"Min Seats": "1"} },
+						{ "id": "codeium-enterprise-p", "name": "Codeium Enterprise", "price": "Custom", "extras": {"Min Seats": "—"}, "features": ["Contact sales"] },
+						{ "id": "tabnine-enterprise-p", "name": "Tabnine Enterprise", "price": "Custom", "extras": {"Min Seats": "—"}, "features": ["Includes private model training"] },
+						{ "id": "gitlab-duo-pro", "name": "GitLab Duo Pro", "price": "$19/seat/mo", "extras": {"Min Seats": "—"}, "features": ["Bundled with GitLab tiers"] }
+					]
+				}
+			]
+		}
+	]
+}
