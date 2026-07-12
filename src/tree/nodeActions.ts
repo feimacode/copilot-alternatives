@@ -471,24 +471,26 @@ async function addFilteredProviders(opts: { multiKey: boolean }): Promise<void> 
 		return;
 	}
 
-	// Step 5: Add each group via VS Code's command (encrypts keys)
-	let successCount = 0;
-	for (const group of groupsToAdd) {
-		try {
-			await vscode.commands.executeCommand('lm.addLanguageModelsProviderGroup', group);
-			successCount++;
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			vscode.window.showErrorMessage(`Failed to add "${group.name}": ${message}`);
-		}
+	// Step 5: Ensure the customendpoint vendor is registered before writing.
+	// The vendor is registered by the GitHub Copilot extension's BYOKContrib.
+	// On first run (no providers yet), Copilot may not have activated, so we
+	// trigger it explicitly to avoid "Vendor customendpoint not found" errors.
+	try {
+		await vscode.commands.executeCommand('github.copilot.activate');
+	} catch {
+		// Copilot may not be installed — proceed anyway and hope for the best.
 	}
 
-	if (successCount > 0) {
-		_nodeActionsRefresh();
-		vscode.window.showInformationMessage(
-			`✅ Added ${successCount} provider group(s) from "${template.displayName}". Models will appear in the chat model picker.`
-		);
+	// Write directly to chatLanguageModels.json
+	const existingEntries = await readProviders();
+	for (const group of groupsToAdd) {
+		existingEntries.push(group);
 	}
+	await writeProviders(existingEntries);
+	_nodeActionsRefresh();
+	vscode.window.showInformationMessage(
+		`✅ Added ${groupsToAdd.length} provider group(s) from "${template.displayName}". Reload VS Code to apply.`
+	);
 }
 
 /**

@@ -112,6 +112,10 @@ export function openProviderEditor(
 				} else {
 					allEntries.push(newEntry);
 				}
+				// Ensure the customendpoint vendor is registered before writing
+				try {
+					await vscode.commands.executeCommand('github.copilot.activate');
+				} catch { /* Copilot may not be installed */ }
 				await writeProviders(allEntries);
 				panel.webview.postMessage({ type: 'saveSuccess' });
 
@@ -241,6 +245,10 @@ export function openModelEditor(
 					parentEntry.models = [...(parentEntry.models || []), result];
 				}
 
+				// Ensure the customendpoint vendor is registered before writing
+				try {
+					await vscode.commands.executeCommand('github.copilot.activate');
+				} catch { /* Copilot may not be installed */ }
 				await writeProviders(allEntries);
 				panel.webview.postMessage({ type: 'saveSuccess' });
 
