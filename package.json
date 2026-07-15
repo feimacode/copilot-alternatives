@@ -53,6 +53,7 @@
 		"url": "https://github.com/feimacode/copilot-alternatives"
 	},
 	"activationEvents": [
+		"onStartupFinished",
 		"onView:copilotAlternatives.main"
 	],
 	"main": "./out/extension.js",
@@ -195,6 +196,30 @@
 				"title": "Open README",
 				"category": "Copilot Alternatives",
 				"icon": "$(markdown)"
+			},
+			{
+				"command": "copilotAlternatives.showTokenUsage",
+				"title": "Show Token Usage Dashboard",
+				"category": "Copilot Alternatives",
+				"icon": "$(flame)"
+			},
+			{
+				"command": "copilotAlternatives.exportTokenUsage",
+				"title": "Export Token Usage Data",
+				"category": "Copilot Alternatives",
+				"icon": "$(save-as)"
+			},
+			{
+				"command": "copilotAlternatives.reloadTokenUsage",
+				"title": "Reload Token Usage Data",
+				"category": "Copilot Alternatives",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "copilotAlternatives.debugTokenUsage",
+				"title": "Debug Token Usage (dump to logs)",
+				"category": "Copilot Alternatives",
+				"icon": "$(bug)"
 			}
 		],
 		"menus": {
@@ -282,6 +307,14 @@
 				{
 					"command": "copilotAlternatives.openReadme",
 					"when": "false"
+				},
+				{
+					"command": "copilotAlternatives.showTokenUsage",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.exportTokenUsage",
+					"when": "true"
 				}
 			],
 			"view/title": [
@@ -385,6 +418,50 @@
 			]
 		}
 	},
+	"configuration": {
+		"title": "Copilot Alternatives — Token Usage",
+		"properties": {
+			"copilotAlternatives.tokenUsage.statusBarFormat": {
+				"type": "string",
+				"default": "tokens-and-cost",
+				"enum": [
+					"tokens-and-cost",
+					"tokens-only",
+					"cost-only"
+				],
+				"enumDescriptions": [
+					"Show both token count and estimated cost",
+					"Show only token count",
+					"Show only estimated cost"
+				],
+				"description": "What to display in the token usage status bar."
+			},
+			"copilotAlternatives.tokenUsage.dailyWatermark": {
+				"type": "number",
+				"default": 5,
+				"description": "Daily cost watermark in USD. Shows a notification when estimated daily chat token cost exceeds this threshold."
+			},
+			"copilotAlternatives.tokenUsage.weeklyWatermark": {
+				"type": "number",
+				"default": 25,
+				"description": "Weekly cost watermark in USD. Shows a notification when estimated weekly chat token cost exceeds this threshold."
+			},
+			"copilotAlternatives.tokenUsage.backfillDays": {
+				"type": "number",
+				"default": 60,
+				"minimum": 1,
+				"maximum": 365,
+				"description": "Number of days of chat history to import from disk. Older sessions are skipped for performance. Increase this value then reload token usage data to include older sessions."
+			},
+			"copilotAlternatives.tokenUsage.watcherWindowDays": {
+				"type": "number",
+				"default": 1,
+				"minimum": 1,
+				"maximum": 30,
+				"description": "How far back (in days) the real-time file watcher scans for chat session files on startup. Keep small (default 1 day) for fast activation. Historical data is still imported by the background processor."
+			}
+		}
+	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
@@ -399,5 +476,10 @@
 		"@vscode/vsce": "^2.22.0",
 		"typescript": "^5.3.0",
 		"vitest": "^4.1.10"
+	},
+	"dependencies": {
+		"@types/better-sqlite3": "^7.6.13",
+		"better-sqlite3": "^12.11.1",
+		"chart.js": "^4.5.1"
 	}
 }

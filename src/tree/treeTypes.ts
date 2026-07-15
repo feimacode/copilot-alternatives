@@ -17,6 +17,9 @@ export type TreeNodeType =
 	| 'byokSection'
 	| 'byokProvider'
 	| 'byokModel'
+	| 'usageSection'
+	| 'usageVendor'
+	| 'usageModel'
 	| 'moreInfoSection'
 	| 'extensionSection'
 	| 'extensionItem';
@@ -129,6 +132,26 @@ export class TreeNode {
 			case 'moreInfoSection':
 				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 				item.iconPath = new vscode.ThemeIcon('book');
+				break;
+
+			case 'usageSection':
+				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+				item.iconPath = new vscode.ThemeIcon('dashboard');
+				// Dashboard button on the usage root node
+				item.command = {
+					command: 'copilotAlternatives.showTokenUsage',
+					title: 'Show Token Usage Dashboard',
+				};
+				break;
+
+			case 'usageVendor':
+				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+				item.iconPath = new vscode.ThemeIcon('flame');
+				break;
+
+			case 'usageModel':
+				item.collapsibleState = vscode.TreeItemCollapsibleState.None;
+				item.iconPath = new vscode.ThemeIcon('symbol-method');
 				break;
 		}
 

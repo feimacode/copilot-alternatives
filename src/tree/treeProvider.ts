@@ -9,6 +9,8 @@ import { getCatalogData } from './catalogData';
 import { readProviders } from '../byok/chatLanguageModels';
 import { IDirectoryGroup, IDirectorySubgroup, IDirectoryItem } from '../types/directory';
 import { IChatLanguageModelEntry, IChatLanguageModelModel } from '../byok/types';
+import { TokenUsageTracker } from '../tokenUsage/tokenUsageTracker';
+import { formatTokenCount, resolveModelPricingKey } from '../tokenUsage/tokenCostEstimator';
 
 /**
  * Single unified TreeDataProvider for the Copilot Alternatives sidebar.
@@ -20,9 +22,11 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 	/** Cached root children — refreshed on each change event. */
 	private _catalogGroups: readonly IDirectoryGroup[] = [];
 	private _extensionPath: string;
+	private _tokenTracker: TokenUsageTracker | undefined;
 
-	constructor(extensionPath: string) {
+	constructor(extensionPath: string, tokenTracker?: TokenUsageTracker) {
 		this._extensionPath = extensionPath;
+		this._tokenTracker = tokenTracker;
 		this._catalogGroups = getCatalogData(extensionPath);
 	}
 
@@ -55,6 +59,10 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				return this._getByokProviders();
 			case 'byokProvider':
 				return this._getByokModels(element.data as IChatLanguageModelEntry);
+			case 'usageSection':
+				return this._getUsageVendors();
+			case 'usageVendor':
+				return this._getUsageModels(element.label);
 			case 'extensionSection':
 				return this._getExtensionItems();
 			case 'moreInfoSection':
@@ -92,7 +100,23 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 			'Browse and install VS Code extensions for AI coding',
 		));
 
-		// 3. Everything else folded under "More Info"
+		// 3. Usage Stats (from SQLite DB, last 7 days)
+		if (this._tokenTracker) {
+			const vendors7d = this._tokenTracker.metricsService.getVendorBreakdown7d();
+			const totalTokens = vendors7d.reduce((sum, v) => sum + v.promptTokens + v.completionTokens, 0);
+			const totalReqs = vendors7d.reduce((sum, v) => sum + v.requestCount, 0);
+			const totalCost = vendors7d.reduce((sum, v) => sum + v.costUsd, 0);
+			nodes.push(new TreeNode(
+				'usageSection',
+				'usage-section',
+				'Usage Stats',
+				undefined,
+				`${formatTokenCount(totalTokens)} tokens | ${totalReqs} requests | in 7 days`,
+				`${formatTokenCount(totalTokens)} tokens, ${totalReqs} requests, $${totalCost.toFixed(2)} cost — last 7 days`,
+			));
+		}
+
+		// 4. Everything else folded under "More Info"
 		const totalItems = this._catalogGroups.reduce(
 			(sum, g) => sum + g.subgroups.reduce((s, sg) => s + sg.items.length, 0), 0
 		) - extCount;
@@ -212,5 +236,47 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				`ID: ${model.id} | Context: ${contextTotal} tokens | URL: ${model.url}`,
 			);
 		});
+	}
+
+
+	// ─── Usage Stats ──────────────────────────────────────────────────────
+
+	private _getUsageVendors(): TreeNode[] {
+		if (!this._tokenTracker) { return []; }
+		const vendors = this._tokenTracker.metricsService.getVendorBreakdown7d();
+
+		return vendors
+			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
+			.map(v => new TreeNode(
+				'usageVendor',
+				'usage-vendor:' + v.vendor,
+				v.vendor,
+				undefined,
+				`${formatTokenCount(v.promptTokens + v.completionTokens)} | ${v.requestCount} requests | in a week`,
+				`${v.vendor}: ${formatTokenCount(v.promptTokens + v.completionTokens)} tokens, ${v.requestCount} requests, $${v.costUsd.toFixed(2)} cost — last 7 days`,
+			));
+	}
+
+	private _getUsageModels(vendor: string): TreeNode[] {
+		if (!this._tokenTracker) { return []; }
+		const models = this._tokenTracker.metricsService.getModelBreakdown7d(vendor);
+		return models
+			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
+			.map(m => {
+				// Strip vendor prefix from display label — parent vendor node already shows it.
+				// For single-segment IDs (e.g. "gpt-4o"), keep as-is.
+				// For multi-segment IDs (e.g. "feima/deepseek-v4-pro" or
+				// "customendpoint/BytePlus/deepseek-v4-flash"), keep only the last segment.
+				const lastSlash = m.modelId.lastIndexOf('/');
+				const shortLabel = lastSlash === -1 ? m.modelId : m.modelId.slice(lastSlash + 1);
+				return new TreeNode(
+					'usageModel',
+					'usage-model:' + m.modelId,
+					shortLabel,
+					undefined,
+					`${formatTokenCount(m.promptTokens + m.completionTokens)} | ${m.requestCount} requests | in a week`,
+					`${m.modelId}: ${formatTokenCount(m.promptTokens + m.completionTokens)} tokens, ${m.requestCount} requests, $${m.costUsd.toFixed(2)} cost — last 7 days`,
+				);
+			});
 	}
 }

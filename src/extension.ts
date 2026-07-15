@@ -10,10 +10,33 @@ import { registerByokCommands } from './byok/byokCommands';
 import { TreeProvider } from './tree/treeProvider';
 import { registerNodeActions, setExtensionPath, setTreeRefresher } from './tree/nodeActions';
 import { findChatLanguageModelsFile } from './byok/chatLanguageModels';
+import { TokenUsageTracker } from './tokenUsage/tokenUsageTracker';
+import { TokenUsageStatusBar } from './tokenUsage/tokenUsageStatusBar';
+import { TokenUsageDashboard } from './tokenUsage/tokenUsageDashboard';
+import { LogServiceImpl, LogLevel } from './platform/log/common/logService';
+import { VSCodeLogTarget, ConsoleLogTarget } from './platform/log/vscode/logService';
+import { logVendorMapping } from './tokenUsage/vendorResolver';
 
 export function activate(context: vscode.ExtensionContext) {
+	// ─── Logging ───────────────────────────────────────────────────────
+	const logChannel = vscode.window.createOutputChannel('Copilot Alternatives', { log: true });
+	context.subscriptions.push(logChannel);
+	const logService = new LogServiceImpl([
+		new VSCodeLogTarget(logChannel),
+		new ConsoleLogTarget('[CA] ', LogLevel.Debug),
+	]);
+
+	logService.info('Copilot Alternatives extension activating...');
+	// Show the output channel on activation so the user sees logs immediately
+	logChannel.show();
+
+	// ─── Token Usage Tracking ───────────────────────────────────────────
+	const tokenTracker = new TokenUsageTracker(context.globalState, context.globalStorageUri.fsPath, logService.createSubLogger('TokenUsage'));
+	tokenTracker.activate(context);
+	context.subscriptions.push(tokenTracker);
+
 	// ─── Tree View ──────────────────────────────────────────────────────
-	const treeProvider = new TreeProvider(context.extensionPath);
+	const treeProvider = new TreeProvider(context.extensionPath, tokenTracker);
 	const treeView = vscode.window.createTreeView('copilotAlternatives.main', {
 		treeDataProvider: treeProvider,
 		showCollapseAll: true,
@@ -41,6 +64,88 @@ export function activate(context: vscode.ExtensionContext) {
 		watcher.onDidDelete(() => treeProvider.refresh());
 		context.subscriptions.push(watcher);
 	}
+
+	const tokenStatusBar = new TokenUsageStatusBar(tokenTracker);
+	tokenTracker.onDidUpdate(() => tokenStatusBar.update());
+	// Refresh dashboard when stored data changes (if dashboard is open)
+	tokenTracker.onDidChangeStored(() => {
+		if (TokenUsageDashboard.currentPanel) {
+			TokenUsageDashboard.currentPanel.update();
+		}
+		treeProvider.refresh();
+	});
+	context.subscriptions.push(tokenStatusBar);
+
+	// ─── Token Usage Commands ───────────────────────────────────────────
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.showTokenUsage', () => {
+			const dashboard = TokenUsageDashboard.createOrShow(tokenTracker);
+			dashboard.update();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.reloadTokenUsage', async () => {
+			await tokenTracker.reloadAll();
+			vscode.window.showInformationMessage('Token usage data reloaded from disk.');
+			if (TokenUsageDashboard.currentPanel) {
+				TokenUsageDashboard.currentPanel.update();
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.exportTokenUsage', () => {
+			const s = tokenTracker.metricsService.getDashboardSummary();
+			const json = JSON.stringify(s, null, 2);
+			vscode.workspace.openTextDocument({ content: json, language: 'json' })
+				.then(doc => vscode.window.showTextDocument(doc));
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.debugTokenUsage', () => {
+			const s = tokenTracker.metricsService.getDashboardSummary();
+			const log = logService.createSubLogger('Debug');
+
+			log.info('=== Token Usage Debug Info ===');
+			log.info(`Extension version: ${context.extension?.packageJSON?.version ?? 'unknown'}`);
+			log.info(`Session tokens: ${tokenTracker.sessionTokens}`);
+			log.info(`Session cost: $${tokenTracker.sessionCost.toFixed(4)}`);
+			log.info(`Backfill days: ${vscode.workspace.getConfiguration().get<number>('copilotAlternatives.tokenUsage.backfillDays', 60)}`);
+
+			// Daily data overview (last 7 days)
+			log.info('--- Last 7 Days (from SQLite) ---');
+			for (const day of s.thisWeek) {
+				if (day.totalPromptTokens === 0 && day.totalCompletionTokens === 0) { continue; }
+				log.info(`  ${day.date}: in=${day.totalPromptTokens} out=${day.totalCompletionTokens} cost=$${day.estimatedCostUsd.toFixed(4)} ${day.requestCount} requests`);
+			}
+
+			// Vendor breakdown
+			log.info('--- Vendor Breakdown (30 days) ---');
+			for (const v of s.vendorBreakdown) {
+				log.info(`  ${v.vendor}: in=${v.promptTokens} out=${v.completionTokens} cost=$${v.costUsd.toFixed(4)} ${v.requestCount} requests`);
+			}
+
+			// Model breakdown
+			log.info('--- Model Breakdown (30 days) ---');
+			for (const m of s.modelBreakdown) {
+				log.info(`  ${m.modelId}: in=${m.promptTokens} out=${m.completionTokens} cost=$${m.costUsd.toFixed(4)} ${m.requestCount} requests`);
+			}
+
+			// All-time totals
+			log.info('--- All Time ---');
+			log.info(`  Days tracked: ${s.allTime.daysTracked}`);
+			log.info(`  Total tokens: ${s.allTime.totalPromptTokens + s.allTime.totalCompletionTokens} (in: ${s.allTime.totalPromptTokens}, out: ${s.allTime.totalCompletionTokens})`);
+			log.info(`  Total cost: $${s.allTime.totalCostUsd.toFixed(4)}`);
+			log.info(`  Sessions: ${s.allTime.sessionCount}, Requests: ${s.allTime.requestCount}`);
+
+			logVendorMapping(s.modelBreakdown.map(m => m.modelId), log);
+
+			log.info('=== End Debug Info ===');
+			vscode.window.showInformationMessage('Token usage debug info written to output channel.');
+		})
+	);
 
 	// ─── Commands ───────────────────────────────────────────────────────
 	setExtensionPath(context.extensionPath);
