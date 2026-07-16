@@ -1,0 +1,17 @@
+{"kind":0,"v":{"version":3,"creationDate":1782092989168,"initialLocation":"panel","responderUsername":"GitHub Copilot","sessionId":"763ad890-2275-4f99-bf21-db5275c5d02a","hasPendingEdits":false,"requests":[],"pendingRequests":[],"inputState":{"attachments":[],"mode":{"id":"agent","kind":"agent"},"selectedModel":{"identifier":"copilot/claude-sonnet-4.6","metadata":{"extension":{"value":"GitHub.copilot-chat","_lower":"github.copilot-chat"},"id":"claude-sonnet-4.6","vendor":"copilot","name":"Claude Sonnet 4.6","family":"claude-sonnet-4.6","version":"claude-sonnet-4.6","pricing":"In: 300 · Out: 1500 AICs/1M tokens","inputCost":300,"outputCost":1500,"cacheCost":30,"priceCategory":"medium","maxInputTokens":935793,"maxOutputTokens":64000,"isDefaultForLocation":{"panel":false},"isUserSelectable":true,"capabilities":{"vision":true,"toolCalling":true,"agentMode":true}}}}}}
+{"kind":2,"k":["requests"],"v":[{"requestId":"request_607692b8-e5a9-4fec-a7c7-613665d00c28","timestamp":1782093125206,"agent":{"extensionId":{"value":"GitHub.copilot-chat","_lower":"github.copilot-chat"},"id":"github.copilot.editsAgent","name":"agent"},"modelId":"copilot/claude-sonnet-4.6","responseId":"response_0eb31d14-8890-40b2-8552-3ee8272e7a06","modelState":{"value":0},"contentReferences":[],"codeCitations":[],"response":[],"message":{"text":"looks into vscode source code to find out if it allows extension to read byok settings for copilot.","parts":[{"range":{"start":0,"endExclusive":89},"text":"looks into vscode source code to find out if it allows extension to read byok settings for copilot.","kind":"text"}]},"variableData":{"variables":[]}}],"i":0}
+{"kind":1,"k":["customTitle"],"v":"VS Code extension byok settings access"}
+{"kind":1,"k":["requests",0,"completionTokens"],"v":1123}
+{"kind":1,"k":["requests",0,"promptTokens"],"v":40071}
+{"kind":1,"k":["requests",0,"outputBuffer"],"v":64000}
+{"kind":1,"k":["requests",0,"promptTokenDetails"],"v":[{"category":"System","label":"System Instructions","percentageOfPrompt":32},{"category":"System","label":"Tool Definitions","percentageOfPrompt":51},{"category":"User Context","label":"Messages","percentageOfPrompt":8},{"category":"User Context","label":"Tool Results","percentageOfPrompt":8}]}
+{"kind":1,"k":["requests",0,"copilotCredits"],"v":17.815395}
+{"kind":1,"k":["requests",0,"completionTokens"],"v":2891}
+{"kind":1,"k":["requests",0,"promptTokens"],"v":56845}
+{"kind":1,"k":["requests",0,"promptTokenDetails"],"v":[{"category":"System","label":"System Instructions","percentageOfPrompt":26},{"category":"System","label":"Tool Definitions","percentageOfPrompt":41},{"category":"User Context","label":"Messages","percentageOfPrompt":9},{"category":"User Context","label":"Tool Results","percentageOfPrompt":24}]}
+{"kind":1,"k":["requests",0,"copilotCredits"],"v":41.786384999999996}
+{"kind":1,"k":["requests",0,"completionTokens"],"v":4266}
+{"kind":1,"k":["requests",0,"promptTokens"],"v":65859}
+{"kind":1,"k":["requests",0,"promptTokenDetails"],"v":[{"category":"System","label":"System Instructions","percentageOfPrompt":23},{"category":"System","label":"Tool Definitions","percentageOfPrompt":37},{"category":"User Context","label":"Messages","percentageOfPrompt":9},{"category":"User Context","label":"Tool Results","percentageOfPrompt":31}]}
+{"kind":1,"k":["requests",0,"copilotCredits"],"v":57.97402499999999}
+{"kind":1,"k":["requests",0,"modelState"],"v":{"value":1,"completedAt":1782093412000}}

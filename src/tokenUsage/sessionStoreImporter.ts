@@ -296,9 +296,11 @@ export function parseSessionFile(filePath: string): ParsedSession | null {
 		let systemInstructionsPct = 0, toolDefinitionsPct = 0, messagesPct = 0, filesPct = 0, toolResultsPct = 0;
 		if (promptTokenDetails) {
 			for (const detail of promptTokenDetails) {
-				const cat = (detail.category as string) ?? '';
+				// VS Code uses `label` for the human-readable category name (e.g. "System Instructions")
+				// and `category` for a coarser grouping (e.g. "System", "User Context").
+				const label = (detail.label as string) ?? '';
 				const pct = (detail.percentageOfPrompt as number) ?? 0;
-				switch (cat) {
+				switch (label) {
 					case 'System Instructions': systemInstructionsPct = pct; break;
 					case 'Tool Definitions': toolDefinitionsPct = pct; break;
 					case 'Messages': messagesPct = pct; break;
