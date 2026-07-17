@@ -98,44 +98,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
-      - name: Get VS Code Electron version
-        id: electron
-        shell: bash
-        run: |
-          ELECTRON_VER=""
-
-          # 1. Try .yarnrc (target "X.Y.Z") — grep returns 1 if no match, suppress with || true
-          ELECTRON_VER=$(curl -sL "https://raw.githubusercontent.com/microsoft/vscode/main/.yarnrc" 2>/dev/null \
-            | grep '^target ' | sed 's/target "\(.*\)"/\1/' || true)
-
-          # 2. Try package.json devDependencies.electron
-          if [ -z "$ELECTRON_VER" ]; then
-            ELECTRON_VER=$(curl -sL "https://raw.githubusercontent.com/microsoft/vscode/main/package.json" 2>/dev/null \
-              | python3 -c "import sys,json,re; d=json.load(sys.stdin); e=d.get('devDependencies',{}).get('electron',''); m=re.search(r'\d+\.\d+\.\d+',e); print(m.group() if m else '')" 2>/dev/null || true)
-          fi
-
-          # 3. Try package.json electronVersion field
-          if [ -z "$ELECTRON_VER" ]; then
-            ELECTRON_VER=$(curl -sL "https://raw.githubusercontent.com/microsoft/vscode/main/package.json" 2>/dev/null \
-              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('electronVersion',''))" 2>/dev/null || true)
-          fi
-
-          # 4. Hardcoded fallback (update with major VS Code Electron bumps)
-          if [ -z "$ELECTRON_VER" ]; then
-            ELECTRON_VER="34.0.0"
-            echo "⚠️ Could not determine VS Code Electron version, using fallback: $ELECTRON_VER"
-          fi
-
-          echo "Electron version: $ELECTRON_VER"
-          echo "version=$ELECTRON_VER" >> $GITHUB_OUTPUT
-
-      - name: Install dependencies (Electron prebuilt for better-sqlite3)
-        shell: bash
-        env:
-          npm_config_runtime: electron
-          npm_config_target: ${{ steps.electron.outputs.version }}
-          npm_config_disturl: https://electronjs.org/headers
-          GYP_MSVS_VERSION: '2022'
+      - name: Install dependencies
         run: npm ci
 
       - name: Build extension
