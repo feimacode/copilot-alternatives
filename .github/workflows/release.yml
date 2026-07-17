@@ -101,14 +101,15 @@ jobs:
       - name: Build @vscode/sqlite3 native binary
         shell: bash
         run: |
-          # Patch extract.js to use system tar instead of the missing npm 'tar' module
-          # (tar is a devDependency of @vscode/sqlite3 and is not installed by npm ci)
-          node -e "
-            const fs = require('fs');
-            fs.writeFileSync('node_modules/@vscode/sqlite3/deps/extract.js',
-              \"const path = require('path');\\nconst {execFileSync} = require('child_process');\\nconst tarball = path.resolve(process.argv[2]);\\nconst dirname = path.resolve(process.argv[3]);\\nexecFileSync('tar', ['-xzf', tarball, '-C', dirname]);\\n\"
-            );
-          "
+          # Patch extract.js: use system tar with forward-slash paths.
+          # Windows bsdtar misparses @vscode\sqlite3\... as user@host when given backslash paths.
+          cat > node_modules/@vscode/sqlite3/deps/extract.js << 'JSEOF'
+          const path = require("path");
+          const { execFileSync } = require("child_process");
+          const tarball = path.resolve(process.argv[2]).replace(/\\/g, '/');
+          const dirname = path.resolve(process.argv[3]).replace(/\\/g, '/');
+          execFileSync("tar", ["-xzf", tarball, "-C", dirname]);
+          JSEOF
           npm rebuild @vscode/sqlite3
 
       - name: Build extension
