@@ -8,11 +8,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { registerByokCommands } from './byok/byokCommands';
 import { TreeProvider } from './tree/treeProvider';
+import { TreeNode } from './tree/treeTypes';
 import { registerNodeActions, setExtensionPath, setTreeRefresher } from './tree/nodeActions';
 import { findChatLanguageModelsFile } from './byok/chatLanguageModels';
 import { TokenUsageTracker } from './tokenUsage/tokenUsageTracker';
 import { TokenUsageStatusBar } from './tokenUsage/tokenUsageStatusBar';
 import { TokenUsageDashboard } from './tokenUsage/tokenUsageDashboard';
+import { VendorDashboard } from './tokenUsage/vendorDashboard';
+import { ModelDashboard } from './tokenUsage/modelDashboard';
 import { LogServiceImpl, LogLevel } from './platform/log/common/logService';
 import { VSCodeLogTarget, ConsoleLogTarget } from './platform/log/vscode/logService';
 import { logVendorMapping } from './tokenUsage/vendorResolver';
@@ -72,6 +75,12 @@ export function activate(context: vscode.ExtensionContext) {
 		if (TokenUsageDashboard.currentPanel) {
 			TokenUsageDashboard.currentPanel.update();
 		}
+		if (VendorDashboard.currentPanel) {
+			VendorDashboard.currentPanel.update();
+		}
+		if (ModelDashboard.currentPanel) {
+			ModelDashboard.currentPanel.update();
+		}
 		treeProvider.refresh();
 	});
 	context.subscriptions.push(tokenStatusBar);
@@ -90,6 +99,12 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Token usage data reloaded from disk.');
 			if (TokenUsageDashboard.currentPanel) {
 				TokenUsageDashboard.currentPanel.update();
+			}
+			if (VendorDashboard.currentPanel) {
+				VendorDashboard.currentPanel.update();
+			}
+			if (ModelDashboard.currentPanel) {
+				ModelDashboard.currentPanel.update();
 			}
 		})
 	);
@@ -144,6 +159,76 @@ export function activate(context: vscode.ExtensionContext) {
 
 			log.info('=== End Debug Info ===');
 			vscode.window.showInformationMessage('Token usage debug info written to output channel.');
+		})
+	);
+
+	// ─── Vendor & Model Usage Commands ──────────────────────────────────
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.showVendorUsage', (arg?: string | TreeNode) => {
+			let vendor: string | undefined;
+			if (typeof arg === 'string') {
+				vendor = arg;
+			} else if (arg && typeof arg === 'object' && 'id' in arg) {
+				vendor = arg.id.replace(/^usage-vendor:/, '');
+			}
+			// Fallback: pick first vendor with usage data
+			if (!vendor) {
+				const vendors = tokenTracker.metricsService.getAllVendors();
+				vendor = vendors[0];
+			}
+			if (!vendor) {
+				vscode.window.showInformationMessage('No vendor usage data available yet.');
+				return;
+			}
+			const dashboard = VendorDashboard.createOrShow(tokenTracker, vendor);
+			dashboard.update();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.showModelUsage', (arg?: string) => {
+			const dashboard = ModelDashboard.createOrShow(tokenTracker);
+			dashboard.update();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.showModelUsageForVendor', (arg: string | TreeNode) => {
+			let vendor: string | undefined;
+			if (typeof arg === 'string') {
+				vendor = arg;
+			} else if (arg && typeof arg === 'object' && 'id' in arg) {
+				vendor = arg.id.replace(/^usage-vendor:/, '');
+			}
+			const dashboard = ModelDashboard.createOrShow(tokenTracker, vendor);
+			dashboard.update();
+		})
+	);
+
+	// ─── Tree inline chart button commands ──────────────────────────────
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.openUsageOverview', (node?: TreeNode) => {
+			const dashboard = TokenUsageDashboard.createOrShow(tokenTracker);
+			dashboard.update();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.openUsageVendor', (node?: TreeNode) => {
+			if (!node || !node.id) { return; }
+			const vendor = node.id.replace(/^usage-vendor:/, '');
+			const dashboard = VendorDashboard.createOrShow(tokenTracker, vendor);
+			dashboard.update();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.openUsageModel', (node?: TreeNode) => {
+			if (!node || !node.id) { return; }
+			const modelId = node.id.replace(/^usage-model:/, '');
+			const vendor = modelId.includes('/') ? modelId.split('/')[0] : undefined;
+			const dashboard = ModelDashboard.createOrShow(tokenTracker, vendor, modelId);
+			dashboard.update();
 		})
 	);
 

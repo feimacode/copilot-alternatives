@@ -119,6 +119,40 @@ export interface ModelAgg {
 	requestCount: number;
 }
 
+/** Daily totals grouped by (date, vendor) for stacked vendor time-series charts. */
+export interface VendorDayTotal {
+	date: string;
+	vendor: string;
+	totalPromptTokens: number;
+	totalCompletionTokens: number;
+	totalTokens: number;
+	estimatedCostUsd: number;
+	requestCount: number;
+}
+
+/** Daily totals grouped by (date, model_id) for per-model time-series charts. */
+export interface ModelDayTotal {
+	date: string;
+	modelId: string;
+	totalPromptTokens: number;
+	totalCompletionTokens: number;
+	totalTokens: number;
+	estimatedCostUsd: number;
+	requestCount: number;
+}
+
+/** Weighted-average prompt-token breakdown per model, weighted by prompt_tokens. */
+export interface ModelPromptBreakdown {
+	modelId: string;
+	promptTokens: number;
+	requestCount: number;
+	avgSystemInstructionsPct: number;
+	avgToolDefinitionsPct: number;
+	avgMessagesPct: number;
+	avgFilesPct: number;
+	avgToolResultsPct: number;
+}
+
 // ─── DDL ────────────────────────────────────────────────────────────────────
 
 const DDL = `
@@ -468,14 +502,14 @@ export class MetricsDatabase {
 		`).all(...params) as ModelAgg[];
 	}
 
-	getDashboardSummary(): DashboardSummary {
+	getDashboardSummary(days = 30): DashboardSummary {
 		this._ensureOpen();
 
 		const todayKey = new Date().toISOString().split('T')[0];
 		const weekTotals = this.getDayTotals(7);
-		const monthTotals = this.getDayTotals(30);
-		const vendorBreakdown = this.getVendorBreakdown(30);
-		const modelBreakdown = this.getModelBreakdown(30);
+		const monthTotals = this.getDayTotals(days);
+		const vendorBreakdown = this.getVendorBreakdown(days);
+		const modelBreakdown = this.getModelBreakdown(days);
 
 		const today = weekTotals.find(d => d.date === todayKey) ?? {
 			date: todayKey,
@@ -528,6 +562,84 @@ export class MetricsDatabase {
 			vendorBreakdown,
 			modelBreakdown,
 		};
+	}
+
+	/** Daily totals grouped by vendor. Optionally filtered to a single vendor. */
+	getDayTotalsByVendor(days: number, vendor?: string): VendorDayTotal[] {
+		this._ensureOpen();
+		const cutoff = Date.now() - days * 86400000;
+		const vendorFilter = vendor ? ' AND vendor = ?' : '';
+		const params: (number | string)[] = [cutoff];
+		if (vendor) { params.push(vendor); }
+		params.push(days * 20);
+		return this._db.prepare(`
+			SELECT
+				date(timestamp / 1000, 'unixepoch') AS date,
+				vendor,
+				SUM(prompt_tokens) AS totalPromptTokens,
+				SUM(completion_tokens) AS totalCompletionTokens,
+				SUM(prompt_tokens + completion_tokens) AS totalTokens,
+				COALESCE(SUM(estimated_cost_usd), 0) AS estimatedCostUsd,
+				COUNT(*) AS requestCount
+			FROM turns
+			WHERE ${this._completeFilter(`timestamp >= ?${vendorFilter}`)}
+			GROUP BY date, vendor
+			ORDER BY date DESC
+			LIMIT ?
+		`).all(...params) as VendorDayTotal[];
+	}
+
+	/** Daily totals grouped by model. Optionally filtered by vendor and/or a specific model. */
+	getDayTotalsByModel(days: number, vendor?: string, modelId?: string): ModelDayTotal[] {
+		this._ensureOpen();
+		const cutoff = Date.now() - days * 86400000;
+		const conditions: string[] = [];
+		const params: (number | string)[] = [cutoff];
+		if (vendor) { conditions.push(`vendor = ?`); params.push(vendor); }
+		if (modelId) { conditions.push(`model_id = ?`); params.push(modelId); }
+		const extraFilter = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
+		params.push(days * 30);
+		return this._db.prepare(`
+			SELECT
+				date(timestamp / 1000, 'unixepoch') AS date,
+				model_id AS modelId,
+				SUM(prompt_tokens) AS totalPromptTokens,
+				SUM(completion_tokens) AS totalCompletionTokens,
+				SUM(prompt_tokens + completion_tokens) AS totalTokens,
+				COALESCE(SUM(estimated_cost_usd), 0) AS estimatedCostUsd,
+				COUNT(*) AS requestCount
+			FROM turns
+			WHERE ${this._completeFilter(`timestamp >= ?${extraFilter}`)}
+			GROUP BY date, model_id
+			ORDER BY date DESC
+			LIMIT ?
+		`).all(...params) as ModelDayTotal[];
+	}
+
+	/** Weighted-average prompt-token breakdown per model. Optionally filtered by vendor and/or model. */
+	getModelPromptBreakdown(days: number, vendor?: string, modelId?: string): ModelPromptBreakdown[] {
+		this._ensureOpen();
+		const cutoff = Date.now() - days * 86400000;
+		const conditions: string[] = [];
+		const params: (number | string)[] = [cutoff];
+		if (vendor) { conditions.push(`vendor = ?`); params.push(vendor); }
+		if (modelId) { conditions.push(`model_id = ?`); params.push(modelId); }
+		const extraFilter = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
+		return this._db.prepare(`
+			SELECT
+				model_id AS modelId,
+				SUM(prompt_tokens) AS promptTokens,
+				COUNT(*) AS requestCount,
+				CAST(SUM(prompt_tokens * system_instructions_pct) AS REAL) / NULLIF(SUM(prompt_tokens), 0) AS avgSystemInstructionsPct,
+				CAST(SUM(prompt_tokens * tool_definitions_pct) AS REAL) / NULLIF(SUM(prompt_tokens), 0) AS avgToolDefinitionsPct,
+				CAST(SUM(prompt_tokens * messages_pct) AS REAL) / NULLIF(SUM(prompt_tokens), 0) AS avgMessagesPct,
+				CAST(SUM(prompt_tokens * files_pct) AS REAL) / NULLIF(SUM(prompt_tokens), 0) AS avgFilesPct,
+				CAST(SUM(prompt_tokens * tool_results_pct) AS REAL) / NULLIF(SUM(prompt_tokens), 0) AS avgToolResultsPct
+			FROM turns
+			WHERE ${this._completeFilter(`timestamp >= ?${extraFilter}`)}
+			GROUP BY model_id
+			ORDER BY promptTokens DESC
+		`).all(...params) as ModelPromptBreakdown[];
 	}
 
 	getSessionCount(): number {

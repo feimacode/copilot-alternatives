@@ -58,10 +58,21 @@ export class TokenUsageDashboard {
 	static currentPanel: TokenUsageDashboard | undefined;
 	private readonly _panel: vscode.WebviewPanel;
 	private readonly _disposables: vscode.Disposable[] = [];
+	private _days = 30;
+	private _rangeMode: 'week' | 'month' | 'since' = 'month';
+	private _sinceDate = '';
 
 	private constructor(panel: vscode.WebviewPanel, private readonly _tracker: TokenUsageTracker) {
 		this._panel = panel;
 		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+		this._panel.webview.onDidReceiveMessage(msg => {
+			if (msg.type === 'dateChange') {
+				this._days = msg.days ?? 30;
+				this._rangeMode = msg.mode ?? 'month';
+				this._sinceDate = msg.sinceDate ?? '';
+				this.update();
+			}
+		}, null, this._disposables);
 	}
 
 	static createOrShow(tracker: TokenUsageTracker): TokenUsageDashboard {
@@ -88,7 +99,7 @@ export class TokenUsageDashboard {
 
 	private _render(): string {
 		// Pull from SQLite DB (fast aggregation query)
-		const s = this._tracker.metricsService.getDashboardSummary();
+		const s = this._tracker.metricsService.getDashboardSummary(this._days);
 
 		// Build vendor aggregate map compatible with chart expectations
 		const vendorAggs: Record<string, { promptTokens: number; completionTokens: number; costUsd: number; apiReportedEvents: number; contextWindowEvents: number }> = {};
@@ -125,6 +136,7 @@ export class TokenUsageDashboard {
 		console.log(`[TokenUsageDashboard] vendorAggs keys=${Object.keys(vendorAggs).length} entries=${vendorEntries.length} totalTokens=${vendorEntries.reduce((s,[,a])=>s+a.promptTokens+a.completionTokens,0)}`);
 
 		const chartData = JSON.stringify({
+			allDates: month.map(d => d.date),
 			allVendors,
 			weekLabels: week.map(d => d.date.slice(5)),
 			weekTokens: week.map(d => d.totalPromptTokens + d.totalCompletionTokens),
@@ -229,12 +241,30 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
 .badge-r{background:rgba(16,185,129,.15);color:var(--green)}
 .badge-c{background:rgba(234,179,8,.15);color:#eab308}
+
+/* Date Range Picker */
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.drp{display:flex;align-items:center;gap:6px}
+.drp-date{padding:3px 8px;font-size:10px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text);font-family:var(--font);display:none}
+.drp-date:focus{border-color:var(--accent);outline:none}
 </style>
 </head>
 <body>
 
-<h1>Token Usage</h1>
-<p class="subtitle">Chat model token consumption & estimated cost — all providers · <a href="command:copilotAlternatives.reloadTokenUsage" style="color:var(--accent);text-decoration:none" title="Clear state and reload all data from disk">↻ Reload from Disk</a></p>
+<div class="hdr">
+  <div>
+    <h1>Token Usage</h1>
+    <p class="subtitle">Chat model token consumption & estimated cost — all providers · <a href="command:copilotAlternatives.reloadTokenUsage" style="color:var(--accent);text-decoration:none" title="Clear state and reload all data from disk">↻ Reload from Disk</a></p>
+  </div>
+  <div class="drp">
+    <div class="tgl" id="tglRange">
+      <button data-r="week" ${this._rangeMode === 'week' ? 'class="on"' : ''}>7 Days</button>
+      <button data-r="month" ${this._rangeMode === 'month' ? 'class="on"' : ''}>30 Days</button>
+      <button data-r="since" ${this._rangeMode === 'since' ? 'class="on"' : ''}>Since…</button>
+    </div>
+    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" min="${month.length > 0 ? month[0].date : ''}" />
+  </div>
+</div>
 
 <div class="grid5">
   <div class="card"><div class="lbl">Today's Tokens</div><div class="val">${formatTokenCount(totalToday)}</div><div class="det">In ${formatTokenCount(today.totalPromptTokens)} / Out ${formatTokenCount(today.totalCompletionTokens)}</div></div>
@@ -244,14 +274,10 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div class="card"><div class="lbl">Vendors Tracked</div><div class="val">${vendorEntries.length}</div><div class="det">${allTime.daysTracked} days of data</div></div>
 </div>
 
-<!-- Toggle + Charts -->
+<!-- Charts -->
 <div class="sec">
   <div class="sec-h">
     <div class="sec-t">Usage Over Time</div>
-    <div class="tgl" id="tglRange">
-      <button class="on" data-r="week">7 Days</button>
-      <button data-r="month">30 Days</button>
-    </div>
   </div>
   <div class="ch2">
     <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">Tokens (Input / Output)</div><div class="ch"><canvas id="tokenChart"></canvas></div></div>
@@ -308,6 +334,11 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 <script>
 const D = ${chartData};
 console.log('[Dashboard] Data loaded:',{weekLabels:D.weekLabels.length,weekTokens:D.weekTokens,monthLabels:D.monthLabels.length,vendorNames:D.vendorNames.length});
+var _vscode = acquireVsCodeApi();
+
+function _postDateChange(days, mode, sinceDate) {
+  _vscode.postMessage({ type: 'dateChange', days: days, mode: mode || 'month', sinceDate: sinceDate || '' });
+}
 setTimeout(function(){
 requestAnimationFrame(function(){
 try{
@@ -357,24 +388,36 @@ tooltip:{callbacks:{label:ctx=>{
 scales:{x:{grid:{display:false},ticks:{maxRotation:45,minRotation:45,font:{size:8}}},
 y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}});
 
-// ── Range toggle ──
-document.getElementById('tglRange').addEventListener('click',e=>{
+// ── Date Range Picker ──
+const _dateInput = document.getElementById('sinceDate');
+document.getElementById('tglRange').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if(!btn) return;
-  document.querySelectorAll('#tglRange button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#tglRange button').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   const r = btn.dataset.r;
-  const labels = r==='week'? D.weekLabels : D.monthLabels;
-  const prompt = r==='week'? D.weekPrompt : D.monthPrompt;
-  const completion = r==='week'? D.weekCompletion : D.monthCompletion;
-  const costs = r==='week'? D.weekCosts : D.monthCosts;
-  tokenChart.data.labels = labels;
-  tokenChart.data.datasets[0].data = prompt;
-  tokenChart.data.datasets[1].data = completion;
-  tokenChart.update();
-  costChart.data.labels = labels;
-  costChart.data.datasets[0].data = costs;
-  costChart.update();
+  if(r === 'week') {
+    _dateInput.style.display = 'none';
+    _postDateChange(7, 'week', '');
+  } else if(r === 'month') {
+    _dateInput.style.display = 'none';
+    _postDateChange(30, 'month', '');
+  } else if(r === 'since') {
+    _dateInput.style.display = 'inline-block';
+    _dateInput.focus();
+    if(_dateInput.value) {
+      const sinceMs = new Date(_dateInput.value).getTime();
+      const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
+      _postDateChange(days, 'since', _dateInput.value);
+    }
+  }
+});
+_dateInput.addEventListener('change', function() {
+  if(this.value) {
+    const sinceMs = new Date(this.value).getTime();
+    const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
+    _postDateChange(days, 'since', this.value);
+  }
 });
 
 // ── Vendor filter ──

@@ -263,10 +263,6 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 		return models
 			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
 			.map(m => {
-				// Strip vendor prefix from display label — parent vendor node already shows it.
-				// For single-segment IDs (e.g. "gpt-4o"), keep as-is.
-				// For multi-segment IDs (e.g. "feima/deepseek-v4-pro" or
-				// "customendpoint/BytePlus/deepseek-v4-flash"), keep only the last segment.
 				const lastSlash = m.modelId.lastIndexOf('/');
 				const shortLabel = lastSlash === -1 ? m.modelId : m.modelId.slice(lastSlash + 1);
 				return new TreeNode(

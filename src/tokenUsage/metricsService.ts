@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg } from './metricsDatabase';
+import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg, ModelDayTotal, ModelPromptBreakdown } from './metricsDatabase';
 import { parseSessionFile, computeFileHash, ParsedSession } from './sessionStoreImporter';
 import { estimateCost, resolveModelPricingKey } from './tokenCostEstimator';
 import { ILogService } from '../platform/log/common/logService';
@@ -449,8 +449,8 @@ export class MetricsService implements vscode.Disposable {
 
 	// ── Dashboard queries ────────────────────────────────────────────────
 
-	getDashboardSummary(): DashboardSummary {
-		return this._db.getDashboardSummary();
+	getDashboardSummary(days = 30): DashboardSummary {
+		return this._db.getDashboardSummary(days);
 	}
 
 	/** Vendor breakdown for the last 7 days, ordered by total tokens descending. */
@@ -469,6 +469,32 @@ export class MetricsService implements vscode.Disposable {
 
 	getRequestCount(): number {
 		return this._db.getRequestCount();
+	}
+
+	// ── Vendor & Model View summaries ───────────────────────────────────
+
+	/** Vendor view summary scoped to a single vendor. */
+	getVendorViewSummary(vendor: string, days = 30): { models: ModelAgg[]; dailyByModel: ModelDayTotal[]; allTimeTokens: number; allTimeRequests: number } {
+		const models = this._db.getModelBreakdown(days, vendor);
+		const dailyByModel = this._db.getDayTotalsByModel(days, vendor);
+		const allVendors = this._db.getDayTotalsByVendor(days, vendor);
+		const allTimeTokens = allVendors.reduce((s, d) => s + d.totalTokens, 0);
+		const allTimeRequests = allVendors.reduce((s, d) => s + d.requestCount, 0);
+		return { models, dailyByModel, allTimeTokens, allTimeRequests };
+	}
+
+	/** Model view summary. Optionally filtered by vendor/model and time range. */
+	getModelViewSummary(vendor?: string, modelId?: string, days = 30): { models: ModelAgg[]; dailyByModel: ModelDayTotal[]; promptBreakdowns: ModelPromptBreakdown[] } {
+		const models = this._db.getModelBreakdown(days, vendor);
+		const dailyByModel = this._db.getDayTotalsByModel(days, vendor, modelId);
+		const promptBreakdowns = this._db.getModelPromptBreakdown(days, vendor, modelId);
+		return { models, dailyByModel, promptBreakdowns };
+	}
+
+	/** List of all distinct vendors with usage in last 30 days. */
+	getAllVendors(): string[] {
+		const vendors = this._db.getVendorBreakdown(30);
+		return vendors.map(v => v.vendor).sort();
 	}
 
 	// ── Dispose ──────────────────────────────────────────────────────────

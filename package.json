@@ -220,6 +220,42 @@
 				"title": "Debug Token Usage (dump to logs)",
 				"category": "Copilot Alternatives",
 				"icon": "$(bug)"
+			},
+			{
+				"command": "copilotAlternatives.showVendorUsage",
+				"title": "Show Vendor Usage",
+				"category": "Copilot Alternatives",
+				"icon": "$(organization)"
+			},
+			{
+				"command": "copilotAlternatives.showModelUsage",
+				"title": "Show Model Usage",
+				"category": "Copilot Alternatives",
+				"icon": "$(symbol-class)"
+			},
+			{
+				"command": "copilotAlternatives.showModelUsageForVendor",
+				"title": "Show Model Usage for Vendor",
+				"category": "Copilot Alternatives",
+				"icon": "$(symbol-class)"
+			},
+			{
+				"command": "copilotAlternatives.openUsageOverview",
+				"title": "Show Overview Usage",
+				"category": "Copilot Alternatives",
+				"icon": "$(graph)"
+			},
+			{
+				"command": "copilotAlternatives.openUsageVendor",
+				"title": "Show Vendor Usage",
+				"category": "Copilot Alternatives",
+				"icon": "$(graph)"
+			},
+			{
+				"command": "copilotAlternatives.openUsageModel",
+				"title": "Show Model Usage",
+				"category": "Copilot Alternatives",
+				"icon": "$(graph)"
 			}
 		],
 		"menus": {
@@ -314,6 +350,14 @@
 				},
 				{
 					"command": "copilotAlternatives.exportTokenUsage",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.showVendorUsage",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.showModelUsage",
 					"when": "true"
 				}
 			],
@@ -413,6 +457,21 @@
 				{
 					"command": "copilotAlternatives.openReadme",
 					"when": "view == copilotAlternatives.main && viewItem == moreInfoSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.openUsageOverview",
+					"when": "view == copilotAlternatives.main && viewItem == usageSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.openUsageVendor",
+					"when": "view == copilotAlternatives.main && viewItem == usageVendor",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.openUsageModel",
+					"when": "view == copilotAlternatives.main && viewItem == usageModel",
 					"group": "inline"
 				}
 			]

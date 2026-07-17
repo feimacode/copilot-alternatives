@@ -137,11 +137,6 @@ export class TreeNode {
 			case 'usageSection':
 				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 				item.iconPath = new vscode.ThemeIcon('dashboard');
-				// Dashboard button on the usage root node
-				item.command = {
-					command: 'copilotAlternatives.showTokenUsage',
-					title: 'Show Token Usage Dashboard',
-				};
 				break;
 
 			case 'usageVendor':
