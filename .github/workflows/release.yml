@@ -79,9 +79,6 @@ jobs:
           - os: windows-2022
             target: win32-x64
             script: package:win
-          - os: macos-13
-            target: darwin-x64
-            script: package:mac
           - os: macos-latest
             target: darwin-arm64
             script: package:mac-arm

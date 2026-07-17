@@ -81,7 +81,7 @@ jobs:
           echo "Available assets:"
           echo "$ASSETS"
 
-          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          TARGETS=("linux-x64" "win32-x64" "darwin-arm64")
           for TARGET in "${TARGETS[@]}"; do
             if ! echo "$ASSETS" | grep -q "copilot-alternatives-$TARGET-$VERSION.vsix"; then
               echo "❌ ERROR: copilot-alternatives-$TARGET-$VERSION.vsix not found in release!"
@@ -129,19 +129,19 @@ jobs:
           echo "✅ Download complete"
           ls -lah
 
-          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          TARGETS=("linux-x64" "win32-x64" "darwin-arm64")
           for TARGET in "${TARGETS[@]}"; do
             if [ ! -f "copilot-alternatives-$TARGET-$VERSION.vsix" ]; then
               echo "❌ VSIX not found: copilot-alternatives-$TARGET-$VERSION.vsix"
               exit 1
             fi
           done
-          echo "✅ All 4 platform VSIXes present"
+          echo "✅ All 3 platform VSIXes present"
 
       - name: Verify checksums
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          TARGETS=("linux-x64" "win32-x64" "darwin-arm64")
           for TARGET in "${TARGETS[@]}"; do
             VSIX="dist/copilot-alternatives-$TARGET-$VERSION.vsix"
             SHA="dist/copilot-alternatives-$TARGET-$VERSION.vsix.sha256"
@@ -164,7 +164,7 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          TARGETS=("linux-x64" "win32-x64" "darwin-arm64")
           for TARGET in "${TARGETS[@]}"; do
             VSIX="dist/copilot-alternatives-$TARGET-$VERSION.vsix"
             echo "📦 Publishing $TARGET..."
