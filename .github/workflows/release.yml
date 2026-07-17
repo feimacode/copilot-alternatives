@@ -134,17 +134,12 @@ jobs:
           VERSION="${{ needs.validate.outputs.version }}"
           VSIX="dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
 
-          # Check the .node binary is present for the right platform
-          if command -v python3 &>/dev/null; then
-            python3 -c "
-import zipfile, sys
-z = zipfile.ZipFile('$VSIX')
-node_files = [f.filename for f in z.infolist() if f.filename.endswith('.node')]
-if not node_files:
-    print('❌ No .node binary found in VSIX')
-    sys.exit(1)
-print('✅ Found native binary:', node_files[0])
-"
+          # Verify .node binary is bundled (unzip available on all runners)
+          if unzip -l "$VSIX" | grep -q '\.node$'; then
+            echo "✅ Native binary present in $VSIX"
+          else
+            echo "❌ No .node binary found in $VSIX"
+            exit 1
           fi
 
           echo "✅ VSIX validated: $VSIX"
