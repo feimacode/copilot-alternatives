@@ -279,6 +279,8 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 	private readonly _knownChatDirs = new Set<string>();
 	private _globalState!: vscode.Memento;
 	private readonly _log: ILogService;
+	/** Debounce timers per file path — coalesces duplicate watcher events from Windows NTFS. */
+	private readonly _debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 	private _metricsService: MetricsService | undefined;
 
@@ -304,6 +306,23 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 
 		// Register VS Code file system watchers for live updates
 		this._registerVSCodeWatchers(context);
+
+		// WSL-only: inotify cannot cross the drvfs /mnt/c boundary, so VS Code's
+		// file system watcher never fires for Windows-side chat session files.
+		// Fall back to polling those roots every 10 s.
+		if (isWSL()) {
+			const wslRoots = getWorkspaceStorageRoots(os.homedir())
+				.filter(r => r.startsWith('/mnt/') && fs.existsSync(r));
+			if (wslRoots.length > 0) {
+				const pollTimer = setInterval(() => {
+					for (const root of wslRoots) {
+						void this._pollWSLRoot(root);
+					}
+				}, 120_000);
+				context.subscriptions.push({ dispose: () => clearInterval(pollTimer) });
+				this._log.debug(`ChatSessionStore: WSL polling active for ${wslRoots.length} Windows root(s)`);
+			}
+		}
 
 		this._log.info(
 			`ChatSessionStore watcher active — ${this._seenRequestIds.size} known requests, ` +
@@ -424,6 +443,56 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 		}
 	}
 
+	/**
+	 * WSL polling: fully async so drvfs latency doesn't block the extension host event loop.
+	 *
+	 * Each tick:
+	 *   1. readdir(root) — discover new workspace dirs.
+	 *   2. For each known chatDir under root: readdir to list .jsonl files.
+	 *   3. Per file: stat for the time-window cutoff only, then hand off to _processFile.
+	 *      Change detection (mtime + size + hash) is delegated to importSingleFile which
+	 *      queries the processed_files DB table — persistent across restarts and shared
+	 *      across VS Code instances.
+	 */
+	private async _pollWSLRoot(root: string): Promise<void> {
+		// 1. Discover new workspace dirs not yet tracked
+		try {
+			const entries = await fs.promises.readdir(root, { withFileTypes: true });
+			for (const entry of entries) {
+				if (!entry.isDirectory()) { continue; }
+				const chatDir = path.join(root, entry.name, 'chatSessions');
+				if (this._knownChatDirs.has(chatDir)) { continue; }
+				try {
+					await fs.promises.access(chatDir);
+					this._knownChatDirs.add(chatDir);
+					this._log.debug(`ChatSessionStore: WSL poll discovered ${chatDir}`);
+				} catch { /* chatSessions dir doesn't exist */ }
+			}
+		} catch { /* root inaccessible */ }
+
+		// 2. Scan known chatDirs for new or modified .jsonl files
+		const config = vscode.workspace.getConfiguration();
+		const watcherDays = config.get<number>(SETTING_WATCHER_WINDOW_DAYS, DEFAULT_WATCHER_WINDOW_DAYS);
+		const cutoffMs = Date.now() - (watcherDays * 86400000);
+
+		for (const chatDir of this._knownChatDirs) {
+			if (!chatDir.startsWith(root)) { continue; }
+			try {
+				const files = await fs.promises.readdir(chatDir);
+				for (const file of files) {
+					if (!file.endsWith('.jsonl')) { continue; }
+					const fp = path.join(chatDir, file);
+					try {
+						const stat = await fs.promises.stat(fp);
+						if (stat.mtimeMs < cutoffMs) { continue; } // outside backfill window, skip
+						// importSingleFile checks processed_files (mtime+size+hash) and skips if unchanged
+						this._processFile(fp);
+					} catch { /* file disappeared */ }
+				}
+			} catch { /* dir inaccessible */ }
+		}
+	}
+
 	// ── File processing ────────────────────────────────────────────
 
 	/**
@@ -432,6 +501,17 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 	 * avoiding a wasteful second file read+parse.
 	 */
 	private _processFile(filePath: string): void {
+		// Debounce per-file: Windows NTFS watcher fires onDidCreate + onDidChange (or two onDidChange)
+		// for a single write, typically ~75ms apart. Coalesce into one import after 200ms.
+		const existing = this._debounceTimers.get(filePath);
+		if (existing !== undefined) { clearTimeout(existing); }
+		this._debounceTimers.set(filePath, setTimeout(() => {
+			this._debounceTimers.delete(filePath);
+			this._doProcessFile(filePath);
+		}, 200));
+	}
+
+	private _doProcessFile(filePath: string): void {
 		// Let metricsService handle the DB import (incremental via processed_files table).
 		// Returns true only if the file was new/changed and actually imported.
 		const importPromise = this._metricsService
@@ -590,6 +670,8 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 
 	dispose(): void {
 		this._saveState();
+		for (const timer of this._debounceTimers.values()) { clearTimeout(timer); }
+		this._debounceTimers.clear();
 		// VS Code watchers are disposed automatically via context.subscriptions
 	}
 }

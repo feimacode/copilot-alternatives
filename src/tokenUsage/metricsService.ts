@@ -360,7 +360,7 @@ export class MetricsService implements vscode.Disposable {
 
 			const existing = await this._db.getProcessedFile(filePath);
 			if (existing && existing.file_size === stat.size) {
-				// File hasn't grown — no new data to import
+				this._log.debug(`MetricsService: skipped ${path.basename(filePath)} (already processed, size=${stat.size})`);
 				return false;
 			}
 
