@@ -13,6 +13,7 @@ docs/**
 
 # Exclude all node_modules, then re-include only the runtime files needed
 node_modules/**
+!node_modules/@vscode/sqlite3/package.json
 !node_modules/@vscode/sqlite3/lib/**
 !node_modules/@vscode/sqlite3/build/Release/vscode-sqlite3.node
 !node_modules/chart.js/dist/chart.umd.min.js
