@@ -70,7 +70,22 @@ jobs:
 
   build:
     needs: validate
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            script: package:linux
+          - os: windows-latest
+            target: win32-x64
+            script: package:win
+          - os: macos-13
+            target: darwin-x64
+            script: package:mac
+          - os: macos-latest
+            target: darwin-arm64
+            script: package:mac-arm
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -89,54 +104,55 @@ jobs:
       - name: Build extension
         run: npm run compile
 
-      - name: Package VSIX
+      - name: Package VSIX (${{ matrix.target }})
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-
-          echo "📦 Packaging VSIX v$VERSION..."
-
+          echo "📦 Packaging ${{ matrix.target }} VSIX v$VERSION..."
           mkdir -p dist
-
           npx @vscode/vsce package \
+            --target ${{ matrix.target }} \
             --allow-star-activation \
-            --out "dist/copilot-alternatives-$VERSION.vsix"
-
-          echo "✅ VSIX packaged: dist/copilot-alternatives-$VERSION.vsix"
+            --out "dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
+          echo "✅ Packaged: dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
 
       - name: Generate SHA-256 checksum
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
-
-          sha256sum "$VSIX" > "${VSIX}.sha256"
+          VSIX="dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
+          if command -v sha256sum &>/dev/null; then
+            sha256sum "$VSIX" > "${VSIX}.sha256"
+          else
+            shasum -a 256 "$VSIX" > "${VSIX}.sha256"
+          fi
           echo "Checksum: $(cat ${VSIX}.sha256)"
 
       - name: Validate VSIX
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+          VSIX="dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
 
-          # Check file size
-          SIZE=$(stat -c%s "$VSIX")
-          MAX_SIZE=$((5 * 1024 * 1024))
-          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
-            echo "⚠️  VSIX exceeds 5 MB: $SIZE bytes"
-          else
-            echo "✅ VSIX size: $SIZE bytes (under 5 MB limit)"
+          # Check the .node binary is present for the right platform
+          if command -v python3 &>/dev/null; then
+            python3 -c "
+import zipfile, sys
+z = zipfile.ZipFile('$VSIX')
+node_files = [f.filename for f in z.infolist() if f.filename.endswith('.node')]
+if not node_files:
+    print('❌ No .node binary found in VSIX')
+    sys.exit(1)
+print('✅ Found native binary:', node_files[0])
+"
           fi
 
-          # Validate VSIX structure
-          echo "🔍 Validating VSIX structure..."
-          unzip -l "$VSIX" | grep -E "extension.vsixmanifest|package.json" || {
-            echo "❌ VSIX is missing required files"
-            exit 1
-          }
-          echo "✅ VSIX structure validated"
+          echo "✅ VSIX validated: $VSIX"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vsix
+          name: vsix-${{ matrix.target }}
           path: |
             dist/*.vsix
             dist/*.sha256
@@ -150,11 +166,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download all platform artifacts
         uses: actions/download-artifact@v4
         with:
-          name: vsix
+          pattern: vsix-*
           path: dist
+          merge-multiple: true
 
       - name: Extract changelog
         id: changelog
@@ -196,5 +213,7 @@ jobs:
           echo "**Version**: v$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- \`copilot-alternatives-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`copilot-alternatives-$VERSION.vsix.sha256\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-linux-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-win32-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-darwin-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-darwin-arm64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY

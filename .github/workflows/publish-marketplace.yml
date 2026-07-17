@@ -81,12 +81,14 @@ jobs:
           echo "Available assets:"
           echo "$ASSETS"
 
-          if ! echo "$ASSETS" | grep -q "copilot-alternatives-$VERSION.vsix"; then
-            echo ""
-            echo "❌ ERROR: copilot-alternatives-$VERSION.vsix not found in release!"
-            exit 1
-          fi
-          echo "✅ Found: copilot-alternatives-$VERSION.vsix"
+          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          for TARGET in "${TARGETS[@]}"; do
+            if ! echo "$ASSETS" | grep -q "copilot-alternatives-$TARGET-$VERSION.vsix"; then
+              echo "❌ ERROR: copilot-alternatives-$TARGET-$VERSION.vsix not found in release!"
+              exit 1
+            fi
+            echo "✅ Found: copilot-alternatives-$TARGET-$VERSION.vsix"
+          done
 
       - name: Check VSCE_PAT secret
         run: |
@@ -109,7 +111,7 @@ jobs:
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
-      - name: Download VSIX from release
+      - name: Download VSIX files from release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -119,53 +121,56 @@ jobs:
           mkdir -p dist
           cd dist
 
-          echo "📥 Downloading VSIX and checksum from release v$VERSION..."
+          echo "📥 Downloading all platform VSIXes from release v$VERSION..."
           gh release download "v$VERSION" --repo "$REPO" \
-            --pattern "copilot-alternatives-$VERSION.vsix*" \
+            --pattern "copilot-alternatives-*-$VERSION.vsix*" \
             --dir .
 
           echo "✅ Download complete"
           ls -lah
 
-          if [ ! -f "copilot-alternatives-$VERSION.vsix" ]; then
-            echo "❌ VSIX file not found after download"
-            exit 1
-          fi
-
-      - name: Verify checksum
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
-          SHA="dist/copilot-alternatives-$VERSION.vsix.sha256"
-
-          if [ ! -f "$SHA" ]; then
-            echo "⚠️  Checksum file not found, skipping verification"
-          else
-            echo "🔍 Verifying checksum..."
-            EXPECTED_HASH=$(awk '{print $1}' "$SHA")
-            ACTUAL_HASH=$(sha256sum "$VSIX" | awk '{print $1}')
-
-            if [ "$EXPECTED_HASH" == "$ACTUAL_HASH" ]; then
-              echo "✅ Checksum verified"
-            else
-              echo "❌ Checksum mismatch!"
-              echo "Expected: $EXPECTED_HASH"
-              echo "Actual:   $ACTUAL_HASH"
+          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          for TARGET in "${TARGETS[@]}"; do
+            if [ ! -f "copilot-alternatives-$TARGET-$VERSION.vsix" ]; then
+              echo "❌ VSIX not found: copilot-alternatives-$TARGET-$VERSION.vsix"
               exit 1
             fi
-          fi
+          done
+          echo "✅ All 4 platform VSIXes present"
 
-      - name: Publish to Marketplace
+      - name: Verify checksums
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          for TARGET in "${TARGETS[@]}"; do
+            VSIX="dist/copilot-alternatives-$TARGET-$VERSION.vsix"
+            SHA="dist/copilot-alternatives-$TARGET-$VERSION.vsix.sha256"
+            if [ ! -f "$SHA" ]; then
+              echo "⚠️  Checksum file not found for $TARGET, skipping"
+              continue
+            fi
+            EXPECTED=$(awk '{print $1}' "$SHA")
+            ACTUAL=$(sha256sum "$VSIX" | awk '{print $1}')
+            if [ "$EXPECTED" == "$ACTUAL" ]; then
+              echo "✅ Checksum OK: $TARGET"
+            else
+              echo "❌ Checksum mismatch: $TARGET"
+              exit 1
+            fi
+          done
+
+      - name: Publish all platforms to Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
-
-          echo "📦 Publishing to VS Code Marketplace: $VSIX"
-          vsce publish --packagePath "$VSIX"
-
-          echo "✅ Published successfully"
+          TARGETS=("linux-x64" "win32-x64" "darwin-x64" "darwin-arm64")
+          for TARGET in "${TARGETS[@]}"; do
+            VSIX="dist/copilot-alternatives-$TARGET-$VERSION.vsix"
+            echo "📦 Publishing $TARGET..."
+            vsce publish --packagePath "$VSIX"
+            echo "✅ Published $TARGET"
+          done
           echo "🔗 Marketplace: https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives"
 
   summary:

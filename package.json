@@ -468,9 +468,14 @@
 		"watch": "tsc -watch -p ./",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"package": "vsce package --allow-star-activation"
+		"package": "vsce package --allow-star-activation",
+		"package:linux": "vsce package --target linux-x64 --allow-star-activation",
+		"package:win": "vsce package --target win32-x64 --allow-star-activation",
+		"package:mac": "vsce package --target darwin-x64 --allow-star-activation",
+		"package:mac-arm": "vsce package --target darwin-arm64 --allow-star-activation"
 	},
 	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^22.0.0",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^2.22.0",
@@ -478,7 +483,6 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
-		"@types/better-sqlite3": "^7.6.13",
 		"better-sqlite3": "^12.11.1",
 		"chart.js": "^4.5.1"
 	}

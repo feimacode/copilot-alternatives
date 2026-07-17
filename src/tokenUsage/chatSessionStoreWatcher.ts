@@ -277,8 +277,6 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 	private readonly _handlers: EventHandler[] = [];
 	private readonly _seenRequestIds = new Set<string>();
 	private readonly _knownChatDirs = new Set<string>();
-	private readonly _watchers: fs.FSWatcher[] = [];
-	private _pollTimer: ReturnType<typeof setInterval> | undefined;
 	private _globalState!: vscode.Memento;
 	private readonly _log: ILogService;
 
@@ -304,14 +302,69 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 		// Defer initial scan to avoid blocking extension activation
 		setImmediate(() => this._scanWorkspaceRoots());
 
-		// Poll for new workspace storage dirs or chatSessions dirs appearing
-		this._pollTimer = setInterval(() => this._scanWorkspaceRoots(), 60_000);
+		// Register VS Code file system watchers for live updates
+		this._registerVSCodeWatchers(context);
 
 		this._log.info(
 			`ChatSessionStore watcher active — ${this._seenRequestIds.size} known requests, ` +
 			`${this._knownChatDirs.size} chatSessions dirs` +
 			(isWSL() ? ' [WSL mode: probing Windows paths]' : '')
 		);
+	}
+
+	// ── VS Code FSWatcher registration ─────────────────────────────
+
+	/**
+	 * Registers two vscode.workspace.createFileSystemWatcher watchers per
+	 * existing storage root:
+	 *
+	 *   Watcher A — pattern `*` (direct children of storage root), onDidCreate only.
+	 *     Fires when a new workspace dir is created. Triggers _scanChatDir for it.
+	 *     No time filter — we want to know about any new workspace dir.
+	 *
+	 *   Watcher B — pattern `*\/chatSessions\/*.jsonl`, onCreate + onChange.
+	 *     Fires when a JSONL file is created or modified. Calls _processFile.
+	 *     The 24h window is enforced by the watcher window setting at process time.
+	 *
+	 * Watcher lifecycle is tied to context.subscriptions — no manual cleanup needed.
+	 * WSL /mnt/c paths are included in roots but VS Code Server inotify does not
+	 * cross the drvfs boundary; the initial scan covers those paths instead.
+	 */
+	private _registerVSCodeWatchers(context: vscode.ExtensionContext): void {
+		const roots = getWorkspaceStorageRoots(os.homedir()).filter(r => fs.existsSync(r));
+		for (const root of roots) {
+			const rootUri = vscode.Uri.file(root);
+
+			// Watcher A: new workspace dirs (no time filter)
+			const watcherA = vscode.workspace.createFileSystemWatcher(
+				new vscode.RelativePattern(rootUri, '*'),
+				false, // ignoreCreateEvents
+				true,  // ignoreChangeEvents
+				true   // ignoreDeleteEvents
+			);
+			watcherA.onDidCreate(uri => {
+				const chatDir = path.join(uri.fsPath, 'chatSessions');
+				if (this._knownChatDirs.has(chatDir)) { return; }
+				if (!fs.existsSync(chatDir)) { return; }
+				this._knownChatDirs.add(chatDir);
+				this._log.debug(`ChatSessionStore: discovered new chatSessions dir at ${chatDir}`);
+				this._scanChatDir(chatDir);
+			});
+			context.subscriptions.push(watcherA);
+
+			// Watcher B: JSONL file create/change (24h filter at processing time)
+			const watcherB = vscode.workspace.createFileSystemWatcher(
+				new vscode.RelativePattern(rootUri, '*/chatSessions/*.jsonl'),
+				false, // ignoreCreateEvents
+				false, // ignoreChangeEvents
+				true   // ignoreDeleteEvents
+			);
+			watcherB.onDidCreate(uri => this._processFile(uri.fsPath));
+			watcherB.onDidChange(uri => this._processFile(uri.fsPath));
+			context.subscriptions.push(watcherB);
+
+			this._log.debug(`ChatSessionStore: registered watchers for ${root}`);
+		}
 	}
 
 	// ── State persistence ──────────────────────────────────────────
@@ -342,7 +395,7 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 					this._knownChatDirs.add(chatDir);
 					this._log.debug(`ChatSessionStore: discovered chatSessions dir at ${chatDir}`);
 					this._scanChatDir(chatDir);
-					this._watchDir(chatDir);
+
 				}
 			} catch {
 				// skip inaccessible roots
@@ -368,20 +421,6 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 			}
 		} catch {
 			// skip inaccessible dirs
-		}
-	}
-
-	private _watchDir(dir: string): void {
-		try {
-			const w = fs.watch(dir, (_eventType, filename) => {
-				if (filename && filename.endsWith('.jsonl')) {
-					this._processFile(path.join(dir, filename));
-				}
-			});
-			w.on('error', () => { /* benign */ });
-			this._watchers.push(w);
-		} catch {
-			// not watchable on this platform
 		}
 	}
 
@@ -549,7 +588,6 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 
 	dispose(): void {
 		this._saveState();
-		if (this._pollTimer) { clearInterval(this._pollTimer); }
-		for (const w of this._watchers) { w.close(); }
+		// VS Code watchers are disposed automatically via context.subscriptions
 	}
 }
