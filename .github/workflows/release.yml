@@ -32,12 +32,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Extract and validate version
         id: version
@@ -91,12 +91,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Build @vscode/sqlite3 native binary
+        shell: bash
+        run: |
+          # Patch extract.js to use system tar instead of the missing npm 'tar' module
+          # (tar is a devDependency of @vscode/sqlite3 and is not installed by npm ci)
+          node -e "
+            const fs = require('fs');
+            fs.writeFileSync('node_modules/@vscode/sqlite3/deps/extract.js',
+              \"const path = require('path');\\nconst {execFileSync} = require('child_process');\\nconst tarball = path.resolve(process.argv[2]);\\nconst dirname = path.resolve(process.argv[3]);\\nexecFileSync('tar', ['-xzf', tarball, '-C', dirname]);\\n\"
+            );
+          "
+          npm rebuild @vscode/sqlite3
 
       - name: Build extension
         run: npm run compile

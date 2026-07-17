@@ -57,7 +57,9 @@ export class TokenUsageTracker implements vscode.Disposable {
 
 		// ── Activation order ─────────────────────────
 		// 1. Quick import (deferred, non-blocking) — gets recent data into DB
-		setImmediate(() => this._metricsService.quickImport());
+		setImmediate(() => { void this._metricsService.quickImport().catch(err =>
+			this._log.warn(`Quick import failed: ${err instanceof Error ? err.message : String(err)}`)
+		); });
 		// 2. Background catch-up (async, non-blocking) — full historical data
 		this._metricsService.backgroundImport().catch(err =>
 			this._log.warn(`Background import failed: ${err instanceof Error ? err.message : String(err)}`)

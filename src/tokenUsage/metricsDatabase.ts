@@ -3,7 +3,7 @@
  *  Licensed under the MIT License.
  *--------------------------------------------------------------------------------------------*/
 
-import Database from 'better-sqlite3';
+import * as sqlite3 from '@vscode/sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -198,61 +198,116 @@ CREATE INDEX IF NOT EXISTS idx_turn_agent ON turns(agent_id);
 
 // ─── Database class ─────────────────────────────────────────────────────────
 
+/** Prefix all keys of obj with '@' for node-sqlite3 named-param binding. */
+function toAtParams(obj: Record<string, unknown>): Record<string, unknown> {
+	const out: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(obj)) { out[`@${k}`] = v; }
+	return out;
+}
+
 export class MetricsDatabase {
-	private _db: Database.Database;
+	private _db: sqlite3.Database;
+	private _ready: Promise<void>;
 	private _closed = false;
+	/** Serializes concurrent runInTransaction calls onto a single queue. */
+	private _txQueue: Promise<unknown> = Promise.resolve();
 
 	constructor(dbPath: string) {
 		const dir = path.dirname(dbPath);
 		if (!fs.existsSync(dir)) {
 			fs.mkdirSync(dir, { recursive: true });
 		}
-		this._db = new Database(dbPath);
-		this._db.pragma('journal_mode = WAL');
-		this._db.pragma('synchronous = NORMAL');
-		this._db.exec(DDL);
+		this._db = new sqlite3.Database(dbPath);
+		this._ready = new Promise<void>((resolve, reject) => {
+			this._db.serialize(() => {
+				this._db.run('PRAGMA journal_mode = WAL');
+				this._db.run('PRAGMA synchronous = NORMAL');
+				this._db.run('PRAGMA busy_timeout = 5000');
+				this._db.exec(DDL, (err) => {
+					if (err) { reject(err); } else { resolve(); }
+				});
+			});
+		});
 	}
 
 	private _ensureOpen(): void {
-		if (this._closed) {
-			throw new Error('MetricsDatabase is closed');
-		}
+		if (this._closed) { throw new Error('MetricsDatabase is closed'); }
 	}
 
-	// ── Transaction helpers ──────────────────────────────────────────────
+	// ── Low-level promise helpers ────────────────────────────────────────
 
-	beginTransaction(): void {
+	private _run(sql: string, params: unknown[] = []): Promise<void> {
 		this._ensureOpen();
-		this._db.prepare('BEGIN IMMEDIATE').run();
+		return new Promise<void>((resolve, reject) => {
+			this._db.run(sql, params, (err: Error | null) => {
+				if (err) { reject(err); } else { resolve(); }
+			});
+		});
 	}
 
-	commit(): void {
+	private _runNamed(sql: string, params: Record<string, unknown>): Promise<void> {
 		this._ensureOpen();
-		this._db.prepare('COMMIT').run();
+		return new Promise<void>((resolve, reject) => {
+			this._db.run(sql, toAtParams(params), (err: Error | null) => {
+				if (err) { reject(err); } else { resolve(); }
+			});
+		});
 	}
 
-	rollback(): void {
+	private _get<T>(sql: string, params: unknown[] = []): Promise<T | undefined> {
 		this._ensureOpen();
-		this._db.prepare('ROLLBACK').run();
+		return new Promise<T | undefined>((resolve, reject) => {
+			this._db.get(sql, params, (err: Error | null, row: T) => {
+				if (err) { reject(err); } else { resolve(row); }
+			});
+		});
+	}
+
+	private _all<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+		this._ensureOpen();
+		return new Promise<T[]>((resolve, reject) => {
+			this._db.all(sql, params, (err: Error | null, rows: T[]) => {
+				if (err) { reject(err); } else { resolve(rows ?? []); }
+			});
+		});
+	}
+
+	// ── Transaction helper ───────────────────────────────────────────────
+
+	async runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
+		await this._ready;
+		const txWork = this._txQueue.then(async () => {
+			await this._run('BEGIN IMMEDIATE');
+			try {
+				const result = await fn();
+				await this._run('COMMIT');
+				return result;
+			} catch (err) {
+				try { await this._run('ROLLBACK'); } catch { /* already rolled back */ }
+				throw err;
+			}
+		});
+		// Advance the queue regardless of success/failure so the next caller can proceed.
+		this._txQueue = txWork.then(() => undefined, () => undefined);
+		return txWork;
 	}
 
 	// ── File tracking ────────────────────────────────────────────────────
 
-	getProcessedFile(filePath: string): ProcessedFileRow | null {
-		this._ensureOpen();
-		return this._db.prepare(
-			'SELECT * FROM processed_files WHERE file_path = ?'
-		).get(filePath) as ProcessedFileRow | undefined ?? null;
+	async getProcessedFile(filePath: string): Promise<ProcessedFileRow | null> {
+		await this._ready;
+		return (await this._get<ProcessedFileRow>(
+			'SELECT * FROM processed_files WHERE file_path = ?', [filePath]
+		)) ?? null;
 	}
 
-	markFileProcessed(
+	async markFileProcessed(
 		filePath: string,
 		size: number,
 		mtime: number,
 		hash: string
-	): void {
-		this._ensureOpen();
-		this._db.prepare(`
+	): Promise<void> {
+		await this._run(`
 			INSERT INTO processed_files (file_path, file_size, file_mtime, content_hash, last_imported)
 			VALUES (?, ?, ?, ?, ?)
 			ON CONFLICT(file_path) DO UPDATE SET
@@ -260,45 +315,29 @@ export class MetricsDatabase {
 				file_mtime = excluded.file_mtime,
 				content_hash = excluded.content_hash,
 				last_imported = excluded.last_imported
-		`).run(filePath, size, mtime, hash, Date.now());
+		`, [filePath, size, mtime, hash, Date.now()]);
 	}
 
-	deleteFileRecord(filePath: string): void {
-		this._ensureOpen();
-		this._db.prepare('DELETE FROM processed_files WHERE file_path = ?').run(filePath);
+	async deleteFileRecord(filePath: string): Promise<void> {
+		await this._run('DELETE FROM processed_files WHERE file_path = ?', [filePath]);
 	}
 
-	/**
-	 * Given a list of candidate .jsonl file paths, returns those that need
-	 * import: files not yet in processed_files, or whose stored hash/size/mtime
-	 * differs from the provided values.
-	 */
-	/**
-	 * Returns files that need import: new files, or files whose size changed
-	 * since last import. JSONL is append-only — size comparison is sufficient
-	 * and avoids reading unchanged files.
-	 */
-	findChangedFiles(candidates: Array<{ path: string; size: number; mtime: number }>): string[] {
-		this._ensureOpen();
-		const changed: string[] = [];
-		for (const c of candidates) {
-			const existing = this.getProcessedFile(c.path);
-			if (!existing) {
-				changed.push(c.path);
-				continue;
-			}
-		if (existing.file_size !== c.size) {
-				changed.push(c.path);
-			}
-		}
-		return changed;
+	async findChangedFiles(candidates: Array<{ path: string; size: number; mtime: number }>): Promise<string[]> {
+		await this._ready;
+		const results = await Promise.all(
+			candidates.map(c =>
+				this.getProcessedFile(c.path).then(existing =>
+					(!existing || existing.file_size !== c.size) ? c.path : null
+				)
+			)
+		);
+		return results.filter((r): r is string => r !== null);
 	}
 
 	// ── Data import ──────────────────────────────────────────────────────
 
-	upsertSession(row: SessionRow): void {
-		this._ensureOpen();
-		const stmt = this._db.prepare(`
+	async upsertSession(row: SessionRow): Promise<void> {
+		await this._runNamed(`
 			INSERT INTO sessions (
 				session_id, file_path, creation_date, initial_location,
 				has_pending_edits, request_count, session_model_id, session_vendor,
@@ -320,13 +359,11 @@ export class MetricsDatabase {
 				session_family = excluded.session_family,
 				session_extension = excluded.session_extension,
 				session_is_byok = excluded.session_is_byok
-		`);
-		stmt.run(row);
+		`, row as unknown as Record<string, unknown>);
 	}
 
-	upsertTurn(row: TurnRow): void {
-		this._ensureOpen();
-		const stmt = this._db.prepare(`
+	async upsertTurn(row: TurnRow): Promise<void> {
+		await this._runNamed(`
 			INSERT INTO turns (
 				request_id, session_id, timestamp, completed_at, elapsed_ms,
 				first_progress_ms, total_elapsed_ms, time_spent_waiting,
@@ -395,13 +432,11 @@ export class MetricsDatabase {
 				tool_call_count = excluded.tool_call_count,
 				thinking_tokens = excluded.thinking_tokens,
 				estimated_cost_usd = excluded.estimated_cost_usd
-		`);
-		stmt.run(row);
+		`, row as unknown as Record<string, unknown>);
 	}
 
-	deleteSession(sessionId: string): void {
-		this._ensureOpen();
-		this._db.prepare('DELETE FROM sessions WHERE session_id = ?').run(sessionId);
+	async deleteSession(sessionId: string): Promise<void> {
+		await this._run('DELETE FROM sessions WHERE session_id = ?', [sessionId]);
 	}
 
 	// ── Dashboard queries ────────────────────────────────────────────────
@@ -411,10 +446,10 @@ export class MetricsDatabase {
 		return extraWhere ? `${base} AND ${extraWhere}` : base;
 	}
 
-	getDayTotals(days: number): DayTotal[] {
-		this._ensureOpen();
+	async getDayTotals(days: number): Promise<DayTotal[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
-		return this._db.prepare(`
+		return this._all<DayTotal>(`
 			SELECT
 				date(timestamp / 1000, 'unixepoch') AS date,
 				SUM(prompt_tokens) AS totalPromptTokens,
@@ -427,13 +462,13 @@ export class MetricsDatabase {
 			GROUP BY date
 			ORDER BY date DESC
 			LIMIT ?
-		`).all(cutoff, days) as DayTotal[];
+		`, [cutoff, days]);
 	}
 
-	getVendorBreakdown(days: number): VendorAgg[] {
-		this._ensureOpen();
+	async getVendorBreakdown(days: number): Promise<VendorAgg[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
-		return this._db.prepare(`
+		return this._all<VendorAgg>(`
 			SELECT
 				vendor,
 				SUM(prompt_tokens) AS promptTokens,
@@ -445,16 +480,16 @@ export class MetricsDatabase {
 			WHERE ${this._completeFilter('timestamp >= ?')}
 			GROUP BY vendor
 			ORDER BY totalTokens DESC
-		`).all(cutoff) as VendorAgg[];
+		`, [cutoff]);
 	}
 
-	getModelBreakdown(days: number, vendor?: string): ModelAgg[] {
-		this._ensureOpen();
+	async getModelBreakdown(days: number, vendor?: string): Promise<ModelAgg[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
 		const vendorFilter = vendor ? ' AND vendor = ?' : '';
-		const params: (number | string)[] = [cutoff];
+		const params: unknown[] = [cutoff];
 		if (vendor) { params.push(vendor); }
-		return this._db.prepare(`
+		return this._all<ModelAgg>(`
 			SELECT
 				model_id AS modelId,
 				SUM(prompt_tokens) AS promptTokens,
@@ -465,17 +500,19 @@ export class MetricsDatabase {
 			WHERE ${this._completeFilter(`timestamp >= ?${vendorFilter}`)}
 			GROUP BY model_id
 			ORDER BY promptTokens + completionTokens DESC
-		`).all(...params) as ModelAgg[];
+		`, params);
 	}
 
-	getDashboardSummary(): DashboardSummary {
-		this._ensureOpen();
+	async getDashboardSummary(): Promise<DashboardSummary> {
+		await this._ready;
 
 		const todayKey = new Date().toISOString().split('T')[0];
-		const weekTotals = this.getDayTotals(7);
-		const monthTotals = this.getDayTotals(30);
-		const vendorBreakdown = this.getVendorBreakdown(30);
-		const modelBreakdown = this.getModelBreakdown(30);
+		const [weekTotals, monthTotals, vendorBreakdown, modelBreakdown] = await Promise.all([
+			this.getDayTotals(7),
+			this.getDayTotals(30),
+			this.getVendorBreakdown(30),
+			this.getModelBreakdown(30),
+		]);
 
 		const today = weekTotals.find(d => d.date === todayKey) ?? {
 			date: todayKey,
@@ -486,7 +523,12 @@ export class MetricsDatabase {
 			requestCount: 0,
 		};
 
-		const allTime = this._db.prepare(`
+		const allTime = await this._get<{
+			totalPromptTokens: number;
+			totalCompletionTokens: number;
+			totalCostUsd: number;
+			firstTrackedDate: string | null;
+		}>(`
 			SELECT
 				COALESCE(SUM(prompt_tokens), 0) AS totalPromptTokens,
 				COALESCE(SUM(completion_tokens), 0) AS totalCompletionTokens,
@@ -494,20 +536,17 @@ export class MetricsDatabase {
 				MIN(date(timestamp / 1000, 'unixepoch')) AS firstTrackedDate
 			FROM turns
 			WHERE ${this._completeFilter()}
-		`).get() as {
-			totalPromptTokens: number;
-			totalCompletionTokens: number;
-			totalCostUsd: number;
-			firstTrackedDate: string | null;
-		};
+		`);
 
-		const counts = this._db.prepare(`
+		const counts = await this._get<{ sessionCount: number; requestCount: number }>(`
 			SELECT
 				(SELECT COUNT(*) FROM sessions) AS sessionCount,
 				(SELECT COUNT(*) FROM turns WHERE ${this._completeFilter()}) AS requestCount
-		`).get() as { sessionCount: number; requestCount: number };
+		`);
 
-		const firstDate = allTime.firstTrackedDate ?? todayKey;
+		const safeAllTime = allTime ?? { totalPromptTokens: 0, totalCompletionTokens: 0, totalCostUsd: 0, firstTrackedDate: null };
+		const safeCounts = counts ?? { sessionCount: 0, requestCount: 0 };
+		const firstDate = safeAllTime.firstTrackedDate ?? todayKey;
 		const daysTracked = Math.max(1, Math.ceil(
 			(new Date(todayKey).getTime() - new Date(firstDate).getTime()) / 86400000
 		));
@@ -517,43 +556,43 @@ export class MetricsDatabase {
 			thisWeek: weekTotals.slice(0, 7).reverse(),
 			thisMonth: monthTotals.slice(0, 30).reverse(),
 			allTime: {
-				totalPromptTokens: allTime.totalPromptTokens,
-				totalCompletionTokens: allTime.totalCompletionTokens,
-				totalCostUsd: allTime.totalCostUsd,
+				totalPromptTokens: safeAllTime.totalPromptTokens,
+				totalCompletionTokens: safeAllTime.totalCompletionTokens,
+				totalCostUsd: safeAllTime.totalCostUsd,
 				firstTrackedDate: firstDate,
 				daysTracked,
-				sessionCount: counts.sessionCount,
-				requestCount: counts.requestCount,
+				sessionCount: safeCounts.sessionCount,
+				requestCount: safeCounts.requestCount,
 			},
 			vendorBreakdown,
 			modelBreakdown,
 		};
 	}
 
-	getSessionCount(): number {
-		this._ensureOpen();
-		return (this._db.prepare('SELECT COUNT(*) AS c FROM sessions').get() as { c: number }).c;
+	async getSessionCount(): Promise<number> {
+		await this._ready;
+		return ((await this._get<{ c: number }>('SELECT COUNT(*) AS c FROM sessions'))?.c ?? 0);
 	}
 
-	getRequestCount(): number {
-		this._ensureOpen();
-		return (this._db.prepare(`SELECT COUNT(*) AS c FROM turns WHERE ${this._completeFilter()}`).get() as { c: number }).c;
+	async getRequestCount(): Promise<number> {
+		await this._ready;
+		return ((await this._get<{ c: number }>(`SELECT COUNT(*) AS c FROM turns WHERE ${this._completeFilter()}`))?.c ?? 0);
 	}
 
 	// ── Rebuild ──────────────────────────────────────────────────────────
 
-	clearAllData(): void {
-		this._ensureOpen();
-		this._db.prepare('DELETE FROM turns').run();
-		this._db.prepare('DELETE FROM sessions').run();
-		this._db.prepare('DELETE FROM processed_files').run();
+	async clearAllData(): Promise<void> {
+		await this._ready;
+		await this._run('DELETE FROM turns');
+		await this._run('DELETE FROM sessions');
+		await this._run('DELETE FROM processed_files');
 	}
 
 	// ── Lifecycle ────────────────────────────────────────────────────────
 
 	vacuum(): void {
-		this._ensureOpen();
-		this._db.exec('VACUUM');
+		if (this._closed) { return; }
+		this._db.run('VACUUM');
 	}
 
 	close(): void {

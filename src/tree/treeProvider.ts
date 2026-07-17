@@ -74,7 +74,7 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 
 	// ─── Root children ──────────────────────────────────────────────────────
 
-	private _getRootChildren(): TreeNode[] {
+	private async _getRootChildren(): Promise<TreeNode[]> {
 		const nodes: TreeNode[] = [];
 
 		// 1. BYOK section — most important, always first and expanded
@@ -102,7 +102,7 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 
 		// 3. Usage Stats (from SQLite DB, last 7 days)
 		if (this._tokenTracker) {
-			const vendors7d = this._tokenTracker.metricsService.getVendorBreakdown7d();
+			const vendors7d = await this._tokenTracker.metricsService.getVendorBreakdown7d();
 			const totalTokens = vendors7d.reduce((sum, v) => sum + v.promptTokens + v.completionTokens, 0);
 			const totalReqs = vendors7d.reduce((sum, v) => sum + v.requestCount, 0);
 			const totalCost = vendors7d.reduce((sum, v) => sum + v.costUsd, 0);
@@ -241,9 +241,9 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 
 	// ─── Usage Stats ──────────────────────────────────────────────────────
 
-	private _getUsageVendors(): TreeNode[] {
+	private async _getUsageVendors(): Promise<TreeNode[]> {
 		if (!this._tokenTracker) { return []; }
-		const vendors = this._tokenTracker.metricsService.getVendorBreakdown7d();
+		const vendors = await this._tokenTracker.metricsService.getVendorBreakdown7d();
 
 		return vendors
 			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
@@ -257,9 +257,9 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 			));
 	}
 
-	private _getUsageModels(vendor: string): TreeNode[] {
+	private async _getUsageModels(vendor: string): Promise<TreeNode[]> {
 		if (!this._tokenTracker) { return []; }
-		const models = this._tokenTracker.metricsService.getModelBreakdown7d(vendor);
+		const models = await this._tokenTracker.metricsService.getModelBreakdown7d(vendor);
 		return models
 			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
 			.map(m => {

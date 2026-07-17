@@ -434,14 +434,16 @@ export class ChatSessionStoreWatcher implements vscode.Disposable {
 	private _processFile(filePath: string): void {
 		// Let metricsService handle the DB import (incremental via processed_files table).
 		// Returns true only if the file was new/changed and actually imported.
-		const imported = this._metricsService
-			? (() => { try { return this._metricsService!.importSingleFile(filePath); } catch { return false; } })()
-			: false;
+		const importPromise = this._metricsService
+			? this._metricsService.importSingleFile(filePath).catch(() => false)
+			: Promise.resolve(false);
 
-		// Only emit live events if the file had new data worth looking at
-		if (imported) {
-			this._emitEventsFromFile(filePath);
-		}
+		importPromise.then(imported => {
+			// Only emit live events if the file had new data worth looking at
+			if (imported) {
+				this._emitEventsFromFile(filePath);
+			}
+		}).catch(() => { /* ignore */ });
 	}
 
 	private _emitEventsFromFile(filePath: string): void {
