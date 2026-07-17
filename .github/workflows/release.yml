@@ -101,14 +101,19 @@ jobs:
       - name: Build @vscode/sqlite3 native binary
         shell: bash
         run: |
-          # Patch extract.js: use system tar with forward-slash paths.
-          # Windows bsdtar misparses @vscode\sqlite3\... as user@host when given backslash paths.
+          # Patch extract.js: pass only the basename to tar + set cwd to the deps dir.
+          # Windows bsdtar parses paths containing '@' as user@host:path.
+          # Keeping the filename arg as a bare name (no directory) avoids that entirely.
           cat > node_modules/@vscode/sqlite3/deps/extract.js << 'JSEOF'
           const path = require("path");
+          const fs = require("fs");
           const { execFileSync } = require("child_process");
-          const tarball = path.resolve(process.argv[2]).replace(/\\/g, '/');
-          const dirname = path.resolve(process.argv[3]).replace(/\\/g, '/');
-          execFileSync("tar", ["-xzf", tarball, "-C", dirname]);
+          const tarball = path.resolve(process.argv[2]);
+          const outDir = path.resolve(process.argv[3]).replace(/\\/g, "/");
+          fs.mkdirSync(outDir, { recursive: true });
+          execFileSync("tar", ["-xzf", path.basename(tarball), "-C", outDir], {
+            cwd: path.dirname(tarball)
+          });
           JSEOF
           npm rebuild @vscode/sqlite3
 
