@@ -300,8 +300,8 @@ const D = ${chartData};
 var _modelEntries = D.modelEntries;
 const _vscode = acquireVsCodeApi();
 
-function _postDateChange(days) {
-  _vscode.postMessage({ type: 'dateChange', days: days });
+function _postDateChange(days, mode, sinceDate) {
+  _vscode.postMessage({ type: 'dateChange', days: days, mode: mode || 'month', sinceDate: sinceDate || '' });
 }
 
 setTimeout(function(){
@@ -351,17 +351,17 @@ document.getElementById('tglRange').addEventListener('click', function(e) {
   var r = btn.dataset.r;
   if(r === 'week') {
     _dateInput.style.display = 'none';
-    _postDateChange(7);
+    _postDateChange(7, 'week', '');
   } else if(r === 'month') {
     _dateInput.style.display = 'none';
-    _postDateChange(30);
+    _postDateChange(30, 'month', '');
   } else if(r === 'since') {
     _dateInput.style.display = 'inline-block';
     _dateInput.focus();
     if(_dateInput.value) {
       var sinceMs = new Date(_dateInput.value).getTime();
       var days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-      _postDateChange(days);
+      _postDateChange(days, 'since', _dateInput.value);
     }
   }
 });
@@ -369,7 +369,7 @@ _dateInput.addEventListener('change', function() {
   if(this.value) {
     var sinceMs = new Date(this.value).getTime();
     var days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-    _postDateChange(days);
+    _postDateChange(days, 'since', this.value);
   }
 });
 

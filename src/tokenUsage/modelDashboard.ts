@@ -120,6 +120,8 @@ export class ModelDashboard {
 	private _activeVendor: string | undefined;
 	private _activeModel: string | undefined;
 	private _days = 30;
+	private _rangeMode: 'week' | 'month' | 'since' = 'month';
+	private _sinceDate = '';
 
 	private constructor(panel: vscode.WebviewPanel, private readonly _tracker: TokenUsageTracker, vendor?: string, model?: string) {
 		this._panel = panel;
@@ -129,6 +131,8 @@ export class ModelDashboard {
 		this._panel.webview.onDidReceiveMessage(msg => {
 			if (msg.type === 'dateChange') {
 				this._days = msg.days ?? 30;
+				this._rangeMode = msg.mode ?? 'month';
+				this._sinceDate = msg.sinceDate ?? '';
 				this.update();
 			}
 		}, null, this._disposables);
@@ -288,11 +292,11 @@ export class ModelDashboard {
   </div>
   <div class="drp">
     <div class="tgl" id="tglRange">
-      <button data-r="week">7 Days</button>
-      <button class="on" data-r="month">30 Days</button>
-      <button data-r="since">Since…</button>
+      <button data-r="week" ${this._rangeMode === 'week' ? 'class="on"' : ''}>7 Days</button>
+      <button data-r="month" ${this._rangeMode === 'month' ? 'class="on"' : ''}>30 Days</button>
+      <button data-r="since" ${this._rangeMode === 'since' ? 'class="on"' : ''}>Since…</button>
     </div>
-    <input type="date" id="sinceDate" class="drp-date" min="${allDates.length > 0 ? allDates[0] : ''}" />
+    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" min="${allDates.length > 0 ? allDates[0] : ''}" />
   </div>
 </div>
 
@@ -371,8 +375,8 @@ var PROMPT_COLORS = ${JSON.stringify(PROMPT_CATEGORY_COLORS)};
 var _modelEntries = D.modelEntries;
 var _vscode = acquireVsCodeApi();
 
-function _postDateChange(days) {
-  _vscode.postMessage({ type: 'dateChange', days: days });
+function _postDateChange(days, mode, sinceDate) {
+  _vscode.postMessage({ type: 'dateChange', days: days, mode: mode || 'month', sinceDate: sinceDate || '' });
 }
 
 setTimeout(function(){
@@ -426,17 +430,17 @@ if(tgl){tgl.addEventListener('click',function(e){
   var r = btn.dataset.r;
   if(r === 'week') {
     _dateInput.style.display = 'none';
-    _postDateChange(7);
+    _postDateChange(7, 'week', '');
   } else if(r === 'month') {
     _dateInput.style.display = 'none';
-    _postDateChange(30);
+    _postDateChange(30, 'month', '');
   } else if(r === 'since') {
     _dateInput.style.display = 'inline-block';
     _dateInput.focus();
     if(_dateInput.value) {
       var sinceMs = new Date(_dateInput.value).getTime();
       var days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-      _postDateChange(days);
+      _postDateChange(days, 'since', _dateInput.value);
     }
   }
 });}
@@ -444,7 +448,7 @@ if(_dateInput){_dateInput.addEventListener('change',function(){
   if(this.value) {
     var sinceMs = new Date(this.value).getTime();
     var days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-    _postDateChange(days);
+    _postDateChange(days, 'since', this.value);
   }
 });}
 
