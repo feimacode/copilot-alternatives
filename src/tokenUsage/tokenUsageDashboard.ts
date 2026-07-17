@@ -92,14 +92,16 @@ export class TokenUsageDashboard {
 	}
 
 	update(): void {
-		this._panel.webview.html = this._render();
+		void this._renderAsync().then(html => {
+			this._panel.webview.html = html;
+		}).catch(() => { /* ignore render errors */ });
 	}
 
-	// ── HTML Generation ───────────────────────────────────────────────────
+	// ─── HTML Generation ───────────────────────────────────────────────
 
-	private _render(): string {
+	private async _renderAsync(): Promise<string> {
 		// Pull from SQLite DB (fast aggregation query)
-		const s = this._tracker.metricsService.getDashboardSummary(this._days);
+		const s = await this._tracker.metricsService.getDashboardSummary(this._days);
 
 		// Build vendor aggregate map compatible with chart expectations
 		const vendorAggs: Record<string, { promptTokens: number; completionTokens: number; costUsd: number; apiReportedEvents: number; contextWindowEvents: number }> = {};

@@ -110,8 +110,8 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('copilotAlternatives.exportTokenUsage', () => {
-			const s = tokenTracker.metricsService.getDashboardSummary();
+		vscode.commands.registerCommand('copilotAlternatives.exportTokenUsage', async () => {
+			const s = await tokenTracker.metricsService.getDashboardSummary();
 			const json = JSON.stringify(s, null, 2);
 			vscode.workspace.openTextDocument({ content: json, language: 'json' })
 				.then(doc => vscode.window.showTextDocument(doc));
@@ -119,8 +119,8 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('copilotAlternatives.debugTokenUsage', () => {
-			const s = tokenTracker.metricsService.getDashboardSummary();
+		vscode.commands.registerCommand('copilotAlternatives.debugTokenUsage', async () => {
+			const s = await tokenTracker.metricsService.getDashboardSummary();
 			const log = logService.createSubLogger('Debug');
 
 			log.info('=== Token Usage Debug Info ===');

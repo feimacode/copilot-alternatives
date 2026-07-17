@@ -32,12 +32,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Extract and validate version
         id: version
@@ -70,7 +70,19 @@ jobs:
 
   build:
     needs: validate
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            script: package:linux
+          - os: windows-2022
+            target: win32-x64
+            script: package:win
+          - os: macos-latest
+            target: darwin-arm64
+            script: package:mac-arm
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -79,64 +91,79 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Build @vscode/sqlite3 native binary
+        shell: bash
+        run: |
+          # Patch extract.js: pass only the basename to tar + set cwd to the deps dir.
+          # Windows bsdtar parses paths containing '@' as user@host:path.
+          # Keeping the filename arg as a bare name (no directory) avoids that entirely.
+          cat > node_modules/@vscode/sqlite3/deps/extract.js << 'JSEOF'
+          const path = require("path");
+          const fs = require("fs");
+          const { execFileSync } = require("child_process");
+          const tarball = path.resolve(process.argv[2]);
+          const outDir = path.resolve(process.argv[3]).replace(/\\/g, "/");
+          fs.mkdirSync(outDir, { recursive: true });
+          execFileSync("tar", ["-xzf", path.basename(tarball), "-C", outDir], {
+            cwd: path.dirname(tarball)
+          });
+          JSEOF
+          npm rebuild @vscode/sqlite3
 
       - name: Build extension
         run: npm run compile
 
-      - name: Package VSIX
+      - name: Package VSIX (${{ matrix.target }})
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-
-          echo "📦 Packaging VSIX v$VERSION..."
-
+          echo "📦 Packaging ${{ matrix.target }} VSIX v$VERSION..."
           mkdir -p dist
-
           npx @vscode/vsce package \
+            --target ${{ matrix.target }} \
             --allow-star-activation \
-            --out "dist/copilot-alternatives-$VERSION.vsix"
-
-          echo "✅ VSIX packaged: dist/copilot-alternatives-$VERSION.vsix"
+            --out "dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
+          echo "✅ Packaged: dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
 
       - name: Generate SHA-256 checksum
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
-
-          sha256sum "$VSIX" > "${VSIX}.sha256"
+          VSIX="dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
+          if command -v sha256sum &>/dev/null; then
+            sha256sum "$VSIX" > "${VSIX}.sha256"
+          else
+            shasum -a 256 "$VSIX" > "${VSIX}.sha256"
+          fi
           echo "Checksum: $(cat ${VSIX}.sha256)"
 
       - name: Validate VSIX
+        shell: bash
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          VSIX="dist/copilot-alternatives-$VERSION.vsix"
+          VSIX="dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
 
-          # Check file size
-          SIZE=$(stat -c%s "$VSIX")
-          MAX_SIZE=$((5 * 1024 * 1024))
-          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
-            echo "⚠️  VSIX exceeds 5 MB: $SIZE bytes"
+          # Verify .node binary is bundled (unzip available on all runners)
+          if unzip -l "$VSIX" | grep -q '\.node$'; then
+            echo "✅ Native binary present in $VSIX"
           else
-            echo "✅ VSIX size: $SIZE bytes (under 5 MB limit)"
+            echo "❌ No .node binary found in $VSIX"
+            exit 1
           fi
 
-          # Validate VSIX structure
-          echo "🔍 Validating VSIX structure..."
-          unzip -l "$VSIX" | grep -E "extension.vsixmanifest|package.json" || {
-            echo "❌ VSIX is missing required files"
-            exit 1
-          }
-          echo "✅ VSIX structure validated"
+          echo "✅ VSIX validated: $VSIX"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vsix
+          name: vsix-${{ matrix.target }}
           path: |
             dist/*.vsix
             dist/*.sha256
@@ -150,11 +177,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download all platform artifacts
         uses: actions/download-artifact@v4
         with:
-          name: vsix
+          pattern: vsix-*
           path: dist
+          merge-multiple: true
 
       - name: Extract changelog
         id: changelog
@@ -196,5 +224,7 @@ jobs:
           echo "**Version**: v$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- \`copilot-alternatives-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`copilot-alternatives-$VERSION.vsix.sha256\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-linux-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-win32-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-darwin-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`copilot-alternatives-darwin-arm64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY

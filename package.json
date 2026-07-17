@@ -2,7 +2,7 @@
 	"name": "copilot-alternatives",
 	"displayName": "Copilot Alternatives — AI Coding Tools Directory",
 	"description": "A curated collection of GitHub Copilot alternatives for developers, teams, and organizations. Browse coding plans, IDEs, CLI agents, extensions, BYOK solutions, and more.",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"publisher": "feima",
 	"license": "MIT",
 	"icon": "assets/icon.png",
@@ -527,18 +527,21 @@
 		"watch": "tsc -watch -p ./",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"package": "vsce package --allow-star-activation"
+		"package": "vsce package --allow-star-activation",
+		"package:linux": "vsce package --target linux-x64 --allow-star-activation",
+		"package:win": "vsce package --target win32-x64 --allow-star-activation",
+		"package:mac-arm": "vsce package --target darwin-arm64 --allow-star-activation"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
+		"@types/sqlite3": "^3.1.11",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^2.22.0",
 		"typescript": "^5.3.0",
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
-		"@types/better-sqlite3": "^7.6.13",
-		"better-sqlite3": "^12.11.1",
+		"@vscode/sqlite3": "^5.1.2",
 		"chart.js": "^4.5.1"
 	}
 }
