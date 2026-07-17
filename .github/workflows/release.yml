@@ -76,7 +76,7 @@ jobs:
           - os: ubuntu-latest
             target: linux-x64
             script: package:linux
-          - os: windows-latest
+          - os: windows-2022
             target: win32-x64
             script: package:win
           - os: macos-13
