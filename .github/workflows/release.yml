@@ -98,7 +98,22 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
-      - name: Install dependencies
+      - name: Get VS Code Electron version
+        id: electron
+        shell: bash
+        run: |
+          # Fetch VS Code's current Electron version from its package.json
+          ELECTRON_VER=$(curl -sL "https://raw.githubusercontent.com/microsoft/vscode/main/package.json" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['electronVersion'])")
+          echo "Electron version: $ELECTRON_VER"
+          echo "version=$ELECTRON_VER" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies (Electron prebuilt for better-sqlite3)
+        shell: bash
+        env:
+          npm_config_runtime: electron
+          npm_config_target: ${{ steps.electron.outputs.version }}
+          npm_config_disturl: https://electronjs.org/headers
         run: npm ci
 
       - name: Build extension
