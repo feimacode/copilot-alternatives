@@ -164,7 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// ─── Vendor & Model Usage Commands ──────────────────────────────────
 	context.subscriptions.push(
-		vscode.commands.registerCommand('copilotAlternatives.showVendorUsage', (arg?: string | TreeNode) => {
+		vscode.commands.registerCommand('copilotAlternatives.showVendorUsage', async (arg?: string | TreeNode) => {
 			let vendor: string | undefined;
 			if (typeof arg === 'string') {
 				vendor = arg;
@@ -173,7 +173,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			// Fallback: pick first vendor with usage data
 			if (!vendor) {
-				const vendors = tokenTracker.metricsService.getAllVendors();
+				const vendors = await tokenTracker.metricsService.getAllVendors();
 				vendor = vendors[0];
 			}
 			if (!vendor) {

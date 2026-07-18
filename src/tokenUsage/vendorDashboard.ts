@@ -9,7 +9,7 @@ import * as path from 'path';
 import { TokenUsageTracker } from './tokenUsageTracker';
 import { formatTokenCount, formatCost, formatCostCompact } from './tokenCostEstimator';
 
-// ─── Vendor color palette ─────────────────────────────────────────────────────
+// ─── Color helpers ───────────────────────────────────────────────────────────
 
 const VENDOR_COLORS: Record<string, string> = {
 	feima: '#ec4899',
@@ -24,6 +24,16 @@ const VENDOR_COLORS: Record<string, string> = {
 
 function vendorColor(vendor: string): string {
 	return VENDOR_COLORS[vendor] ?? VENDOR_COLORS['unknown'];
+}
+
+const MODEL_PALETTE = [
+	'#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444',
+	'#ec4899', '#06b6d4', '#6366f1', '#84cc16', '#f97316',
+	'#14b8a6', '#d946ef', '#f43f5e', '#8c9eff', '#ffab40',
+];
+
+function modelColor(modelId: string, index: number): string {
+	return MODEL_PALETTE[index % MODEL_PALETTE.length];
 }
 
 // ─── Chart.js loading ────────────────────────────────────────────────────────
@@ -141,14 +151,14 @@ export class VendorDashboard {
 		return VendorDashboard.currentPanel;
 	}
 
-	update(): void {
-		this._panel.webview.html = this._render();
+    async update(): Promise<void> {
+        this._panel.webview.html = await this._render();
 	}
 
-	private _render(): string {
+    private async _render(): Promise<string> {
 		const vendor = this._activeVendor;
 		const color = vendorColor(vendor);
-		const s = this._tracker.metricsService.getVendorViewSummary(vendor, this._days);
+        const s = await this._tracker.metricsService.getVendorViewSummary(vendor, this._days);
 		const models = s.models;
 		const dailyByModel = s.dailyByModel;
 
@@ -161,7 +171,7 @@ export class VendorDashboard {
 		// Daily usage
 		const dateSet = new Set<string>();
 		for (const d of dailyByModel) { dateSet.add(d.date); }
-		const allDates = [...dateSet].sort().slice(-30);
+        const allDates = [...dateSet].sort().slice(-this._days);
 		const dailyTokensMap: Record<string, number> = {};
 		const dailyPromptMap: Record<string, number> = {};
 		const dailyCompletionMap: Record<string, number> = {};
@@ -173,7 +183,7 @@ export class VendorDashboard {
 			dailyRequestsMap[d.date] = (dailyRequestsMap[d.date] || 0) + d.requestCount;
 		}
 		const weekDates = allDates.slice(-7);
-		const monthDates = allDates.slice(-30);
+        const monthDates = allDates.slice(-this._days);
 
 		// Model entries
 		const modelEntries = models.map(m => ({
@@ -199,6 +209,7 @@ export class VendorDashboard {
 		const chartData = JSON.stringify({
 			vendor,
 			vendorColor: color,
+            firstTrackedDate: s.firstTrackedDate,
 			modelEntries,
 			weekDates: weekDates.map(d => d.slice(5)),
 			monthDates: monthDates.map(d => d.slice(5)),
@@ -213,7 +224,7 @@ export class VendorDashboard {
 			monthDatesFull: monthDates,
 			modelIds,
 			modelDailyStack: modelIds.map(mid => monthDates.map(d => modelDailyMap[mid]?.[d] ?? 0)),
-			modelColors: modelIds.map(() => color),
+			modelColors: modelIds.map((mid, i) => modelColor(mid, i)),
 			totalTokens, totalPromptTokens, totalCompletionTokens,
 			totalRequests, totalCost,
 			modelCount: models.length,
@@ -231,7 +242,7 @@ export class VendorDashboard {
 <div class="hdr">
   <div>
     <h1><span class="dot" style="background:${color}"></span>${vendor}</h1>
-    <p class="subtitle">Token usage &amp; model breakdown — last 30 days</p>
+    <p class="subtitle">Token usage &amp; model breakdown · Earliest data: <strong>${s.firstTrackedDate ?? 'N/A'}</strong></p>
   </div>
   <div class="drp">
     <div class="tgl" id="tglRange">
@@ -239,15 +250,15 @@ export class VendorDashboard {
       <button data-r="month" ${this._rangeMode === 'month' ? 'class="on"' : ''}>30 Days</button>
       <button data-r="since" ${this._rangeMode === 'since' ? 'class="on"' : ''}>Since…</button>
     </div>
-    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" min="${allDates.length > 0 ? allDates[0] : ''}" />
+    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" />
   </div>
 </div>
 
 <div class="grid4">
-  <div class="card"><div class="lbl">Total Tokens</div><div class="val">${formatTokenCount(totalTokens)}</div><div class="det">${formatTokenCount(totalPromptTokens)} in / ${formatTokenCount(totalCompletionTokens)} out</div></div>
-  <div class="card"><div class="lbl">Total Requests</div><div class="val">${totalRequests.toLocaleString()}</div><div class="det">Across ${models.length} model(s)</div></div>
-  <div class="card"><div class="lbl">Models</div><div class="val">${models.length}</div><div class="det">Active in last 30 days</div></div>
-  <div class="card"><div class="lbl">Total Cost</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>
+  <div class="card"><div class="lbl">Tokens</div><div class="val">${formatTokenCount(totalTokens)}</div><div class="det">${formatTokenCount(totalPromptTokens)} in / ${formatTokenCount(totalCompletionTokens)} out</div></div>
+  <div class="card"><div class="lbl">Requests</div><div class="val">${totalRequests.toLocaleString()}</div><div class="det">Across ${models.length} model(s)</div></div>
+  <div class="card"><div class="lbl">Models</div><div class="val">${models.length}</div><div class="det">Active in last ${this._days} days</div></div>
+  <div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>
 </div>
 
 <!-- Usage Over Time -->
@@ -269,7 +280,7 @@ export class VendorDashboard {
       <th data-sort="modelId">Model</th><th data-sort="requestCount">Requests</th>
       <th data-sort="totalTokens" class="sorted">Total Tokens</th>
       <th data-sort="promptTokens">Input</th><th data-sort="completionTokens">Output</th>
-      <th>I/O Ratio</th><th data-sort="costUsd">Cost</th>
+      <th>I/O Ratio</th><th data-sort="costUsd">Estimate</th>
     </tr></thead>
     <tbody id="modelTbody">${modelEntries.map(m => `<tr>
       <td>${m.modelId}</td><td>${m.requestCount.toLocaleString()}</td>
@@ -284,7 +295,7 @@ export class VendorDashboard {
 
 <!-- Daily Tokens by Model -->
 <div class="sec">
-  <div class="sec-h"><div class="sec-t">Daily Tokens by Model (30 days)</div></div>
+  <div class="sec-h"><div class="sec-t">Daily Tokens by Model</div></div>
   <div class="chart-wrap"><canvas id="modelDailyChart"></canvas></div>
 </div>
 
@@ -306,43 +317,76 @@ function _postDateChange(days, mode, sinceDate) {
 
 setTimeout(function(){
 requestAnimationFrame(function(){
+
+// ── Initialize charts ──
 try{
 Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--muted').trim()||'#888';
 Chart.defaults.borderColor = getComputedStyle(document.body).getPropertyValue('--border').trim()||'#404';
 Chart.defaults.font.size = 10;
 
 // ── Token Chart ──
+if(document.getElementById('tokenChart')){
 var tCtx = document.getElementById('tokenChart').getContext('2d');
-var tokenChart = new Chart(tCtx,{type:'bar',data:{labels:D.weekDates,datasets:[
-  {label:'Input',data:D.weekPrompt,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},
-  {label:'Output',data:D.weekCompletion,backgroundColor:'rgba(249,115,22,.7)',borderRadius:3}
+var tokenChart = new Chart(tCtx,{type:'bar',data:{labels:D.monthDates,datasets:[
+  {label:'Input',data:D.monthPrompt,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},
+  {label:'Output',data:D.monthCompletion,backgroundColor:'rgba(249,115,22,.7)',borderRadius:3}
 ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,padding:10}}},
 scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:function(v){return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}}});
+}
 
 // ── Request Chart ──
+if(document.getElementById('requestChart')){
 var rCtx = document.getElementById('requestChart').getContext('2d');
-var requestChart = new Chart(rCtx,{type:'line',data:{labels:D.weekDates,datasets:[
-  {label:'Requests',data:D.weekRequests,borderColor:D.vendorColor,backgroundColor:D.vendorColor+'22',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+var requestChart = new Chart(rCtx,{type:'line',data:{labels:D.monthDates,datasets:[
+  {label:'Requests',data:D.monthRequests,borderColor:D.vendorColor,backgroundColor:D.vendorColor+'22',fill:true,tension:.3,pointRadius:3,borderWidth:2}
 ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
 scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return v>=1e3?(v/1e3).toFixed(1)+'K':v}}}}}});
+}
 
 // ── Model Daily Stacked Chart ──
+if(document.getElementById('modelDailyChart')){
 var mdCtx = document.getElementById('modelDailyChart').getContext('2d');
 new Chart(mdCtx,{type:'bar',data:{labels:D.monthDatesFull.map(function(d){return d.slice(5);}),datasets:D.modelIds.map(function(mid,i){return {
   label:mid,data:D.modelDailyStack[i],backgroundColor:D.modelColors[i]+'88',borderRadius:2
 };})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,padding:8}}},
 scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:function(v){return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}}});
+}
 
 // ── I/O Grouped Bar Chart ──
+if(document.getElementById('ioChart')){
 var ioCtx = document.getElementById('ioChart').getContext('2d');
 new Chart(ioCtx,{type:'bar',data:{labels:_modelEntries.map(function(m){return m.modelId;}),datasets:[
   {label:'Input',data:_modelEntries.map(function(m){return m.promptTokens;}),backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},
   {label:'Output',data:_modelEntries.map(function(m){return m.completionTokens;}),backgroundColor:'rgba(249,115,22,.7)',borderRadius:3}
 ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,padding:8}}},
 scales:{x:{stacked:true,ticks:{callback:function(v){return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}}});
+}
 
-// ── Date Range Picker ──
+// ── Table Sorting ──
+if(document.getElementById('modelTbl')){
+var sortCol = 'totalTokens', sortAsc = false;
+function sortModelTable(col){
+  if(sortCol===col){sortAsc=!sortAsc;}else{sortCol=col;sortAsc=false;}
+  var dir = sortAsc?1:-1;
+  _modelEntries.sort(function(a,b){var av=a[col],bv=b[col];return typeof av==='string'?dir*av.localeCompare(bv):dir*(av-bv);});
+  renderTable();updateSortHeaders();
+}
+function renderTable(){
+  document.getElementById('modelTbody').innerHTML = _modelEntries.map(function(m){
+    var inPct=(D.totalTokens>0?m.promptTokens/D.totalTokens:0)*100,outPct=(D.totalTokens>0?m.completionTokens/D.totalTokens:0)*100;
+    return '<tr><td>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(m.costUsd)+'</td></tr>';
+  }).join('');
+}
+function _fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);}
+function _fmtC(n){return '$'+n.toFixed(4);}
+function updateSortHeaders(){document.querySelectorAll('#modelTbl th').forEach(function(th){th.classList.remove('sorted');if(th.dataset.sort===sortCol)th.classList.add('sorted');});}
+document.querySelectorAll('#modelTbl th[data-sort]').forEach(function(th){th.addEventListener('click',function(){sortModelTable(th.dataset.sort);});});
+}
+}catch(e){console.error('[VendorDashboard] Chart init error:',e);document.body.insertAdjacentHTML('beforeend','<div style="color:red;padding:10px">Chart error: '+e.message+'</div>');}
+
+// ── Date Range Picker (always registered) ──
 var _dateInput = document.getElementById('sinceDate');
+if(document.getElementById('tglRange')){
 document.getElementById('tglRange').addEventListener('click', function(e) {
   var btn = e.target.closest('button');
   if(!btn) return;
@@ -365,34 +409,15 @@ document.getElementById('tglRange').addEventListener('click', function(e) {
     }
   }
 });
-_dateInput.addEventListener('change', function() {
+}
+if(_dateInput){_dateInput.addEventListener('change', function() {
   if(this.value) {
     var sinceMs = new Date(this.value).getTime();
     var days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
     _postDateChange(days, 'since', this.value);
   }
-});
+});}
 
-// ── Table Sorting ──
-var sortCol = 'totalTokens', sortAsc = false;
-function sortModelTable(col){
-  if(sortCol===col){sortAsc=!sortAsc;}else{sortCol=col;sortAsc=false;}
-  var dir = sortAsc?1:-1;
-  _modelEntries.sort(function(a,b){var av=a[col],bv=b[col];return typeof av==='string'?dir*av.localeCompare(bv):dir*(av-bv);});
-  renderTable();updateSortHeaders();
-}
-function renderTable(){
-  document.getElementById('modelTbody').innerHTML = _modelEntries.map(function(m){
-    var inPct=(D.totalTokens>0?m.promptTokens/D.totalTokens:0)*100,outPct=(D.totalTokens>0?m.completionTokens/D.totalTokens:0)*100;
-    return '<tr><td>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(m.costUsd)+'</td></tr>';
-  }).join('');
-}
-function _fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);}
-function _fmtC(n){return '$'+n.toFixed(4);}
-function updateSortHeaders(){document.querySelectorAll('#modelTbl th').forEach(function(th){th.classList.remove('sorted');if(th.dataset.sort===sortCol)th.classList.add('sorted');});}
-document.querySelectorAll('#modelTbl th[data-sort]').forEach(function(th){th.addEventListener('click',function(){sortModelTable(th.dataset.sort);});});
-
-}catch(e){console.error('[VendorDashboard] Chart init error:',e);document.body.insertAdjacentHTML('beforeend','<div style="color:red;padding:10px">Chart error: '+e.message+'</div>');}
 });
 });
 </script>

@@ -543,9 +543,9 @@ export class MetricsDatabase {
 		const todayKey = new Date().toISOString().split('T')[0];
 		const [weekTotals, monthTotals, vendorBreakdown, modelBreakdown] = await Promise.all([
 			this.getDayTotals(7),
-			this.getDayTotals(30),
-			this.getVendorBreakdown(30),
-			this.getModelBreakdown(30),
+			this.getDayTotals(days),
+			this.getVendorBreakdown(days),
+			this.getModelBreakdown(days),
 		]);
 
 		const today = weekTotals.find(d => d.date === todayKey) ?? {
@@ -588,7 +588,7 @@ export class MetricsDatabase {
 		return {
 			today,
 			thisWeek: weekTotals.slice(0, 7).reverse(),
-			thisMonth: monthTotals.slice(0, 30).reverse(),
+			thisMonth: monthTotals.slice(0, days).reverse(),
 			allTime: {
 				totalPromptTokens: safeAllTime.totalPromptTokens,
 				totalCompletionTokens: safeAllTime.totalCompletionTokens,
@@ -604,14 +604,14 @@ export class MetricsDatabase {
 	}
 
 	/** Daily totals grouped by vendor. Optionally filtered to a single vendor. */
-	getDayTotalsByVendor(days: number, vendor?: string): VendorDayTotal[] {
-		this._ensureOpen();
+	async getDayTotalsByVendor(days: number, vendor?: string): Promise<VendorDayTotal[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
 		const vendorFilter = vendor ? ' AND vendor = ?' : '';
-		const params: (number | string)[] = [cutoff];
+		const params: unknown[] = [cutoff];
 		if (vendor) { params.push(vendor); }
 		params.push(days * 20);
-		return this._db.prepare(`
+		return this._all<VendorDayTotal>(`
 			SELECT
 				date(timestamp / 1000, 'unixepoch') AS date,
 				vendor,
@@ -625,20 +625,20 @@ export class MetricsDatabase {
 			GROUP BY date, vendor
 			ORDER BY date DESC
 			LIMIT ?
-		`).all(...params) as VendorDayTotal[];
+		`, params);
 	}
 
 	/** Daily totals grouped by model. Optionally filtered by vendor and/or a specific model. */
-	getDayTotalsByModel(days: number, vendor?: string, modelId?: string): ModelDayTotal[] {
-		this._ensureOpen();
+	async getDayTotalsByModel(days: number, vendor?: string, modelId?: string): Promise<ModelDayTotal[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
 		const conditions: string[] = [];
-		const params: (number | string)[] = [cutoff];
-		if (vendor) { conditions.push(`vendor = ?`); params.push(vendor); }
-		if (modelId) { conditions.push(`model_id = ?`); params.push(modelId); }
+		const params: unknown[] = [cutoff];
+		if (vendor) { conditions.push('vendor = ?'); params.push(vendor); }
+		if (modelId) { conditions.push('model_id = ?'); params.push(modelId); }
 		const extraFilter = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
 		params.push(days * 30);
-		return this._db.prepare(`
+		return this._all<ModelDayTotal>(`
 			SELECT
 				date(timestamp / 1000, 'unixepoch') AS date,
 				model_id AS modelId,
@@ -652,19 +652,19 @@ export class MetricsDatabase {
 			GROUP BY date, model_id
 			ORDER BY date DESC
 			LIMIT ?
-		`).all(...params) as ModelDayTotal[];
+		`, params);
 	}
 
 	/** Weighted-average prompt-token breakdown per model. Optionally filtered by vendor and/or model. */
-	getModelPromptBreakdown(days: number, vendor?: string, modelId?: string): ModelPromptBreakdown[] {
-		this._ensureOpen();
+	async getModelPromptBreakdown(days: number, vendor?: string, modelId?: string): Promise<ModelPromptBreakdown[]> {
+		await this._ready;
 		const cutoff = Date.now() - days * 86400000;
 		const conditions: string[] = [];
-		const params: (number | string)[] = [cutoff];
-		if (vendor) { conditions.push(`vendor = ?`); params.push(vendor); }
-		if (modelId) { conditions.push(`model_id = ?`); params.push(modelId); }
+		const params: unknown[] = [cutoff];
+		if (vendor) { conditions.push('vendor = ?'); params.push(vendor); }
+		if (modelId) { conditions.push('model_id = ?'); params.push(modelId); }
 		const extraFilter = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
-		return this._db.prepare(`
+		return this._all<ModelPromptBreakdown>(`
 			SELECT
 				model_id AS modelId,
 				SUM(prompt_tokens) AS promptTokens,
@@ -678,7 +678,7 @@ export class MetricsDatabase {
 			WHERE ${this._completeFilter(`timestamp >= ?${extraFilter}`)}
 			GROUP BY model_id
 			ORDER BY promptTokens DESC
-		`).all(...params) as ModelPromptBreakdown[];
+		`, params);
 	}
 
 	async getSessionCount(): Promise<number> {
@@ -689,6 +689,13 @@ export class MetricsDatabase {
 	async getRequestCount(): Promise<number> {
 		await this._ready;
 		return ((await this._get<{ c: number }>(`SELECT COUNT(*) AS c FROM turns WHERE ${this._completeFilter()}`))?.c ?? 0);
+	}
+
+	async getFirstTrackedDate(): Promise<{ firstTrackedDate: string } | null | undefined> {
+		await this._ready;
+		return this._get<{ firstTrackedDate: string }>(
+			`SELECT MIN(date(timestamp / 1000, 'unixepoch')) AS firstTrackedDate FROM turns WHERE ${this._completeFilter()}`
+		);
 	}
 
 	// ── Rebuild ──────────────────────────────────────────────────────────

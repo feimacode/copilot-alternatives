@@ -470,26 +470,32 @@ export class MetricsService implements vscode.Disposable {
 	// ── Vendor & Model View summaries ───────────────────────────────────
 
 	/** Vendor view summary scoped to a single vendor. */
-	getVendorViewSummary(vendor: string, days = 30): { models: ModelAgg[]; dailyByModel: ModelDayTotal[]; allTimeTokens: number; allTimeRequests: number } {
-		const models = this._db.getModelBreakdown(days, vendor);
-		const dailyByModel = this._db.getDayTotalsByModel(days, vendor);
-		const allVendors = this._db.getDayTotalsByVendor(days, vendor);
+	async getVendorViewSummary(vendor: string, days = 30): Promise<{ models: ModelAgg[]; dailyByModel: ModelDayTotal[]; allTimeTokens: number; allTimeRequests: number; firstTrackedDate: string | null }> {
+		const [models, dailyByModel, allVendors, firstDateRow] = await Promise.all([
+			this._db.getModelBreakdown(days, vendor),
+			this._db.getDayTotalsByModel(days, vendor),
+			this._db.getDayTotalsByVendor(days, vendor),
+			this._db.getFirstTrackedDate(),
+		]);
 		const allTimeTokens = allVendors.reduce((s, d) => s + d.totalTokens, 0);
 		const allTimeRequests = allVendors.reduce((s, d) => s + d.requestCount, 0);
-		return { models, dailyByModel, allTimeTokens, allTimeRequests };
+		return { models, dailyByModel, allTimeTokens, allTimeRequests, firstTrackedDate: firstDateRow?.firstTrackedDate ?? null };
 	}
 
 	/** Model view summary. Optionally filtered by vendor/model and time range. */
-	getModelViewSummary(vendor?: string, modelId?: string, days = 30): { models: ModelAgg[]; dailyByModel: ModelDayTotal[]; promptBreakdowns: ModelPromptBreakdown[] } {
-		const models = this._db.getModelBreakdown(days, vendor);
-		const dailyByModel = this._db.getDayTotalsByModel(days, vendor, modelId);
-		const promptBreakdowns = this._db.getModelPromptBreakdown(days, vendor, modelId);
-		return { models, dailyByModel, promptBreakdowns };
+	async getModelViewSummary(vendor?: string, modelId?: string, days = 30): Promise<{ models: ModelAgg[]; dailyByModel: ModelDayTotal[]; promptBreakdowns: ModelPromptBreakdown[]; firstTrackedDate: string | null }> {
+		const [models, dailyByModel, promptBreakdowns, firstDateRow] = await Promise.all([
+			this._db.getModelBreakdown(days, vendor),
+			this._db.getDayTotalsByModel(days, vendor, modelId),
+			this._db.getModelPromptBreakdown(days, vendor, modelId),
+			this._db.getFirstTrackedDate(),
+		]);
+		return { models, dailyByModel, promptBreakdowns, firstTrackedDate: firstDateRow?.firstTrackedDate ?? null };
 	}
 
 	/** List of all distinct vendors with usage in last 30 days. */
-	getAllVendors(): string[] {
-		const vendors = this._db.getVendorBreakdown(30);
+	async getAllVendors(): Promise<string[]> {
+		const vendors = await this._db.getVendorBreakdown(30);
 		return vendors.map(v => v.vendor).sort();
 	}
 

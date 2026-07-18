@@ -137,8 +137,13 @@ export class TokenUsageDashboard {
 		}
 		console.log(`[TokenUsageDashboard] vendorAggs keys=${Object.keys(vendorAggs).length} entries=${vendorEntries.length} totalTokens=${vendorEntries.reduce((s,[,a])=>s+a.promptTokens+a.completionTokens,0)}`);
 
+		const today = s.today;
+		const totalToday = today.totalPromptTokens + today.totalCompletionTokens;
+		const allTime = s.allTime;
+
 		const chartData = JSON.stringify({
 			allDates: month.map(d => d.date),
+			firstTrackedDate: allTime.firstTrackedDate,
 			allVendors,
 			weekLabels: week.map(d => d.date.slice(5)),
 			weekTokens: week.map(d => d.totalPromptTokens + d.totalCompletionTokens),
@@ -168,10 +173,6 @@ export class TokenUsageDashboard {
 			vmColors: s.modelBreakdown.map(m => vendorColor(vendorForModel(m.modelId))),
 			vmVendors: s.modelBreakdown.map(m => vendorForModel(m.modelId)),
 		});
-
-		const today = s.today;
-		const totalToday = today.totalPromptTokens + today.totalCompletionTokens;
-		const allTime = s.allTime;
 
 		return /* html */`<!DOCTYPE html>
 <html lang="en">
@@ -255,8 +256,8 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 
 <div class="hdr">
   <div>
-    <h1>Token Usage</h1>
-    <p class="subtitle">Chat model token consumption & estimated cost — all providers · <a href="command:copilotAlternatives.reloadTokenUsage" style="color:var(--accent);text-decoration:none" title="Clear state and reload all data from disk">↻ Reload from Disk</a></p>
+    <h1>Token Usage - Overall</h1>
+    <p class="subtitle">Chat model token consumption & estimated cost — all providers · Earliest data: <strong>${allTime.firstTrackedDate ?? 'N/A'}</strong> · <a href="command:copilotAlternatives.reloadTokenUsage" style="color:var(--accent);text-decoration:none" title="Clear state and reload all data from disk">↻ Reload from Disk</a></p>
   </div>
   <div class="drp">
     <div class="tgl" id="tglRange">
@@ -264,15 +265,15 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
       <button data-r="month" ${this._rangeMode === 'month' ? 'class="on"' : ''}>30 Days</button>
       <button data-r="since" ${this._rangeMode === 'since' ? 'class="on"' : ''}>Since…</button>
     </div>
-    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" min="${month.length > 0 ? month[0].date : ''}" />
+    <input type="date" id="sinceDate" class="drp-date" value="${this._sinceDate}" style="${this._rangeMode === 'since' ? 'display:inline-block' : ''}" />
   </div>
 </div>
 
 <div class="grid5">
   <div class="card"><div class="lbl">Today's Tokens</div><div class="val">${formatTokenCount(totalToday)}</div><div class="det">In ${formatTokenCount(today.totalPromptTokens)} / Out ${formatTokenCount(today.totalCompletionTokens)}</div></div>
-  <div class="card"><div class="lbl">Today's Cost</div><div class="val">${formatCost(today.estimatedCostUsd)}</div><div class="det">${vendorEntries.length} vendors active</div></div>
-  <div class="card"><div class="lbl">All-Time Tokens</div><div class="val">${formatTokenCount(allTime.totalPromptTokens + allTime.totalCompletionTokens)}</div><div class="det">Since ${allTime.firstTrackedDate}</div></div>
-  <div class="card"><div class="lbl">All-Time Cost</div><div class="val">${formatCost(allTime.totalCostUsd)}</div><div class="det">Avg ${formatCostCompact(dailyAvgCost)}/day</div></div>
+  <div class="card"><div class="lbl">Today's Estimate</div><div class="val">${formatCost(today.estimatedCostUsd)}</div><div class="det">${vendorEntries.length} vendors active</div></div>
+  <div class="card"><div class="lbl">Tokens</div><div class="val">${formatTokenCount(allTime.totalPromptTokens + allTime.totalCompletionTokens)}</div><div class="det">Since ${allTime.firstTrackedDate}</div></div>
+  <div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(allTime.totalCostUsd)}</div><div class="det">Avg ${formatCostCompact(dailyAvgCost)}/day</div></div>
   <div class="card"><div class="lbl">Vendors Tracked</div><div class="val">${vendorEntries.length}</div><div class="det">${allTime.daysTracked} days of data</div></div>
 </div>
 
@@ -298,7 +299,7 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div class="ch2">
     <div><div class="ch"><canvas id="vendorDonut"></canvas></div></div>
     <div style="overflow-y:auto;max-height:200px">
-      <table class="tbl" id="vendorTbl"><thead><tr><th>Vendor</th><th>Tokens</th><th>Cost</th><th>Source</th></tr></thead><tbody>
+      <table class="tbl" id="vendorTbl"><thead><tr><th>Vendor</th><th>Tokens</th><th>Estimate</th><th>Source</th></tr></thead><tbody>
         ${vendorEntries.map(([v, a]) => `<tr data-v="${v}">
           <td><span class="dot" style="background:${vendorColor(v)}"></span>${v}</td>
           <td>${formatTokenCount(a.promptTokens + a.completionTokens)}</td>
@@ -312,7 +313,7 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 
 <!-- Per-Vendor Daily Chart -->
 <div class="sec">
-  <div class="sec-h"><div class="sec-t">Daily Cost by Vendor</div></div>
+  <div class="sec-h"><div class="sec-t">Daily Estimate by Vendor</div></div>
   <div style="height:200px"><canvas id="vendorStackChart"></canvas></div>
 </div>
 
@@ -350,16 +351,16 @@ Chart.defaults.font.size = 10;
 
 // ── Token Chart ──
 const tCtx = document.getElementById('tokenChart').getContext('2d');
-const tokenChart = new Chart(tCtx,{type:'bar',data:{labels:D.weekLabels,datasets:[
-  {label:'Input',data:D.weekPrompt,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},
-  {label:'Output',data:D.weekCompletion,backgroundColor:'rgba(249,115,22,.7)',borderRadius:3}
+const tokenChart = new Chart(tCtx,{type:'bar',data:{labels:D.monthLabels,datasets:[
+  {label:'Input',data:D.monthPrompt,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},
+  {label:'Output',data:D.monthCompletion,backgroundColor:'rgba(249,115,22,.7)',borderRadius:3}
 ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,padding:10}}},
 scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}});
 
 // ── Cost Chart ──
 const cCtx = document.getElementById('costChart').getContext('2d');
-const costChart = new Chart(cCtx,{type:'line',data:{labels:D.weekLabels,datasets:[
-  {label:'Cost',data:D.weekCosts,borderColor:'rgba(16,185,129,.9)',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+const costChart = new Chart(cCtx,{type:'line',data:{labels:D.monthLabels,datasets:[
+  {label:'Cost',data:D.monthCosts,borderColor:'rgba(16,185,129,.9)',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
 ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
 scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'$'+v.toFixed(4)}}}}});
 
@@ -371,9 +372,9 @@ const vendorDonut = new Chart(vCtx,{type:'doughnut',data:{labels:D.vendorNames,d
 
 // ── Vendor Stack Chart (daily by vendor) ──
 const vsCtx = document.getElementById('vendorStackChart').getContext('2d');
-// Rebuild per-vendor daily cost data — simplified: use week totals spread across days
-const vendorStackChart = new Chart(vsCtx,{type:'bar',data:{labels:D.weekLabels,datasets:D.vendorNames.map((v,i)=>({
-  label:v,data:D.weekCosts.map(c=>c*(D.vendorTokens[i]/D.vendorTokens.reduce((a,b)=>a+b,1)||1)),
+// Rebuild per-vendor daily cost data — simplified: use range totals spread across days
+const vendorStackChart = new Chart(vsCtx,{type:'bar',data:{labels:D.monthLabels,datasets:D.vendorNames.map((v,i)=>({
+  label:v,data:D.monthCosts.map(c=>c*(D.vendorTokens[i]/D.vendorTokens.reduce((a,b)=>a+b,1)||1)),
   backgroundColor:D.vendorColors[i]+'cc',borderRadius:2
 }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,padding:8}}},
 scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'$'+v.toFixed(4)}}}}});
@@ -390,37 +391,6 @@ tooltip:{callbacks:{label:ctx=>{
 scales:{x:{grid:{display:false},ticks:{maxRotation:45,minRotation:45,font:{size:8}}},
 y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}});
 
-// ── Date Range Picker ──
-const _dateInput = document.getElementById('sinceDate');
-document.getElementById('tglRange').addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  document.querySelectorAll('#tglRange button').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  const r = btn.dataset.r;
-  if(r === 'week') {
-    _dateInput.style.display = 'none';
-    _postDateChange(7, 'week', '');
-  } else if(r === 'month') {
-    _dateInput.style.display = 'none';
-    _postDateChange(30, 'month', '');
-  } else if(r === 'since') {
-    _dateInput.style.display = 'inline-block';
-    _dateInput.focus();
-    if(_dateInput.value) {
-      const sinceMs = new Date(_dateInput.value).getTime();
-      const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-      _postDateChange(days, 'since', _dateInput.value);
-    }
-  }
-});
-_dateInput.addEventListener('change', function() {
-  if(this.value) {
-    const sinceMs = new Date(this.value).getTime();
-    const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
-    _postDateChange(days, 'since', this.value);
-  }
-});
 
 // ── Vendor filter ──
 document.getElementById('fltVendors').addEventListener('click',e=>{
@@ -465,6 +435,38 @@ function _refreshVendorFilter(){
   vendorDonut.update();
 }
 }catch(e){console.error('[Dashboard] Chart init error:',e);document.body.insertAdjacentHTML('beforeend','<div style="color:red;padding:10px">Chart error: '+e.message+'</div>');}
+
+// ── Date Range Picker (always registered) ──
+const _dateInput = document.getElementById('sinceDate');
+document.getElementById('tglRange').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#tglRange button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const r = btn.dataset.r;
+  if(r === 'week') {
+    _dateInput.style.display = 'none';
+    _postDateChange(7, 'week', '');
+  } else if(r === 'month') {
+    _dateInput.style.display = 'none';
+    _postDateChange(30, 'month', '');
+  } else if(r === 'since') {
+    _dateInput.style.display = 'inline-block';
+    _dateInput.focus();
+    if(_dateInput.value) {
+      const sinceMs = new Date(_dateInput.value).getTime();
+      const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
+      _postDateChange(days, 'since', _dateInput.value);
+    }
+  }
+});
+_dateInput.addEventListener('change', function() {
+  if(this.value) {
+    const sinceMs = new Date(this.value).getTime();
+    const days = Math.max(1, Math.ceil((Date.now() - sinceMs) / 86400000) + 1);
+    _postDateChange(days, 'since', this.value);
+  }
+});
 });
 });
 </script>

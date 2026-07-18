@@ -63,7 +63,7 @@
 				{
 					"id": "copilotAlternatives",
 					"title": "Copilot Alternatives",
-					"icon": "assets/icon.svg"
+					"icon": "assets/sidebar-icon.svg"
 				}
 			]
 		},
@@ -537,6 +537,7 @@
 		"@types/sqlite3": "^3.1.11",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^2.22.0",
+		"tar": "^7.5.20",
 		"typescript": "^5.3.0",
 		"vitest": "^4.1.10"
 	},

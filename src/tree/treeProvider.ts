@@ -245,7 +245,7 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 		if (!this._tokenTracker) { return []; }
 		const vendors = await this._tokenTracker.metricsService.getVendorBreakdown7d();
 
-		return vendors
+		const nodes = vendors
 			.sort((a, b) => (b.promptTokens + b.completionTokens) - (a.promptTokens + a.completionTokens))
 			.map(v => new TreeNode(
 				'usageVendor',
@@ -255,6 +255,20 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				`${formatTokenCount(v.promptTokens + v.completionTokens)} | ${v.requestCount} requests | in a week`,
 				`${v.vendor}: ${formatTokenCount(v.promptTokens + v.completionTokens)} tokens, ${v.requestCount} requests, $${v.costUsd.toFixed(2)} cost — last 7 days`,
 			));
+
+		// Ensure "copilot" always appears, even when there's no data yet
+		if (!vendors.some(v => v.vendor === 'copilot')) {
+			nodes.unshift(new TreeNode(
+				'usageVendor',
+				'usage-vendor:copilot',
+				'copilot',
+				undefined,
+				'No data yet',
+				'GitHub Copilot — token usage data will appear here once available',
+			));
+		}
+
+		return nodes;
 	}
 
 	private async _getUsageModels(vendor: string): Promise<TreeNode[]> {

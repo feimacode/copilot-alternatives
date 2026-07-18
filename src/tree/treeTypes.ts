@@ -147,6 +147,12 @@ export class TreeNode {
 			case 'usageModel':
 				item.collapsibleState = vscode.TreeItemCollapsibleState.None;
 				item.iconPath = new vscode.ThemeIcon('symbol-method');
+				// Click opens model dashboard
+				item.command = {
+					command: 'copilotAlternatives.openUsageModel',
+					title: 'Show Model Usage',
+					arguments: [this],
+				};
 				break;
 		}
 
