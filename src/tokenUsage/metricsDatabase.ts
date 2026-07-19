@@ -153,6 +153,38 @@ export interface ModelPromptBreakdown {
 	avgToolResultsPct: number;
 }
 
+// ─── Session list / detail types ───────────────────────────────────────────
+
+/** Aggregate summary of a session for the tree listing. */
+export interface SessionSummary {
+	session_id: string;
+	creation_date: number;
+	initial_location: string | null;
+	request_count: number;
+	session_vendor: string | null;
+	session_model_name: string | null;
+	session_extension: string | null;
+	has_pending_edits: number;
+	promptTokens: number;
+	completionTokens: number;
+	totalTokens: number;
+	costUsd: number;
+	agent_ids: string | null;
+	first_turn_at: number | null;
+	last_turn_at: number | null;
+}
+
+/** Filter options for session listing. */
+export interface SessionFilterOptions {
+	modelNames: string[];
+}
+
+/** Full session detail with all its turns. */
+export interface SessionDetail {
+	session: SessionRow;
+	turns: TurnRow[];
+}
+
 // ─── DDL ────────────────────────────────────────────────────────────────────
 
 const DDL = `
@@ -696,6 +728,98 @@ export class MetricsDatabase {
 		return this._get<{ firstTrackedDate: string }>(
 			`SELECT MIN(date(timestamp / 1000, 'unixepoch')) AS firstTrackedDate FROM turns WHERE ${this._completeFilter()}`
 		);
+	}
+
+	// ── Session list / detail queries ────────────────────────────────────
+
+	/**
+	 * List sessions with aggregated turn stats, optionally within a
+	 * time window and filtered by vendor/model/agent/search text.
+	 */
+	async listSessions(
+		days: number,
+		filters?: { modelName?: string },
+	): Promise<SessionSummary[]> {
+		await this._ready;
+		const cutoff = Date.now() - days * 86400000;
+		const conditions: string[] = [];
+		const params: unknown[] = [];
+
+		// Time filter: include sessions whose *most recent* turn falls within the window,
+		// or sessions that have no turns at all (still show the empty entry).
+		conditions.push('(t.last_turn IS NULL OR t.last_turn >= ?)');
+		params.push(cutoff);
+
+		if (filters?.modelName) { conditions.push('t.model_name = ?'); params.push(filters.modelName); }
+
+		const where = `WHERE ${conditions.join(' AND ')}`;
+
+		return this._all<SessionSummary>(`
+			SELECT DISTINCT
+				s.session_id,
+				s.creation_date,
+				s.initial_location,
+				s.session_vendor,
+				s.session_model_name,
+				s.session_extension,
+				s.has_pending_edits,
+				COALESCE(t.turn_count, 0) AS request_count,
+				COALESCE(t.prompt_tokens, 0) AS promptTokens,
+				COALESCE(t.completion_tokens, 0) AS completionTokens,
+				COALESCE(t.total_tokens, 0) AS totalTokens,
+				COALESCE(t.cost_usd, 0) AS costUsd,
+				t.agent_ids,
+				t.first_turn AS first_turn_at,
+				t.last_turn AS last_turn_at
+			FROM sessions s
+			LEFT JOIN (
+				SELECT
+					session_id,
+					COUNT(*) AS turn_count,
+					SUM(prompt_tokens) AS prompt_tokens,
+					SUM(completion_tokens) AS completion_tokens,
+					SUM(prompt_tokens + completion_tokens) AS total_tokens,
+					COALESCE(SUM(estimated_cost_usd), 0) AS cost_usd,
+					GROUP_CONCAT(DISTINCT agent_id) AS agent_ids,
+					MIN(timestamp) AS first_turn,
+					MAX(timestamp) AS last_turn,
+					MAX(model_name) AS model_name
+				FROM turns
+				GROUP BY session_id
+			) t ON s.session_id = t.session_id
+			${where}
+			ORDER BY s.creation_date DESC
+			LIMIT 200
+		`, params);
+	}
+
+	/**
+	 * Get the full detail for a single session: its SessionRow and all TurnRows.
+	 */
+	async getSessionDetail(sessionId: string): Promise<SessionDetail | null> {
+		await this._ready;
+		const [session, turns] = await Promise.all([
+			this._get<SessionRow>('SELECT * FROM sessions WHERE session_id = ?', [sessionId]),
+			this._all<TurnRow>(
+				'SELECT * FROM turns WHERE session_id = ? ORDER BY timestamp ASC',
+				[sessionId],
+			),
+		]);
+		if (!session) { return null; }
+		return { session, turns };
+	}
+
+	/**
+	 * Get distinct filter option values from the sessions/turns tables.
+	 */
+	async getSessionFilterOptions(): Promise<SessionFilterOptions> {
+		await this._ready;
+		const rows = await this._all<{ v: string | null }>(
+			'SELECT DISTINCT model_name AS v FROM turns WHERE model_name IS NOT NULL ORDER BY v',
+		);
+		return {
+			modelNames: rows.map(r => r.v!).filter(Boolean),
+		};
 	}
 
 	// ── Rebuild ──────────────────────────────────────────────────────────

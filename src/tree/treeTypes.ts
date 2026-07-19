@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { IDirectoryGroup, IDirectorySubgroup, IDirectoryItem } from '../types/directory';
 import { IChatLanguageModelEntry, IChatLanguageModelModel } from '../byok/types';
+import { SessionSummary } from '../tokenUsage/metricsDatabase';
 
 /**
  * Discriminating union of all possible tree node types.
@@ -22,7 +23,11 @@ export type TreeNodeType =
 	| 'usageModel'
 	| 'moreInfoSection'
 	| 'extensionSection'
-	| 'extensionItem';
+	| 'extensionItem'
+	| 'sessionSection'
+	| 'sessionNode'
+	| 'helpSection'
+	| 'helpItem';
 
 /**
  * Wraps a data object + type metadata for the TreeDataProvider.
@@ -37,7 +42,7 @@ export class TreeNode {
 		/** Human-readable label. */
 		readonly label: string,
 		/** Reference to the underlying data object. */
-		readonly data: IDirectoryGroup | IDirectorySubgroup | IDirectoryItem | IChatLanguageModelEntry | IChatLanguageModelModel | undefined,
+		readonly data: IDirectoryGroup | IDirectorySubgroup | IDirectoryItem | IChatLanguageModelEntry | IChatLanguageModelModel | SessionSummary | undefined,
 		/** Optional description (shown dimmed next to the label). */
 		readonly description?: string,
 		/** Optional tooltip text. */
@@ -154,6 +159,47 @@ export class TreeNode {
 					arguments: [this],
 				};
 				break;
+
+			case 'sessionSection':
+				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+				// Default: comment-discussion. Filter icon when description doesn't start with "last 7d"
+				if (this.description && !this.description.startsWith('last 7d')) {
+					item.iconPath = new vscode.ThemeIcon('filter');
+				} else {
+					item.iconPath = new vscode.ThemeIcon('comment-discussion');
+				}
+				break;
+
+			case 'sessionNode': {
+				item.collapsibleState = vscode.TreeItemCollapsibleState.None;
+				item.iconPath = new vscode.ThemeIcon('comment');
+				const session = this.data as SessionSummary | undefined;
+				if (session?.session_id) {
+					item.command = {
+						command: 'copilotAlternatives.showSessionDetail',
+						title: 'Show Session Details',
+						arguments: [session.session_id],
+					};
+				}
+				break;
+			}
+
+			case 'helpSection':
+				item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+				item.iconPath = new vscode.ThemeIcon('question');
+				break;
+
+			case 'helpItem': {
+				item.collapsibleState = vscode.TreeItemCollapsibleState.None;
+				item.iconPath = new vscode.ThemeIcon('book');
+				// Primary click opens the help doc
+				item.command = {
+					command: 'copilotAlternatives.openHelpDoc',
+					title: 'Open Help',
+					arguments: [this.id],
+				};
+				break;
+			}
 		}
 
 		return item;

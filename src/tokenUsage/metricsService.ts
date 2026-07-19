@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg, ModelDayTotal, ModelPromptBreakdown } from './metricsDatabase';
+import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg, ModelDayTotal, ModelPromptBreakdown, SessionSummary, SessionDetail, SessionFilterOptions } from './metricsDatabase';
 import { parseSessionFile, computeFileHash, ParsedSession } from './sessionStoreImporter';
 import { estimateCost, resolveModelPricingKey } from './tokenCostEstimator';
 import { ILogService } from '../platform/log/common/logService';
@@ -497,6 +497,23 @@ export class MetricsService implements vscode.Disposable {
 	async getAllVendors(): Promise<string[]> {
 		const vendors = await this._db.getVendorBreakdown(30);
 		return vendors.map(v => v.vendor).sort();
+	}
+
+	// ── Session list / detail queries ───────────────────────────────────
+
+	async listSessions(
+		days: number,
+		filters?: { modelName?: string },
+	): Promise<SessionSummary[]> {
+		return this._db.listSessions(days, filters);
+	}
+
+	async getSessionDetail(sessionId: string): Promise<SessionDetail | null> {
+		return this._db.getSessionDetail(sessionId);
+	}
+
+	async getSessionFilterOptions(): Promise<SessionFilterOptions> {
+		return this._db.getSessionFilterOptions();
 	}
 
 	// ── Dispose ──────────────────────────────────────────────────────────

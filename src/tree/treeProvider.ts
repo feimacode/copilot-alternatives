@@ -10,7 +10,23 @@ import { readProviders } from '../byok/chatLanguageModels';
 import { IDirectoryGroup, IDirectorySubgroup, IDirectoryItem } from '../types/directory';
 import { IChatLanguageModelEntry, IChatLanguageModelModel } from '../byok/types';
 import { TokenUsageTracker } from '../tokenUsage/tokenUsageTracker';
+import { SessionSummary } from '../tokenUsage/metricsDatabase';
 import { formatTokenCount, resolveModelPricingKey } from '../tokenUsage/tokenCostEstimator';
+
+/** Stored session filter state shared across the tree provider's lifecycle. */
+export interface SessionFilter {
+	days: number;
+	modelName?: string;
+}
+
+/** Help doc entries: label shown in tree → filename in help/ directory. */
+const HELP_DOCS: { label: string; filename: string; description: string }[] = [
+	{ label: 'Getting Started', filename: 'HELP_GETTING_STARTED.md', description: 'Installation, sidebar, first steps' },
+	{ label: 'Token Usage Tracking', filename: 'HELP_TOKEN_USAGE.md', description: 'Dashboards, status bar, session analytics' },
+	{ label: 'BYOK Provider Management', filename: 'HELP_BYOK_MANAGEMENT.md', description: 'Add, edit, manage providers & models' },
+	{ label: 'Session Analytics', filename: 'HELP_SESSION_ANALYTICS.md', description: 'Browse sessions, filters, turn detail' },
+	{ label: 'Cost Estimates', filename: 'HELP_COST_ESTIMATES.md', description: 'How pricing works and accuracy' },
+];
 
 /**
  * Single unified TreeDataProvider for the Copilot Alternatives sidebar.
@@ -23,6 +39,8 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 	private _catalogGroups: readonly IDirectoryGroup[] = [];
 	private _extensionPath: string;
 	private _tokenTracker: TokenUsageTracker | undefined;
+	private _sessionFilter: SessionFilter = { days: 7 };
+	private readonly _helpDocs = HELP_DOCS;
 
 	constructor(extensionPath: string, tokenTracker?: TokenUsageTracker) {
 		this._extensionPath = extensionPath;
@@ -38,6 +56,10 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 		this._catalogGroups = getCatalogData(this._extensionPath);
 		this._onDidChangeTreeData.fire(undefined);
 	}
+
+	/** Get/set the active session filter. */
+	get sessionFilter(): SessionFilter { return this._sessionFilter; }
+	set sessionFilter(f: SessionFilter) { this._sessionFilter = f; this.refresh(); }
 
 	// ─── TreeDataProvider interface ─────────────────────────────────────────
 
@@ -63,10 +85,14 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				return this._getUsageVendors();
 			case 'usageVendor':
 				return this._getUsageModels(element.label);
+			case 'sessionSection':
+				return this._getSessions();
 			case 'extensionSection':
 				return this._getExtensionItems();
 			case 'moreInfoSection':
 				return this._getMoreInfoChildren();
+			case 'helpSection':
+				return this._getHelpDocs();
 			default:
 				return [];
 		}
@@ -114,6 +140,23 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				`${formatTokenCount(totalTokens)} tokens | ${totalReqs} requests | in 7 days`,
 				`${formatTokenCount(totalTokens)} tokens, ${totalReqs} requests, $${totalCost.toFixed(2)} cost — last 7 days`,
 			));
+
+			// 3b. Session Stats
+			const sessions = await this._tokenTracker.metricsService.listSessions(this._sessionFilter.days, {
+				modelName: this._sessionFilter.modelName,
+			});
+			const totalCost7d = sessions.reduce((s, sess) => s + sess.costUsd, 0);
+			const extraDesc = this._sessionFilter.modelName
+				? ` · ${this._sessionFilter.modelName}`
+				: '';
+			nodes.push(new TreeNode(
+				'sessionSection',
+				'session-section',
+				'Session Stats',
+				undefined,
+				`last ${this._sessionFilter.days}d${extraDesc} · ${sessions.length} sessions | $${totalCost7d.toFixed(2)}`,
+				`${sessions.length} sessions, $${totalCost7d.toFixed(2)} cost — last ${this._sessionFilter.days} days`,
+			));
 		}
 
 		// 4. Everything else folded under "More Info"
@@ -123,10 +166,20 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 		nodes.push(new TreeNode(
 			'moreInfoSection',
 			'more-info',
-			'More Info',
+			'More Alternative Solutions',
 			undefined,
 			`${this._catalogGroups.length - 1} categories, ${totalItems} items`,
 			'Browse all catalog sections: coding plans, tools, providers, and pricing',
+		));
+
+		// 5. Help section — always last
+		nodes.push(new TreeNode(
+			'helpSection',
+			'help-section',
+			'Help',
+			undefined,
+			`${this._helpDocs.length} guides`,
+			'Guides for getting started, tracking usage, managing BYOK providers, and more',
 		));
 
 		return nodes;
@@ -288,5 +341,58 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 					`${m.modelId}: ${formatTokenCount(m.promptTokens + m.completionTokens)} tokens, ${m.requestCount} requests, $${m.costUsd.toFixed(2)} cost — last 7 days`,
 				);
 			});
+	}
+
+	// ─── Session Stats ────────────────────────────────────────────────────
+
+	private async _getSessions(): Promise<TreeNode[]> {
+		if (!this._tokenTracker) { return []; }
+
+		const sessions = await this._tokenTracker.metricsService.listSessions(
+			this._sessionFilter.days,
+			{
+				modelName: this._sessionFilter.modelName,
+			},
+		);
+
+		if (sessions.length === 0) {
+			return [new TreeNode(
+				'sessionNode',
+				'session:none',
+				'No sessions found',
+				undefined,
+				this._hasActiveFilter() ? 'Try adjusting your filter' : 'Start using Copilot Chat to see sessions here',
+			)];
+		}
+
+		return sessions.map(s => {
+			const dateStr = new Date(s.creation_date).toISOString().split('T')[0];
+			const shortId = s.session_id.length > 8 ? s.session_id.substring(0, 8) : s.session_id;
+			const vendorModel = [s.session_vendor, s.session_model_name].filter(Boolean).join('/') || 'unknown';
+			const formattedTokens = formatTokenCount(s.totalTokens);
+
+			return new TreeNode(
+				'sessionNode',
+				'session:' + s.session_id,
+				`${dateStr} · ${shortId}`,
+				s,
+				`${s.request_count} turns · ${vendorModel}`,
+				`${s.request_count} turns, ${formattedTokens} tokens, $${s.costUsd.toFixed(2)} — ${vendorModel}`,
+			);
+		});
+	}
+
+	private _hasActiveFilter(): boolean {
+		return this._sessionFilter.days !== 7 || !!this._sessionFilter.modelName;
+	}
+
+	private _getHelpDocs(): TreeNode[] {
+		return this._helpDocs.map(doc => new TreeNode(
+			'helpItem',
+			doc.filename,
+			doc.label,
+			undefined,
+			doc.description,
+		));
 	}
 }

@@ -1,0 +1,464 @@
+{
+	"version": "1.3.0",
+	"lastUpdated": "2026-07-18",
+	"description": "Per-model pricing lookup table for cost estimation. All prices in USD per 1M tokens. Sources: providerUrl for direct API pricing; copilotUrl for GitHub Copilot pricing if different.",
+	"opencodeGo": {
+		"name": "OpenCode Go",
+		"url": "https://opencode.ai/docs/go/#usage-limits",
+		"subscription": { "firstMonth": 5.00, "recurring": 10.00, "monthlyCapDefault": 60.00, "monthlyCapRestricted": 15.00, "multiplier": 6 },
+		"restrictedModelIds": ["grok-4.5", "kimi-k3", "mimo-v2.5-pro", "deepseek-v4-pro"]
+	},
+	"models": [
+		{
+			"id": "gpt-5.6-sol",
+			"name": "GPT-5.6 Sol",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 5.00, "output": 30.00, "cacheHit": 0.50, "inputLongContext": 10.00, "outputLongContext": 45.00, "cacheHitLongContext": 1.00, "batchInput": 0.50 },
+			"note": "Flagship tier. ≤272K / >272K two-tier on Copilot."
+		},
+		{
+			"id": "gpt-5.6-terra",
+			"name": "GPT-5.6 Terra",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 2.50, "output": 15.00, "cacheHit": 0.25, "inputLongContext": 5.00, "outputLongContext": 22.50, "cacheHitLongContext": 0.50, "batchInput": 0.25 },
+			"note": "Mid-tier. ≤272K / >272K two-tier on Copilot."
+		},
+		{
+			"id": "gpt-5.6-luna",
+			"name": "GPT-5.6 Luna",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 1.00, "output": 6.00, "cacheHit": 0.10, "inputLongContext": 2.00, "outputLongContext": 9.00, "cacheHitLongContext": 0.20, "batchInput": 0.10 },
+			"note": "Budget tier. ≤200K / >200K two-tier on Copilot."
+		},
+		{
+			"id": "gpt-5.5",
+			"name": "GPT-5.5",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 5.00, "output": 30.00, "cacheHit": 0.50, "inputLongContext": 10.00, "outputLongContext": 45.00, "cacheHitLongContext": 1.00, "batchInput": 0.50 },
+			"note": "Strong reasoning model. ≤272K / >272K two-tier on Copilot."
+		},
+		{
+			"id": "gpt-5.4",
+			"name": "GPT-5.4",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 2.50, "output": 15.00, "cacheHit": 0.25, "inputLongContext": 5.00, "outputLongContext": 22.50, "cacheHitLongContext": 0.50, "batchInput": 0.25 },
+			"note": "Previous-gen flagship. ≤272K / >272K two-tier on Copilot."
+		},
+		{
+			"id": "gpt-5.4-mini",
+			"name": "GPT-5.4 Mini",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.75, "output": 4.50, "cacheHit": 0.075 },
+			"note": "Lightweight, fast."
+		},
+		{
+			"id": "gpt-5-mini",
+			"name": "GPT-5 Mini",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.25, "output": 2.00, "cacheHit": 0.025 },
+			"note": "Lightweight category on GitHub Copilot (separate from GPT-5.4 Mini)."
+		},
+		{
+			"id": "gpt-5.4-nano",
+			"name": "GPT-5.4 Nano",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.20, "output": 1.25, "cacheHit": 0.02 },
+			"note": "Smallest/cheapest GPT model."
+		},
+		{
+			"id": "gpt-5.3-codex",
+			"name": "GPT-5.3 Codex",
+			"provider": "OpenAI",
+			"providerUrl": "https://developers.openai.com/api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 1.75, "cacheHit": 0.175, "output": 14.00 },
+			"note": "Coding agent model for Codex CLI."
+		},
+		{
+			"id": "claude-fable-5",
+			"name": "Claude Fable 5",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 10.00, "output": 50.00, "cacheHit": 1.00, "cacheWrite": 12.50 },
+			"note": "Most capable widely released Claude."
+		},
+		{
+			"id": "claude-opus-4-8",
+			"name": "Claude Opus 4.8",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 5.00, "output": 25.00, "cacheHit": 0.50, "cacheWrite": 6.25 },
+			"note": "Best for complex agentic coding and enterprise work."
+		},
+		{
+			"id": "claude-opus-4-8-fast",
+			"name": "Claude Opus 4.8 (fast mode)",
+			"provider": "Anthropic",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": null,
+			"pricing": { "input": 10.00, "output": 50.00, "cacheHit": 1.00, "cacheWrite": 12.50 },
+			"note": "Fast mode of Opus 4.8, priced at Fable 5 level. GitHub Copilot only (preview)."
+		},
+		{
+			"id": "claude-opus-4-7",
+			"name": "Claude Opus 4.7",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 5.00, "output": 25.00, "cacheHit": 0.50, "cacheWrite": 6.25 }
+		},
+		{
+			"id": "claude-opus-4-6",
+			"name": "Claude Opus 4.6",
+			"provider": "Anthropic",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 5.00, "output": 25.00, "cacheHit": 0.50, "cacheWrite": 6.25 }
+		},
+		{
+			"id": "claude-opus-4-5",
+			"name": "Claude Opus 4.5",
+			"provider": "Anthropic",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 200000,
+			"pricing": { "input": 5.00, "output": 25.00, "cacheHit": 0.50, "cacheWrite": 6.25 }
+		},
+		{
+			"id": "claude-sonnet-5",
+			"name": "Claude Sonnet 5",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 3.00, "output": 15.00, "cacheHit": 0.30, "cacheWrite": 3.75 },
+			"copilotPricing": { "input": 2.00, "output": 10.00, "cacheHit": 0.20, "cacheWrite": 2.50 },
+			"note": "Promotional pricing on Copilot: $2/$10 through Aug 31, 2026."
+		},
+		{
+			"id": "claude-sonnet-4-6",
+			"name": "Claude Sonnet 4.6",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 1000000,
+			"pricing": { "input": 3.00, "output": 15.00, "cacheHit": 0.30, "cacheWrite": 3.75 },
+			"note": "Strong coding model."
+		},
+		{
+			"id": "claude-sonnet-4-5",
+			"name": "Claude Sonnet 4.5",
+			"provider": "Anthropic",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 200000,
+			"pricing": { "input": 3.00, "output": 15.00, "cacheHit": 0.30, "cacheWrite": 3.75 }
+		},
+		{
+			"id": "claude-sonnet-4",
+			"name": "Claude Sonnet 4",
+			"provider": "Anthropic",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 200000,
+			"pricing": { "input": 3.00, "output": 15.00, "cacheHit": 0.30, "cacheWrite": 3.75 }
+		},
+		{
+			"id": "claude-haiku-4-5",
+			"name": "Claude Haiku 4.5",
+			"provider": "Anthropic",
+			"providerUrl": "https://platform.claude.com/docs/en/docs/about-claude/models",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 200000,
+			"pricing": { "input": 1.00, "output": 5.00, "cacheHit": 0.10, "cacheWrite": 1.25 },
+			"note": "Fastest Claude, near-frontier intelligence."
+		},
+		{
+			"id": "gemini-3.5-flash",
+			"name": "Gemini 3.5 Flash",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 1.50, "output": 9.00, "cacheHit": 0.15 },
+			"note": "Most intelligent speed model."
+		},
+		{
+			"id": "gemini-3.1-pro-preview",
+			"name": "Gemini 3.1 Pro Preview",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 200000,
+			"pricing": { "input": 2.00, "output": 12.00, "cacheHit": 0.20, "inputLongContext": 4.00, "outputLongContext": 18.00, "cacheHitLongContext": 0.40 },
+			"note": "Latest Pro model. ≤200K / >200K two-tier on Copilot."
+		},
+		{
+			"id": "gemini-3-flash",
+			"name": "Gemini 3 Flash",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.50, "output": 3.00, "cacheHit": 0.05 },
+			"note": "Speed model with search/grounding."
+		},
+		{
+			"id": "gemini-2.5-pro",
+			"name": "Gemini 2.5 Pro",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 1.25, "output": 10.00, "cacheHit": 0.125, "inputLongContext": 2.50, "outputLongContext": 15.00, "cacheHitLongContext": 0.25 },
+			"note": "State-of-the-art multipurpose, excels at coding."
+		},
+		{
+			"id": "gemini-2.5-flash",
+			"name": "Gemini 2.5 Flash",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 0.30, "output": 2.50, "cacheHit": 0.03 },
+			"note": "Hybrid reasoning model, 1M context."
+		},
+		{
+			"id": "gemini-2.5-flash-lite",
+			"name": "Gemini 2.5 Flash-Lite",
+			"provider": "Google",
+			"providerUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+			"copilotUrl": null,
+			"pricing": { "input": 0.10, "output": 0.40, "cacheHit": 0.01 },
+			"note": "Most cost-effective Gemini model."
+		},
+		{
+			"id": "raptor-mini",
+			"name": "Raptor Mini",
+			"provider": "GitHub (fine-tuned)",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.25, "output": 2.00, "cacheHit": 0.025 },
+			"note": "GitHub's own fine-tuned model, versatile category."
+		},
+		{
+			"id": "mai-code-1-flash",
+			"name": "MAI-Code-1-Flash",
+			"provider": "Microsoft",
+			"providerUrl": null,
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"pricing": { "input": 0.75, "output": 4.50, "cacheHit": 0.075 },
+			"note": "Microsoft's coding model, lightweight category on Copilot."
+		},
+		{
+			"id": "deepseek-v4-flash",
+			"name": "DeepSeek V4 Flash",
+			"provider": "DeepSeek",
+			"providerUrl": "https://api-docs.deepseek.com/quick_start/pricing",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"maxOutput": 384000,
+			"pricing": { "input": 0.14, "output": 0.28, "cacheHit": 0.0028 },
+			"note": "Fast & cheap, great for high-volume coding.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 158150 }
+		},
+		{
+			"id": "deepseek-v4-pro",
+			"name": "DeepSeek V4 Pro",
+			"provider": "DeepSeek",
+			"providerUrl": "https://api-docs.deepseek.com/quick_start/pricing",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"maxOutput": 384000,
+			"pricing": { "input": 0.435, "output": 0.87, "cacheHit": 0.003625 },
+			"note": "Strong reasoning, excellent price/performance.",
+			"opencodeGo": { "monthlyCap": 15.00, "monthlyEstRequests": 17150 }
+		},
+		{
+			"id": "grok-4.5",
+			"name": "Grok 4.5",
+			"provider": "xAI",
+			"providerUrl": "https://x.ai/api#pricing",
+			"copilotUrl": null,
+			"contextWindow": 500000,
+			"pricing": { "input": 2.00, "output": 6.00 },
+			"note": "Flagship, strong at coding and agentic tool calling.",
+			"opencodeGo": { "monthlyCap": 15.00, "monthlyEstRequests": 380 }
+		},
+		{
+			"id": "glm-5.2",
+			"name": "GLM-5.2",
+			"provider": "Zhipu AI (via z.ai)",
+			"providerUrl": "https://docs.z.ai/guides/overview/pricing",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 1.40, "output": 4.40, "cacheHit": 0.26 },
+			"note": "Flagship open model, #2 on LMArena Code.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 4300 }
+		},
+		{
+			"id": "glm-5.1",
+			"name": "GLM-5.1",
+			"provider": "Zhipu AI (via z.ai)",
+			"providerUrl": "https://docs.z.ai/guides/overview/pricing",
+			"copilotUrl": null,
+			"contextWindow": 198000,
+			"pricing": { "input": 1.40, "output": 4.40, "cacheHit": 0.26 },
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 4300 }
+		},
+		{
+			"id": "glm-5",
+			"name": "GLM-5",
+			"provider": "Zhipu AI (via z.ai)",
+			"providerUrl": "https://docs.z.ai/guides/overview/pricing",
+			"copilotUrl": null,
+			"pricing": { "input": 1.00, "output": 3.20, "cacheHit": 0.20 }
+		},
+		{
+			"id": "glm-5-turbo",
+			"name": "GLM-5-Turbo",
+			"provider": "Zhipu AI (via z.ai)",
+			"providerUrl": "https://docs.z.ai/guides/overview/pricing",
+			"copilotUrl": null,
+			"pricing": { "input": 1.20, "output": 4.00, "cacheHit": 0.24 }
+		},
+		{
+			"id": "glm-4.7",
+			"name": "GLM-4.7",
+			"provider": "Zhipu AI (via z.ai)",
+			"providerUrl": "https://docs.z.ai/guides/overview/pricing",
+			"copilotUrl": null,
+			"pricing": { "input": 0.60, "output": 2.20, "cacheHit": 0.11 },
+			"note": "Sonnet-level model for daily development."
+		},
+		{
+			"id": "kimi-k3",
+			"name": "Kimi K3",
+			"provider": "Moonshot (Kimi)",
+			"providerUrl": "https://platform.kimi.com/docs/pricing",
+			"copilotUrl": null,
+			"contextWindow": 1048576,
+			"pricing": { "input": 2.78, "output": 13.89, "cacheHit": 0.28 },
+			"note": "Flagship, 1M context (CNY ¥20/¥100 per MTok).",
+			"opencodeGo": { "monthlyCap": 15.00, "monthlyEstRequests": 680 }
+		},
+		{
+			"id": "kimi-k2.7-code",
+			"name": "Kimi K2.7 Code",
+			"provider": "Moonshot (Kimi)",
+			"providerUrl": "https://platform.kimi.com/docs/pricing",
+			"copilotUrl": "https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing",
+			"contextWindow": 262144,
+			"pricing": { "input": 0.90, "output": 3.75, "cacheHit": 0.18 },
+			"copilotPricing": { "input": 0.95, "output": 4.00, "cacheHit": 0.19 },
+			"note": "Coding model, thinking mode. Copilot price slightly higher than direct.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 9250 }
+		},
+		{
+			"id": "kimi-k2.6",
+			"name": "Kimi K2.6",
+			"provider": "Moonshot (Kimi)",
+			"providerUrl": null,
+			"copilotUrl": null,
+			"pricing": { "input": 0.90, "output": 3.75, "cacheHit": 0.16 },
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 5750 }
+		},
+		{
+			"id": "qwen3.7-max",
+			"name": "Qwen3.7 Max",
+			"provider": "Alibaba Cloud",
+			"providerUrl": "https://help.aliyun.com/zh/model-studio/getting-started/models",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 2.50, "output": 7.50, "cacheHit": 0.50 },
+			"note": "Highest capability Qwen.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 4770 }
+		},
+		{
+			"id": "qwen3.7-plus",
+			"name": "Qwen3.7 Plus",
+			"provider": "Alibaba Cloud",
+			"providerUrl": "https://help.aliyun.com/zh/model-studio/getting-started/models",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 0.40, "output": 1.60, "cacheHit": 0.04, "inputLongContext": 1.20, "outputLongContext": 4.80 },
+			"note": "Best price/performance Qwen. ≤256K / >256K two-tier.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 21600 }
+		},
+		{
+			"id": "qwen3.6-plus",
+			"name": "Qwen3.6 Plus",
+			"provider": "Alibaba Cloud",
+			"providerUrl": "https://help.aliyun.com/zh/model-studio/getting-started/models",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 0.50, "output": 3.00, "cacheHit": 0.05, "inputLongContext": 2.00, "outputLongContext": 6.00 },
+			"note": "Previous-gen Plus, ≤256K / >256K two-tier.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 16300 }
+		},
+		{
+			"id": "minimax-m3",
+			"name": "MiniMax-M3",
+			"provider": "MiniMax",
+			"providerUrl": "https://platform.minimaxi.com/docs/guides/pricing-paygo",
+			"copilotUrl": null,
+			"contextWindow": 192000,
+			"pricing": { "input": 0.29, "output": 1.17, "cacheHit": 0.06 },
+			"note": "Agentic model, permanent 50% discount applied (CNY ¥2.1/¥8.4 per MTok).",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 16000 }
+		},
+		{
+			"id": "minimax-m2.7",
+			"name": "MiniMax-M2.7",
+			"provider": "MiniMax",
+			"providerUrl": "https://platform.minimaxi.com/docs/guides/pricing-paygo",
+			"copilotUrl": null,
+			"contextWindow": 192000,
+			"pricing": { "input": 0.29, "output": 1.17, "cacheHit": 0.06, "cacheWrite": 0.36 },
+			"note": "Previous-gen (CNY ¥2.1/¥8.4 per MTok).",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 17000 }
+		},
+		{
+			"id": "mimo-v2.5",
+			"name": "MiMo-V2.5",
+			"provider": "Xiaomi",
+			"providerUrl": "https://mimo.xiaomi.com",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 0.14, "output": 0.28, "cacheHit": 0.0028 },
+			"note": "Very cost-efficient, 1M context.",
+			"opencodeGo": { "monthlyCap": 60.00, "monthlyEstRequests": 150400 }
+		},
+		{
+			"id": "mimo-v2.5-pro",
+			"name": "MiMo-V2.5-Pro",
+			"provider": "Xiaomi",
+			"providerUrl": "https://mimo.xiaomi.com",
+			"copilotUrl": null,
+			"contextWindow": 1000000,
+			"pricing": { "input": 0.435, "output": 0.87, "cacheHit": 0.003625 },
+			"note": "Stronger reasoning, same 1M context.",
+			"opencodeGo": { "monthlyCap": 15.00, "monthlyEstRequests": 16300 }
+		}
+	]
+}

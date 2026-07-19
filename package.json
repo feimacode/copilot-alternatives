@@ -211,7 +211,7 @@
 			},
 			{
 				"command": "copilotAlternatives.reloadTokenUsage",
-				"title": "Reload Token Usage Data",
+				"title": "Refresh Stats DB from local sessions",
 				"category": "Copilot Alternatives",
 				"icon": "$(refresh)"
 			},
@@ -256,6 +256,36 @@
 				"title": "Show Model Usage",
 				"category": "Copilot Alternatives",
 				"icon": "$(graph)"
+			},
+			{
+				"command": "copilotAlternatives.showSessionDetail",
+				"title": "Show Session Details",
+				"category": "Copilot Alternatives",
+				"icon": "$(comment-discussion)"
+			},
+			{
+				"command": "copilotAlternatives.toggleSessionFilter",
+				"title": "Toggle Session Filter",
+				"category": "Copilot Alternatives",
+				"icon": "$(filter)"
+			},
+			{
+				"command": "copilotAlternatives.clearSessionFilter",
+				"title": "Clear Session Filter",
+				"category": "Copilot Alternatives",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "copilotAlternatives.copySessionId",
+				"title": "Copy Session ID",
+				"category": "Copilot Alternatives",
+				"icon": "$(copy)"
+			},
+			{
+				"command": "copilotAlternatives.openHelpDoc",
+				"title": "Open Help Document",
+				"category": "Copilot Alternatives",
+				"icon": "$(question)"
 			}
 		],
 		"menus": {
@@ -358,6 +388,14 @@
 				},
 				{
 					"command": "copilotAlternatives.showModelUsage",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.toggleSessionFilter",
+					"when": "true"
+				},
+				{
+					"command": "copilotAlternatives.openHelpDoc",
 					"when": "true"
 				}
 			],
@@ -473,6 +511,31 @@
 					"command": "copilotAlternatives.openUsageModel",
 					"when": "view == copilotAlternatives.main && viewItem == usageModel",
 					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.toggleSessionFilter",
+					"when": "view == copilotAlternatives.main && viewItem == sessionSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.clearSessionFilter",
+					"when": "view == copilotAlternatives.main && viewItem == sessionSection",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.showSessionDetail",
+					"when": "view == copilotAlternatives.main && viewItem == sessionNode",
+					"group": "inline"
+				},
+				{
+					"command": "copilotAlternatives.copySessionId",
+					"when": "view == copilotAlternatives.main && viewItem == sessionNode",
+					"group": "1_edit"
+				},
+				{
+					"command": "copilotAlternatives.openHelpDoc",
+					"when": "view == copilotAlternatives.main && viewItem == helpItem",
+					"group": "inline"
 				}
 			]
 		}
@@ -480,31 +543,6 @@
 	"configuration": {
 		"title": "Copilot Alternatives — Token Usage",
 		"properties": {
-			"copilotAlternatives.tokenUsage.statusBarFormat": {
-				"type": "string",
-				"default": "tokens-and-cost",
-				"enum": [
-					"tokens-and-cost",
-					"tokens-only",
-					"cost-only"
-				],
-				"enumDescriptions": [
-					"Show both token count and estimated cost",
-					"Show only token count",
-					"Show only estimated cost"
-				],
-				"description": "What to display in the token usage status bar."
-			},
-			"copilotAlternatives.tokenUsage.dailyWatermark": {
-				"type": "number",
-				"default": 5,
-				"description": "Daily cost watermark in USD. Shows a notification when estimated daily chat token cost exceeds this threshold."
-			},
-			"copilotAlternatives.tokenUsage.weeklyWatermark": {
-				"type": "number",
-				"default": 25,
-				"description": "Weekly cost watermark in USD. Shows a notification when estimated weekly chat token cost exceeds this threshold."
-			},
 			"copilotAlternatives.tokenUsage.backfillDays": {
 				"type": "number",
 				"default": 60,
@@ -518,6 +556,12 @@
 				"minimum": 1,
 				"maximum": 30,
 				"description": "How far back (in days) the real-time file watcher scans for chat session files on startup. Keep small (default 1 day) for fast activation. Historical data is still imported by the background processor."
+			},
+			"copilotAlternatives.tokenUsage.yearlyBudgetTarget": {
+				"type": "number",
+				"default": 250000,
+				"minimum": 1,
+				"description": "Yearly AI token budget target in USD. Displayed as a progress bar in the token usage overview dashboard."
 			}
 		}
 	},

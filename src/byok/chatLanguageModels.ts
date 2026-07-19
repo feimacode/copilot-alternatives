@@ -9,6 +9,33 @@ import * as os from 'os';
 import * as fs from 'fs';
 import { IChatLanguageModelEntry } from './types';
 
+// ─── API Key Storage Rules ─────────────────────────────────────────────────
+//
+// API keys marked as "secret": true in the vendor schema (e.g. customendpoint)
+// MUST NOT be stored as plaintext in chatLanguageModels.json. VS Code's
+// LanguageModelsService._resolveConfiguration() silently drops secret values
+// that are not ${input:...} references, treating them as undefined.
+//
+// There are TWO separate secret storage namespaces in VS Code:
+//
+//   1. Extension-level (vscode.ExtensionContext.secrets) — NOT accessible by
+//      VS Code's internal LanguageModelsService at runtime. Storing a key here
+//      and writing a ${input:...} reference to the JSON file will produce a
+//      reference that _resolveConfiguration() cannot decode → key silently
+//      dropped → model calls fail.
+//
+//   2. Internal service-level (ISecretStorageService) — used by
+//      LanguageModelsService._resolveLanguageModelProviderGroup(). This is the
+//      ONLY namespace that _resolveConfiguration() reads from at runtime.
+//
+// Therefore, the only way to produce valid encrypted references is through VS
+// Code's own commands:
+//   - lm.addLanguageModelsProviderGroup     (create)
+//
+// Direct writes to chatLanguageModels.json via writeProviders() must preserve
+// existing encrypted references (${input:...}) and strip plaintext keys to
+// prevent accidental leaks.
+
 /**
  * Finds the chatLanguageModels.json file in the VS Code user data directory.
  *
@@ -182,6 +209,12 @@ export async function readProviders(): Promise<IChatLanguageModelEntry[]> {
 /**
  * Writes the provider array back to chatLanguageModels.json.
  * Creates the file if it doesn't exist.
+ *
+ * ⚠ API key rules:
+ * - Existing encrypted references (${input:...}) are preserved as-is.
+ * - Plaintext keys are STRIPPED (set to undefined) to prevent leaks.
+ *   Use `lm.addLanguageModelsProviderGroup` command to store new keys via
+ *   VS Code's internal ISecRetStorageService, which produces valid refs.
  */
 export async function writeProviders(entries: IChatLanguageModelEntry[]): Promise<void> {
 	const fileUri = findChatLanguageModelsFile();
@@ -189,7 +222,15 @@ export async function writeProviders(entries: IChatLanguageModelEntry[]): Promis
 		throw new Error('Could not locate chatLanguageModels.json — VS Code user data directory not found.');
 	}
 
-	const content = JSON.stringify(entries, undefined, '\t');
+	// Strip any plaintext API keys — only keep encrypted references
+	const sanitized = entries.map(entry => {
+		if (entry.apiKey && !entry.apiKey.startsWith('${input:')) {
+			return { ...entry, apiKey: undefined };
+		}
+		return entry;
+	});
+
+	const content = JSON.stringify(sanitized, undefined, '\t');
 	await vscode.workspace.fs.writeFile(fileUri, Buffer.from(content, 'utf-8'));
 }
 
@@ -202,7 +243,8 @@ export function hasProviderNamed(entries: IChatLanguageModelEntry[], name: strin
 
 /**
  * Returns a masked representation of an API key for display purposes.
- * Handles both plain keys and VS Code secret references.
+ * Handles plain keys, VS Code internal secret references, and extension
+ * encrypted references.
  */
 export function maskApiKey(apiKey: string | undefined): string {
 	if (!apiKey) {

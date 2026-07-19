@@ -168,10 +168,7 @@ export class VendorDashboard {
 		const totalRequests = models.reduce((sum, m) => sum + m.requestCount, 0);
 		const totalCost = models.reduce((sum, m) => sum + m.costUsd, 0);
 
-		// Daily usage
-		const dateSet = new Set<string>();
-		for (const d of dailyByModel) { dateSet.add(d.date); }
-        const allDates = [...dateSet].sort().slice(-this._days);
+		// Daily usage — build lookup maps from DB data
 		const dailyTokensMap: Record<string, number> = {};
 		const dailyPromptMap: Record<string, number> = {};
 		const dailyCompletionMap: Record<string, number> = {};
@@ -182,8 +179,13 @@ export class VendorDashboard {
 			dailyCompletionMap[d.date] = (dailyCompletionMap[d.date] || 0) + d.totalCompletionTokens;
 			dailyRequestsMap[d.date] = (dailyRequestsMap[d.date] || 0) + d.requestCount;
 		}
-		const weekDates = allDates.slice(-7);
-        const monthDates = allDates.slice(-this._days);
+		// Generate full date range for the selected period
+		const rangeDates: string[] = [];
+		for (let i = this._days - 1; i >= 0; i--) {
+			const d = new Date();
+			d.setDate(d.getDate() - i);
+			rangeDates.push(d.toISOString().split('T')[0]);
+		}
 
 		// Model entries
 		const modelEntries = models.map(m => ({
@@ -211,19 +213,19 @@ export class VendorDashboard {
 			vendorColor: color,
             firstTrackedDate: s.firstTrackedDate,
 			modelEntries,
-			weekDates: weekDates.map(d => d.slice(5)),
-			monthDates: monthDates.map(d => d.slice(5)),
-			weekTokens: weekDates.map(d => dailyTokensMap[d] || 0),
-			monthTokens: monthDates.map(d => dailyTokensMap[d] || 0),
-			weekPrompt: weekDates.map(d => dailyPromptMap[d] || 0),
-			monthPrompt: monthDates.map(d => dailyPromptMap[d] || 0),
-			weekCompletion: weekDates.map(d => dailyCompletionMap[d] || 0),
-			monthCompletion: monthDates.map(d => dailyCompletionMap[d] || 0),
-			weekRequests: weekDates.map(d => dailyRequestsMap[d] || 0),
-			monthRequests: monthDates.map(d => dailyRequestsMap[d] || 0),
-			monthDatesFull: monthDates,
+			weekDates: rangeDates.slice(-7).map(d => d.slice(5)),
+			monthDates: rangeDates.map(d => d.slice(5)),
+			weekTokens: rangeDates.slice(-7).map(d => dailyTokensMap[d] || 0),
+			monthTokens: rangeDates.map(d => dailyTokensMap[d] || 0),
+			weekPrompt: rangeDates.slice(-7).map(d => dailyPromptMap[d] || 0),
+			monthPrompt: rangeDates.map(d => dailyPromptMap[d] || 0),
+			weekCompletion: rangeDates.slice(-7).map(d => dailyCompletionMap[d] || 0),
+			monthCompletion: rangeDates.map(d => dailyCompletionMap[d] || 0),
+			weekRequests: rangeDates.slice(-7).map(d => dailyRequestsMap[d] || 0),
+			monthRequests: rangeDates.map(d => dailyRequestsMap[d] || 0),
+			monthDatesFull: rangeDates,
 			modelIds,
-			modelDailyStack: modelIds.map(mid => monthDates.map(d => modelDailyMap[mid]?.[d] ?? 0)),
+			modelDailyStack: modelIds.map(mid => rangeDates.map(d => modelDailyMap[mid]?.[d] ?? 0)),
 			modelColors: modelIds.map((mid, i) => modelColor(mid, i)),
 			totalTokens, totalPromptTokens, totalCompletionTokens,
 			totalRequests, totalCost,

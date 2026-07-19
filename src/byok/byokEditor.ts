@@ -26,6 +26,19 @@ function getModelTitle(mode: 'create' | 'edit', name: string, parentName: string
  * Singleton: if a provider panel is already open, it is revealed and reused.
  * Resolves to the saved entry on the FIRST save, or undefined if the user
  * closes the panel without saving.
+ *
+ * ⚠ API keys are NOT handled by this editor. VS Code's apiKey schema property
+ * is marked "secret": true, and the ONLY way to set/update it with a valid
+ * ${input:chat.lm.secret.<hash>} reference is through VS Code's internal
+ * ISecRetStorageService — which no public extension API exposes.
+ *
+ * For CREATE: we use `lm.addLanguageModelsProviderGroup` (the one public
+ * command) which encrypts via ISecRetStorageService internally.
+ *
+ * For EDIT: we save non-secret fields via writeProviders(). If the user
+ * wants to change the API key, we point them to VS Code's built-in
+ * Language Models editor ("Manage Language Models") which has a working
+ * "Update API Key" action with full access to the internal services.
  */
 export function openProviderEditor(
 	mode: 'create' | 'edit',
@@ -33,15 +46,7 @@ export function openProviderEditor(
 	providerNames: readonly string[]
 ): Promise<IChatLanguageModelEntry | undefined> {
 	return new Promise(resolve => {
-		// If a panel is already open, reveal it and re-render for this entry
-		if (_activeProviderPanel) {
-			_activeProviderPanel.reveal();
-			_activeProviderPanel.title = getProviderTitle(mode, original.name);
-			_activeProviderPanel.webview.html = getProviderEditorHtml(original, mode, providerNames);
-			// Note: the original panel's promise won't fire — we resolve this new
-			// promise immediately on the existing panel's next save via a side channel.
-			// For simplicity, we close the existing one and open a new one.
-		}
+		// If a panel is already open, close and reopen with the new entry
 		if (_activeProviderPanel) {
 			_activeProviderPanel.dispose();
 		}
@@ -61,12 +66,15 @@ export function openProviderEditor(
 		let resolved = false;
 		let currentMode: 'create' | 'edit' = mode;
 		let currentOriginal: IChatLanguageModelEntry = { ...original };
+		// Stages the API key entered via "Set Key" in create mode until form submit
+		let pendingNewApiKey: string | null = null;
 
 		const disposable = panel.webview.onDidReceiveMessage(async msg => {
+			// ── Set / stage API key ───────────────────────────────────────
 			if (msg.type === 'requestApiKey') {
 				const newKey = await vscode.window.showInputBox({
-					title: 'Update API Key',
-					prompt: `Enter the new API key for "${currentOriginal.name}"`,
+					title: currentMode === 'create' ? 'Set API Key' : 'Update API Key',
+					prompt: `Enter the API key for "${currentOriginal.name}"`,
 					password: true,
 					placeHolder: 'API key (stored encrypted)',
 					validateInput: (value) => {
@@ -74,6 +82,9 @@ export function openProviderEditor(
 						return undefined;
 					},
 				});
+				if (newKey && currentMode === 'create') {
+					pendingNewApiKey = newKey;
+				}
 				panel.webview.postMessage({
 					type: 'apiKeyValue',
 					value: newKey ?? '',
@@ -81,52 +92,93 @@ export function openProviderEditor(
 				return;
 			}
 
+			// ── Open VS Code's built-in Language Models editor for key mgmt ─
+			if (msg.type === 'openLanguageModelsEditor') {
+				try {
+					await vscode.commands.executeCommand('workbench.action.chat.manage');
+				} catch {
+					vscode.window.showInformationMessage(
+						'You can also manage API keys directly in chatLanguageModels.json ' +
+						'(use the "Open JSON File" button in the sidebar).'
+					);
+				}
+				return;
+			}
+
+			// ── Cancel ─────────────────────────────────────────────────────
 			if (msg.type === 'cancel') {
 				disposable.dispose();
 				panel.dispose();
 				return;
 			}
 
+			// ── Save ───────────────────────────────────────────────────────
 			if (msg.type !== 'save') { return; }
 
-			// Build the new entry
+			const saveName = msg.entry.name.trim();
+			const saveVendor = msg.entry.vendor?.trim() || 'customendpoint';
+
+			// Build the entry (non-secret fields only)
 			const newEntry: IChatLanguageModelEntry = {
 				...currentOriginal,
-				name: msg.entry.name,
-				vendor: msg.entry.vendor || 'customendpoint',
-				apiType: msg.entry.apiType,
+				name: saveName,
+				vendor: saveVendor,
+				apiType: msg.entry.apiType || currentOriginal.apiType,
 			} as IChatLanguageModelEntry;
-			if (msg.entry.apiKey === '__keep__') {
-				newEntry.apiKey = currentOriginal.apiKey;
-			} else if (msg.entry.apiKey === '__clear__') {
-				delete (newEntry as Record<string, unknown>).apiKey;
-			} else if (typeof msg.entry.apiKey === 'string') {
-				newEntry.apiKey = msg.entry.apiKey;
-			}
 
 			try {
-				const allEntries = await readProviders();
-				const idx = allEntries.findIndex(e => e.name === currentOriginal.name);
-				if (idx >= 0) {
-					allEntries[idx] = newEntry;
-				} else {
-					allEntries.push(newEntry);
-				}
-				// Ensure the customendpoint vendor is registered before writing
-				try {
-					await vscode.commands.executeCommand('github.copilot.activate');
-				} catch { /* Copilot may not be installed */ }
-				await writeProviders(allEntries);
-				panel.webview.postMessage({ type: 'saveSuccess' });
+				try { await vscode.commands.executeCommand('github.copilot.activate'); } catch { /* ok */ }
 
-				// Update the in-memory original so subsequent saves diff against the new state
+				if (currentMode === 'create') {
+					// ── CREATE: use lm.addLanguageModelsProviderGroup ──────
+					// This is the one public command that encrypts via the
+					// internal ISecRetStorageService. It works for create
+					// because there's no existing entry to conflict with.
+					const apiKey = pendingNewApiKey || msg.entry.apiKey;
+					if (!apiKey) {
+						panel.webview.postMessage({
+							type: 'saveError',
+							message: 'Please set an API key first (click "Set Key").'
+						});
+						return;
+					}
+					await vscode.commands.executeCommand('lm.addLanguageModelsProviderGroup', {
+						name: saveName,
+						vendor: saveVendor,
+						apiKey,
+						apiType: newEntry.apiType,
+						models: newEntry.models,
+					});
+					pendingNewApiKey = null;
+				} else {
+				// ── EDIT: save non-secret fields via writeProviders ───
+				// writeProviders() preserves existing ${input:...} encrypted
+				// references and strips any plaintext keys. To update the
+				// API key, use the "Manage Language Models" button which
+				// opens VS Code's built-in editor with a working "Update
+				// API Key" action.
+					const allEntries = await readProviders();
+					const idx = allEntries.findIndex(e =>
+						e.name === currentOriginal.name && e.vendor === currentOriginal.vendor
+					);
+					// Keep the on-disk encrypted key reference
+					const persisted = idx >= 0 ? allEntries[idx] : undefined;
+					newEntry.apiKey = persisted?.apiKey ?? currentOriginal.apiKey;
+					if (idx >= 0) {
+						allEntries[idx] = newEntry;
+					} else {
+						allEntries.push(newEntry);
+					}
+					await writeProviders(allEntries);
+				}
+
+				panel.webview.postMessage({ type: 'saveSuccess' });
 				currentOriginal = { ...newEntry };
 
-				// After a successful "create" save, switch the panel to "edit" mode
+				// Create → Edit mode transition
 				if (currentMode === 'create') {
 					currentMode = 'edit';
-					panel.title = getProviderTitle('edit', newEntry.name);
-					// Update the readonly apiKey display to show the now-saved value
+					panel.title = getProviderTitle('edit', saveName);
 					panel.webview.postMessage({ type: 'modeChanged', mode: 'edit', entry: newEntry });
 				}
 
@@ -442,10 +494,14 @@ function getProviderEditorHtml(
 	<div class="row">
 		<label for="apiKey">API Key</label>
 		<div class="field-with-button">
-			<input id="apiKey" type="text" class="api-key-display" value="${esc(maskKeyForDisplay(entry.apiKey))}" placeholder="${mode === 'edit' ? '(no key set — click Update to set one)' : 'YOUR_API_KEY_HERE or \${input:chat.lm.secret.xxx}'}" readonly>
-			<button type="button" id="updateKeyBtn">${mode === 'edit' ? 'Update' : 'Set Key'}</button>
+			<input id="apiKey" type="text" class="api-key-display" value="${esc(maskKeyForDisplay(entry.apiKey))}" placeholder="${mode === 'edit' ? '(no key set)' : 'YOUR_API_KEY_HERE or \${input:chat.lm.secret.xxx}'}" readonly>
+			${mode === 'edit'
+			? `<button type="button" id="manageKeyBtn">Manage</button>`
+			: `<button type="button" id="updateKeyBtn">Set Key</button>`}
 		</div>
-		<div class="hint">Stored encrypted in the OS keystore. Click the button to change it.</div>
+		<div class="hint">${mode === 'edit'
+			? 'API keys are stored encrypted by VS Code. To update, click "Manage" to open the Language Models editor, then use the "Update API Key" action.'
+			: 'Click "Set Key" to enter your API key — stored encrypted by VS Code.'}</div>
 	</div>
 
 	<div class="error" id="err"></div>
@@ -459,35 +515,63 @@ function getProviderEditorHtml(
 <script>
 const vscode = acquireVsCodeApi();
 const existingNames = ${existingJson};
+const isEditMode = ${mode === 'edit'};
 
 const form = document.getElementById('form');
 const errEl = document.getElementById('err');
 const apiKeyInput = document.getElementById('apiKey');
-let newApiKey = null; // holds the new value before save
 
 document.getElementById('cancelBtn').addEventListener('click', () => {
 	vscode.postMessage({ type: 'cancel' });
 });
 
-document.getElementById('updateKeyBtn').addEventListener('click', () => {
-	vscode.postMessage({ type: 'requestApiKey' });
-});
+// Set Key button (create mode) — stages the value for the form submit.
+const setKeyBtn = document.getElementById('updateKeyBtn');
+if (setKeyBtn) {
+	setKeyBtn.addEventListener('click', () => {
+		vscode.postMessage({ type: 'requestApiKey' });
+	});
+}
+
+// Manage Key button (edit mode) — opens VS Code's built-in Language Models
+// editor which has a working "Update API Key" action with full access to
+// the internal ISecRetStorageService.
+const manageKeyBtn = document.getElementById('manageKeyBtn');
+if (manageKeyBtn) {
+	manageKeyBtn.addEventListener('click', () => {
+		vscode.postMessage({ type: 'openLanguageModelsEditor' });
+	});
+}
 
 window.addEventListener('message', e => {
 	const msg = e.data;
 	if (msg.type === 'apiKeyValue') {
-		newApiKey = msg.value;
 		apiKeyInput.value = maskKeyInline(msg.value);
-		apiKeyInput.title = msg.value ? 'Click Update to set a different value' : '';
+		apiKeyInput.title = msg.value ? 'Click Set Key to change' : '';
+		if (msg.value) {
+			errEl.className = 'success';
+			errEl.textContent = '✓ API key set — click "Add Provider" to save';
+			setTimeout(() => { errEl.textContent = ''; errEl.className = 'error'; }, 3000);
+		}
 	}
 	if (msg.type === 'saveSuccess') {
 		errEl.className = 'success';
 		errEl.textContent = '✓ Saved successfully';
 		setTimeout(() => { errEl.textContent = ''; errEl.className = 'error'; }, 3000);
 	}
+	if (msg.type === 'modeChanged' && msg.mode === 'edit' && msg.entry) {
+		// After create→edit transition, refresh the apiKey display & swap buttons
+		if (msg.entry.apiKey) {
+			apiKeyInput.value = maskKeyForDisplay(msg.entry.apiKey);
+		}
+		// Reload the page so the script picks up isEditMode=true and the correct
+		// button wiring (the form stays open, just the mode changes).
+		vscode.postMessage({ type: 'cancel' });
+	}
 	if (msg.type === 'saveError') {
 		errEl.className = 'error';
 		errEl.textContent = 'Save failed: ' + msg.message;
+		// Don't auto-clear errors
 	}
 });
 
@@ -498,15 +582,16 @@ form.addEventListener('submit', e => {
 		name: document.getElementById('name').value.trim(),
 		vendor: document.getElementById('vendor').value.trim() || 'customendpoint',
 		apiType: document.getElementById('apiType').value,
-		// Send the new key only if one was entered; otherwise keep the original
-		apiKey: newApiKey !== null ? newApiKey : (${mode === 'edit'} ? '__keep__' : ''),
+		// API key is NOT sent in edit mode — writeProviders() preserves the
+		// existing \${input:...} reference on disk. In create mode, the key is
+		// staged via "Set Key" and included by the host.
 	};
 	if (!entry.name) {
 		errEl.textContent = 'Group name is required.';
 		return;
 	}
 	// In create mode, if the name conflicts, suggest a " (2)" / " (3)" suffix
-	if (${mode === 'create'} && existingNames.includes(entry.name)) {
+	if (!isEditMode && existingNames.includes(entry.name)) {
 		const originalName = entry.name;
 		let counter = 2;
 		let suggestion = originalName + ' (' + counter + ')';
@@ -640,6 +725,7 @@ window.addEventListener('message', e => {
 	if (msg.type === 'saveError') {
 		errEl.className = 'error';
 		errEl.textContent = 'Save failed: ' + msg.message;
+		// Don't auto-clear errors — let the user read them
 	}
 	if (msg.type === 'modeChanged' && msg.mode === 'edit' && msg.model) {
 		const m = msg.model;

@@ -56,6 +56,14 @@ export class TokenUsageDashboard {
 	static readonly viewType = 'copilotAlternatives.tokenUsage';
 	/** The currently open dashboard panel, if any. */
 	static currentPanel: TokenUsageDashboard | undefined;
+	/** Cached yearly budget target. Updated by setYearlyBudget command. */
+	static _yearlyBudget = 250000;
+
+	/** Refresh the cached budget from settings. Call on extension activation. */
+	static loadBudgetFromConfig(): void {
+		TokenUsageDashboard._yearlyBudget = vscode.workspace.getConfiguration().get<number>('copilotAlternatives.tokenUsage.yearlyBudgetTarget', 250000);
+	}
+
 	private readonly _panel: vscode.WebviewPanel;
 	private readonly _disposables: vscode.Disposable[] = [];
 	private _days = 30;
@@ -66,11 +74,18 @@ export class TokenUsageDashboard {
 		this._panel = panel;
 		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 		this._panel.webview.onDidReceiveMessage(msg => {
+			if (msg.type === 'reload') {
+				void vscode.commands.executeCommand('copilotAlternatives.reloadTokenUsage');
+				return;
+			}
 			if (msg.type === 'dateChange') {
 				this._days = msg.days ?? 30;
 				this._rangeMode = msg.mode ?? 'month';
 				this._sinceDate = msg.sinceDate ?? '';
 				this.update();
+			}
+			if (msg.type === 'setBudget') {
+				void vscode.commands.executeCommand('copilotAlternatives.setYearlyBudget');
 			}
 		}, null, this._disposables);
 	}
@@ -120,8 +135,8 @@ export class TokenUsageDashboard {
 		const modelEntries = Object.entries(modelRollup).sort((a, b) => b[1].tokens - a[1].tokens);
 
 		const dailyAvgCost = s.allTime.totalCostUsd / Math.max(1, s.allTime.daysTracked);
+		const jensenTarget = TokenUsageDashboard._yearlyBudget;
 		const projectedYearly = dailyAvgCost * 365;
-		const jensenTarget = 250000;
 		const jensenPct = Math.min(100, (projectedYearly / jensenTarget) * 100);
 
 		// Week data for charts
@@ -137,24 +152,38 @@ export class TokenUsageDashboard {
 		}
 		console.log(`[TokenUsageDashboard] vendorAggs keys=${Object.keys(vendorAggs).length} entries=${vendorEntries.length} totalTokens=${vendorEntries.reduce((s,[,a])=>s+a.promptTokens+a.completionTokens,0)}`);
 
+		// Generate full date range for the selected period
+		const rangeDates: string[] = [];
+		for (let i = this._days - 1; i >= 0; i--) {
+			const d = new Date();
+			d.setDate(d.getDate() - i);
+			rangeDates.push(d.toISOString().split('T')[0]);
+		}
+		// Build lookup maps from DB data
+		const monthMap = new Map<string, typeof month[0]>();
+		for (const d of month) { monthMap.set(d.date, d); }
+		const weekMap = new Map<string, typeof week[0]>();
+		for (const d of week) { weekMap.set(d.date, d); }
+
 		const today = s.today;
 		const totalToday = today.totalPromptTokens + today.totalCompletionTokens;
 		const allTime = s.allTime;
 
 		const chartData = JSON.stringify({
-			allDates: month.map(d => d.date),
+			allDates: rangeDates,
 			firstTrackedDate: allTime.firstTrackedDate,
 			allVendors,
-			weekLabels: week.map(d => d.date.slice(5)),
-			weekTokens: week.map(d => d.totalPromptTokens + d.totalCompletionTokens),
-			weekPrompt: week.map(d => d.totalPromptTokens),
-			weekCompletion: week.map(d => d.totalCompletionTokens),
-			weekCosts: week.map(d => d.estimatedCostUsd),
-			monthLabels: month.map(d => d.date.slice(5)),
-			monthTokens: month.map(d => d.totalPromptTokens + d.totalCompletionTokens),
-			monthPrompt: month.map(d => d.totalPromptTokens),
-			monthCompletion: month.map(d => d.totalCompletionTokens),
-			monthCosts: month.map(d => d.estimatedCostUsd),
+			labels: rangeDates.map(d => d.slice(5)),
+			weekLabels: rangeDates.slice(-7).map(d => d.slice(5)),
+			weekTokens: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalPromptTokens! + weekMap.get(d)?.totalCompletionTokens! || 0),
+			weekPrompt: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalPromptTokens ?? 0),
+			weekCompletion: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalCompletionTokens ?? 0),
+			weekCosts: rangeDates.slice(-7).map(d => weekMap.get(d)?.estimatedCostUsd ?? 0),
+			monthLabels: rangeDates.map(d => d.slice(5)),
+			monthTokens: rangeDates.map(d => monthMap.get(d)?.totalPromptTokens! + monthMap.get(d)?.totalCompletionTokens! || 0),
+			monthPrompt: rangeDates.map(d => monthMap.get(d)?.totalPromptTokens ?? 0),
+			monthCompletion: rangeDates.map(d => monthMap.get(d)?.totalCompletionTokens ?? 0),
+			monthCosts: rangeDates.map(d => monthMap.get(d)?.estimatedCostUsd ?? 0),
 			vendorNames: vendorEntries.map(([v]) => v),
 			vendorTokens: vendorEntries.map(([, a]) => a.promptTokens + a.completionTokens),
 			vendorCosts: vendorEntries.map(([, a]) => a.costUsd),
@@ -257,7 +286,7 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 <div class="hdr">
   <div>
     <h1>Token Usage - Overall</h1>
-    <p class="subtitle">Chat model token consumption & estimated cost — all providers · Earliest data: <strong>${allTime.firstTrackedDate ?? 'N/A'}</strong> · <a href="command:copilotAlternatives.reloadTokenUsage" style="color:var(--accent);text-decoration:none" title="Clear state and reload all data from disk">↻ Reload from Disk</a></p>
+    <p class="subtitle">Chat model token consumption & estimated cost — all providers · Earliest data: <strong>${allTime.firstTrackedDate ?? 'N/A'}</strong> · <a href="#" onclick="_vscode.postMessage({type:'reload'});return false" style="color:var(--accent);text-decoration:none" title="Refresh stats DB from local session files">↻ Refresh Stats DB</a></p>
   </div>
   <div class="drp">
     <div class="tgl" id="tglRange">
@@ -326,9 +355,9 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div style="height:220px"><canvas id="vmChart"></canvas></div>
 </div>
 
-<!-- Jensen -->
+<!-- Yearly Budget -->
 <div class="sec">
-  <div class="sec-h"><div class="sec-t">Jensen Benchmark</div><span style="font-size:10px;color:var(--muted)">$${(jensenTarget/1000).toFixed(0)}K/year target</span></div>
+  <div class="sec-h"><div class="sec-t">Yearly Token Budget</div><span style="font-size:10px;color:var(--muted)">$${(jensenTarget / 1000).toFixed(0)}K/year target · <a href="#" onclick="_vscode.postMessage({type:'setBudget'});return false" style="color:var(--accent);text-decoration:none">Configure</a></span></div>
   <div class="jb"><div class="jb-f" style="width:${jensenPct.toFixed(1)}%">${jensenPct.toFixed(1)}%</div></div>
   <div class="jb-m"><span>Projected yearly: ${formatCost(projectedYearly)}</span><span>Target: ${formatCost(jensenTarget)}</span></div>
 </div>

@@ -59,6 +59,32 @@ export function registerNodeActions(context: vscode.ExtensionContext): void {
 			}
 		}),
 
+		// ─── Open help doc ───────────────────────────────────────────────
+		vscode.commands.registerCommand('copilotAlternatives.openHelpDoc', async (arg?: string | TreeNode) => {
+			if (!_nodeActionsExtensionPath) {
+				vscode.window.showErrorMessage('Extension path not available.');
+				return;
+			}
+			// arg can be a filename string (from label click) or a TreeNode (from context menu button)
+			let filename: string | undefined;
+			if (typeof arg === 'string') {
+				filename = arg;
+			} else if (arg instanceof TreeNode) {
+				filename = arg.id;
+			}
+			if (!filename) {
+				vscode.window.showErrorMessage('No help document specified.');
+				return;
+			}
+			const helpPath = path.join(_nodeActionsExtensionPath, 'help', filename);
+			const helpUri = vscode.Uri.file(helpPath);
+			try {
+				await vscode.commands.executeCommand('markdown.showPreview', helpUri);
+			} catch {
+				vscode.window.showErrorMessage(`Could not open help document: ${filename}`);
+			}
+		}),
+
 		// ─── BYOK: add single-key provider from tree ───────────────────
 
 		vscode.commands.registerCommand('copilotAlternatives.byok.addProviderInline', async () => {
@@ -387,7 +413,7 @@ async function addFilteredProviders(opts: { multiKey: boolean }): Promise<void> 
 	// Step 2 (multi-key only): ask user how many keys to add
 	let keyCount = getKeyCount(template);
 	if (opts.multiKey) {
-		const maxKeys = Math.max(2, getKeyCount(template));
+		const maxKeys = 10;
 		const numberPick = await vscode.window.showQuickPick(
 			Array.from({ length: maxKeys }, (_, i) => `${i + 1} key${i === 0 ? '' : 's'}`).map(s => ({
 				label: s,
@@ -430,19 +456,24 @@ async function addFilteredProviders(opts: { multiKey: boolean }): Promise<void> 
 		collectedKeys[i] = apiKey.trim();
 	}
 
-	// Step 4: Build groups — distribute groups across keys
+	// Step 4: Build groups — cycle through template accounts for extra keys
 	const totalGroups = template.chatLanguageModels.length;
-	const groupsPerKey = Math.max(1, Math.floor(totalGroups / getKeyCount(template)));
+	const templateKeyCount = getKeyCount(template);
+	const groupsPerAccount = Math.max(1, Math.floor(totalGroups / templateKeyCount));
 	const groupsToAdd: IChatLanguageModelEntry[] = [];
 
 	for (let i = 0; i < keyCount; i++) {
-		const start = i * groupsPerKey;
-		const end = i === keyCount - 1 ? totalGroups : start + groupsPerKey;
+		// Cycle through template accounts: 0, 1, 2, 0, 1, 2, …
+		const accountIdx = i % templateKeyCount;
+		const accountNumber = i + 1;
+		const start = accountIdx * groupsPerAccount;
+		const end = start + groupsPerAccount;
 		const bucket = template.chatLanguageModels.slice(start, end);
 
 		for (const groupTemplate of bucket) {
+			// Replace the account number in the group name (first \d+ match)
+			let groupName = groupTemplate.name.replace(/\d+/, String(accountNumber));
 			// If a group with the same name already exists, append " (2)", " (3)", etc.
-			let groupName = groupTemplate.name;
 			if (existingNames.includes(groupName)) {
 				let counter = 2;
 				let suggestion = `${groupName} (${counter})`;
@@ -471,26 +502,41 @@ async function addFilteredProviders(opts: { multiKey: boolean }): Promise<void> 
 		return;
 	}
 
-	// Step 5: Ensure the customendpoint vendor is registered before writing.
-	// The vendor is registered by the GitHub Copilot extension's BYOKContrib.
-	// On first run (no providers yet), Copilot may not have activated, so we
-	// trigger it explicitly to avoid "Vendor customendpoint not found" errors.
+	// Step 5: Register each group via VS Code's lm.addLanguageModelsProviderGroup command.
+	// This command internally stores the API key in VS Code's encrypted SecretStorageService
+	// and writes a ${input:chat.lm.secret.<hash>} reference to chatLanguageModels.json,
+	// which the LanguageModelsService can resolve at runtime.
+	// Plaintext writes to the JSON file would be silently ignored because apiKey
+	// is marked "secret": true in the customendpoint vendor schema.
+	let addedCount = 0;
 	try {
 		await vscode.commands.executeCommand('github.copilot.activate');
 	} catch {
-		// Copilot may not be installed — proceed anyway and hope for the best.
+		// Copilot may not be installed — proceed anyway.
+	}
+	for (const group of groupsToAdd) {
+		try {
+			await vscode.commands.executeCommand('lm.addLanguageModelsProviderGroup', {
+				name: group.name,
+				vendor: group.vendor,
+				apiKey: group.apiKey,
+				apiType: group.apiType,
+				models: group.models,
+			});
+			addedCount++;
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			vscode.window.showErrorMessage(`Failed to add "${group.name}": ${message}`);
+		}
 	}
 
-	// Write directly to chatLanguageModels.json
-	const existingEntries = await readProviders();
-	for (const group of groupsToAdd) {
-		existingEntries.push(group);
-	}
-	await writeProviders(existingEntries);
 	_nodeActionsRefresh();
-	vscode.window.showInformationMessage(
-		`✅ Added ${groupsToAdd.length} provider group(s) from "${template.displayName}". Reload VS Code to apply.`
-	);
+	if (addedCount > 0) {
+		vscode.window.showInformationMessage(
+			`✅ Added ${addedCount} provider group(s) from "${template.displayName}". ` +
+			`Models will appear in the chat model picker.`
+		);
+	}
 }
 
 /**

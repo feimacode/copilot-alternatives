@@ -16,6 +16,7 @@ import { TokenUsageStatusBar } from './tokenUsage/tokenUsageStatusBar';
 import { TokenUsageDashboard } from './tokenUsage/tokenUsageDashboard';
 import { VendorDashboard } from './tokenUsage/vendorDashboard';
 import { ModelDashboard } from './tokenUsage/modelDashboard';
+import { SessionDashboard } from './tokenUsage/sessionDashboard';
 import { LogServiceImpl, LogLevel } from './platform/log/common/logService';
 import { VSCodeLogTarget, ConsoleLogTarget } from './platform/log/vscode/logService';
 import { logVendorMapping } from './tokenUsage/vendorResolver';
@@ -32,6 +33,9 @@ export function activate(context: vscode.ExtensionContext) {
 	logService.info('Copilot Alternatives extension activating...');
 	// Show the output channel on activation so the user sees logs immediately
 	logChannel.show();
+
+	// Load cached budget from config
+	TokenUsageDashboard.loadBudgetFromConfig();
 
 	// ─── Token Usage Tracking ───────────────────────────────────────────
 	const tokenTracker = new TokenUsageTracker(context.globalState, context.globalStorageUri.fsPath, logService.createSubLogger('TokenUsage'));
@@ -81,6 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
 		if (ModelDashboard.currentPanel) {
 			ModelDashboard.currentPanel.update();
 		}
+		if (SessionDashboard.currentPanel) {
+			SessionDashboard.currentPanel.update();
+		}
 		treeProvider.refresh();
 	});
 	context.subscriptions.push(tokenStatusBar);
@@ -95,8 +102,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('copilotAlternatives.reloadTokenUsage', async () => {
+			const answer = await vscode.window.showWarningMessage(
+				'Refresh stats database from local session files? This will re-read all Copilot session event logs and update the database.',
+				{ modal: true },
+				'Refresh'
+			);
+			if (answer !== 'Refresh') { return; }
 			await tokenTracker.reloadAll();
-			vscode.window.showInformationMessage('Token usage data reloaded from disk.');
+			vscode.window.showInformationMessage('Stats DB refreshed from local session files.');
 			if (TokenUsageDashboard.currentPanel) {
 				TokenUsageDashboard.currentPanel.update();
 			}
@@ -105,6 +118,9 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			if (ModelDashboard.currentPanel) {
 				ModelDashboard.currentPanel.update();
+			}
+			if (SessionDashboard.currentPanel) {
+				SessionDashboard.currentPanel.update();
 			}
 		})
 	);
@@ -229,6 +245,107 @@ export function activate(context: vscode.ExtensionContext) {
 			const vendor = modelId.includes('/') ? modelId.split('/')[0] : undefined;
 			const dashboard = ModelDashboard.createOrShow(tokenTracker, vendor, modelId);
 			dashboard.update();
+		})
+	);
+
+	// ─── Session Stats Commands ─────────────────────────────────────────
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.showSessionDetail', (sessionId: string) => {
+			const dashboard = SessionDashboard.createOrShow(tokenTracker, sessionId);
+			dashboard.update();
+		})
+	);
+
+	// Open session filter wizard.
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.toggleSessionFilter', async () => {
+			const current = treeProvider.sessionFilter;
+			const opts = await tokenTracker.metricsService.getSessionFilterOptions();
+			const filter: { days: number; modelName?: string } = { days: current.days };
+
+			// Step 1: Date range
+			const datePick = await vscode.window.showQuickPick(
+				[
+					{ label: 'Last 7 days', days: 7 },
+					{ label: 'Last 30 days', days: 30 },
+					{ label: 'Last 90 days', days: 90 },
+					{ label: 'All time', days: 3650 },
+				],
+				{ placeHolder: 'Filter by date range...', title: 'Session Filter — Date Range' },
+			);
+			if (!datePick) { return; }
+			filter.days = datePick.days;
+
+			// Step 2: Model
+			if (opts.modelNames.length > 0) {
+				const pick = await vscode.window.showQuickPick(
+					[{ label: 'All models', val: '' }, ...opts.modelNames.map(m => ({ label: m, val: m }))],
+					{ placeHolder: 'Filter by model (Esc = skip)...', title: 'Session Filter — Model' },
+				);
+				if (!pick) { return; }
+				filter.modelName = pick.val || undefined;
+			}
+
+			treeProvider.sessionFilter = filter;
+		})
+	);
+
+	// Clear session filter — show all sessions (3650 days, no model filter).
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.clearSessionFilter', () => {
+			treeProvider.sessionFilter = { days: 3650 };
+			treeProvider.refresh();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.copySessionId', (sessionId: string) => {
+			vscode.env.clipboard.writeText(sessionId);
+			vscode.window.showInformationMessage(`Copied session ID: ${sessionId}`);
+		})
+	);
+
+	// Set yearly budget target
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.setYearlyBudget', async () => {
+			const currentVal = vscode.workspace.getConfiguration().get<number>('copilotAlternatives.tokenUsage.yearlyBudgetTarget', 250000);
+			const result = await vscode.window.showInputBox({
+				title: 'Yearly AI Token Budget',
+				prompt: 'Enter your yearly budget target in USD',
+				value: String(currentVal),
+				validateInput: (v) => {
+					const n = parseFloat(v);
+					if (isNaN(n) || n <= 0) { return 'Please enter a positive number'; }
+					return undefined;
+				},
+			});
+			if (result !== undefined) {
+				const value = parseFloat(result);
+				// Update in-memory cache immediately for all dashboard instances
+				TokenUsageDashboard._yearlyBudget = value;
+				// Persist for next session
+				try {
+					await vscode.workspace.getConfiguration().update('copilotAlternatives.tokenUsage.yearlyBudgetTarget', value, true);
+				} catch (e) {
+					console.warn('[TokenUsage] Failed to persist yearly budget:', e);
+				}
+				vscode.window.showInformationMessage(`Yearly budget set to $${value.toLocaleString()}`);
+				// Refresh open dashboards
+				if (TokenUsageDashboard.currentPanel) { TokenUsageDashboard.currentPanel.update(); }
+				if (VendorDashboard.currentPanel) { VendorDashboard.currentPanel.update(); }
+				if (ModelDashboard.currentPanel) { ModelDashboard.currentPanel.update(); }
+			}
+		})
+	);
+
+	// Listen for budget setting changes to refresh open dashboards
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeConfiguration(e => {
+			if (!e.affectsConfiguration('copilotAlternatives.tokenUsage.yearlyBudgetTarget')) { return; }
+			TokenUsageDashboard.loadBudgetFromConfig();
+			if (TokenUsageDashboard.currentPanel) { TokenUsageDashboard.currentPanel.update(); }
+			if (VendorDashboard.currentPanel) { VendorDashboard.currentPanel.update(); }
+			if (ModelDashboard.currentPanel) { ModelDashboard.currentPanel.update(); }
 		})
 	);
 

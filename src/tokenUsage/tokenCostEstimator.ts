@@ -3,16 +3,22 @@
  *  Licensed under the MIT License.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Per-model token pricing in USD per 1M tokens.
- * Used as fallback when the LM API does not supply pricing in model metadata.
+ * Loaded from pricing.json at startup. Fields are optional; absent means
+ * that price component is not applicable or unknown for this model.
  */
 export interface ModelPricing {
 	readonly inputPerMillion: number;
 	readonly outputPerMillion: number;
 	readonly cacheReadPerMillion?: number;
+	readonly cacheWritePerMillion?: number;
+	readonly inputLongPerMillion?: number;
+	readonly outputLongPerMillion?: number;
+	readonly cacheReadLongPerMillion?: number;
 }
 
 /**
@@ -36,34 +42,136 @@ export interface EnergyEstimate {
 	readonly totalWh: number;
 }
 
-// ─── Static pricing tables ────────────────────────────────────────────────────
+// ─── Raw row from pricing.json ────────────────────────────────────────────────
 
-const MODEL_PRICING: Record<string, ModelPricing> = {
-	'gpt-4o':           { inputPerMillion: 2.50, outputPerMillion: 10.00 },
-	'gpt-4o-mini':      { inputPerMillion: 0.15, outputPerMillion: 0.60 },
-	'gpt-4.1':          { inputPerMillion: 2.00, outputPerMillion: 8.00 },
-	'gpt-4.1-nano':     { inputPerMillion: 0.10, outputPerMillion: 0.40 },
-	'gpt-4':            { inputPerMillion: 30.00, outputPerMillion: 60.00 },
-	'claude-opus-4.6':  { inputPerMillion: 15.00, outputPerMillion: 75.00, cacheReadPerMillion: 3.75 },
-	'claude-sonnet-4':  { inputPerMillion: 3.00, outputPerMillion: 15.00, cacheReadPerMillion: 0.75 },
-	'claude-sonnet-3.5':{ inputPerMillion: 3.00, outputPerMillion: 15.00, cacheReadPerMillion: 0.75 },
-	'claude-3-5-haiku': { inputPerMillion: 0.80, outputPerMillion: 4.00, cacheReadPerMillion: 0.20 },
-	'gemini-2.5-pro':   { inputPerMillion: 2.50, outputPerMillion: 10.00 },
-	'gemini-2.5-flash': { inputPerMillion: 0.15, outputPerMillion: 0.60 },
-	'gemini-3.0-pro':   { inputPerMillion: 2.50, outputPerMillion: 10.00 },
-	'gemini-3.0-flash': { inputPerMillion: 0.15, outputPerMillion: 0.60 },
-};
+interface PricingRow {
+	id: string;
+	name: string;
+	provider: string;
+	pricing: {
+		input: number;
+		output: number;
+		cacheHit?: number;
+		cacheWrite?: number;
+		inputLongContext?: number;
+		outputLongContext?: number;
+		cacheHitLongContext?: number;
+	};
+	copilotPricing?: {
+		input: number;
+		output: number;
+		cacheHit?: number;
+		cacheWrite?: number;
+	};
+}
+
+interface PricingFile {
+	models: PricingRow[];
+}
+
+// ─── Dynamically-loaded pricing table ─────────────────────────────────────────
+
+let _pricingLoaded = false;
+const _pricingMap: Record<string, ModelPricing> = {};
+const _idByAlias: Record<string, string> = {};
+
+/**
+ * Resolve the path to pricing.json relative to the compiled output directory.
+ * __dirname = out/tokenUsage/ → ../../data/pricing.json
+ */
+function _pricingJsonPath(): string {
+	return path.resolve(__dirname, '..', '..', 'data', 'pricing.json');
+}
+
+/**
+ * Load pricing data from pricing.json into the lookup maps.
+ * Safe to call multiple times — the cache flag prevents redundant I/O.
+ */
+function _ensurePricingLoaded(): void {
+	if (_pricingLoaded) { return; }
+
+	try {
+		const filePath = _pricingJsonPath();
+		const raw = fs.readFileSync(filePath, 'utf8');
+		const data: PricingFile = JSON.parse(raw);
+
+		for (const model of data.models) {
+			const p = model.pricing;
+			const cp = model.copilotPricing;
+
+			// Prefer copilotPricing when available (GitHub Copilot-specific rate)
+			const src = cp ?? p;
+
+			const m: ModelPricing = {
+				inputPerMillion: src.input,
+				outputPerMillion: src.output,
+				...(src.cacheHit !== undefined && { cacheReadPerMillion: src.cacheHit }),
+				...(src.cacheWrite !== undefined && { cacheWritePerMillion: src.cacheWrite }),
+				...(p.inputLongContext !== undefined && { inputLongPerMillion: p.inputLongContext }),
+				...(p.outputLongContext !== undefined && { outputLongPerMillion: p.outputLongContext }),
+				...(p.cacheHitLongContext !== undefined && { cacheReadLongPerMillion: p.cacheHitLongContext }),
+			};
+
+			_pricingMap[model.id] = m;
+
+			// Build alias map for fuzzy matching: lowercase id without special chars
+			const alias = model.id.toLowerCase().replace(/[-_.\s]/g, '');
+			_idByAlias[alias] = model.id;
+		}
+
+		_pricingLoaded = true;
+		console.log(`[TokenCostEstimator] loaded ${Object.keys(_pricingMap).length} models from pricing.json`);
+	} catch (err) {
+		console.error('[TokenCostEstimator] failed to load pricing.json, using fallback:', err);
+	}
+}
 
 const MODEL_ENERGY: Record<string, ModelEnergy> = {
-	'gpt-4o':           { inputWhPerToken: 0.00038,  outputWhPerToken: 0.0038 },
-	'gpt-4o-mini':      { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
-	'gpt-4.1':          { inputWhPerToken: 0.00035,  outputWhPerToken: 0.0035 },
-	'gpt-4.1-nano':     { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
-	'gpt-4':            { inputWhPerToken: 0.0010,   outputWhPerToken: 0.010 },
-	'claude-opus-4.6':  { inputWhPerToken: 0.00080,  outputWhPerToken: 0.0080 },
+	'gpt-5.4': { inputWhPerToken: 0.00038, outputWhPerToken: 0.0038 },
+	'gpt-5.4-mini': { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
+	'gpt-5.4-nano': { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
+	'gpt-5-mini': { inputWhPerToken: 0.000030, outputWhPerToken: 0.00030 },
+	'gpt-5.5': { inputWhPerToken: 0.00050, outputWhPerToken: 0.0050 },
+	'gpt-5.6-sol': { inputWhPerToken: 0.00060, outputWhPerToken: 0.0060 },
+	'gpt-5.6-terra': { inputWhPerToken: 0.00045, outputWhPerToken: 0.0045 },
+	'gpt-5.6-luna': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'gpt-5.3-codex': { inputWhPerToken: 0.00040, outputWhPerToken: 0.0040 },
+	'claude-haiku-4-5': { inputWhPerToken: 0.00015, outputWhPerToken: 0.0015 },
 	'claude-sonnet-4':  { inputWhPerToken: 0.00038,  outputWhPerToken: 0.0038 },
-	'claude-sonnet-3.5':{ inputWhPerToken: 0.00038,  outputWhPerToken: 0.0038 },
-	'claude-3-5-haiku': { inputWhPerToken: 0.00015,  outputWhPerToken: 0.0015 },
+	'claude-sonnet-4-5': { inputWhPerToken: 0.00038, outputWhPerToken: 0.0038 },
+	'claude-sonnet-4-6': { inputWhPerToken: 0.00038, outputWhPerToken: 0.0038 },
+	'claude-sonnet-5': { inputWhPerToken: 0.00032, outputWhPerToken: 0.0032 },
+	'claude-opus-4-5': { inputWhPerToken: 0.00080, outputWhPerToken: 0.0080 },
+	'claude-opus-4-6': { inputWhPerToken: 0.00080, outputWhPerToken: 0.0080 },
+	'claude-opus-4-7': { inputWhPerToken: 0.00080, outputWhPerToken: 0.0080 },
+	'claude-opus-4-8': { inputWhPerToken: 0.00080, outputWhPerToken: 0.0080 },
+	'claude-fable-5': { inputWhPerToken: 0.00100, outputWhPerToken: 0.0100 },
+	'gemini-2.5-pro': { inputWhPerToken: 0.00050, outputWhPerToken: 0.0050 },
+	'gemini-2.5-flash': { inputWhPerToken: 0.00015, outputWhPerToken: 0.0015 },
+	'gemini-2.5-flash-lite': { inputWhPerToken: 0.000060, outputWhPerToken: 0.00060 },
+	'gemini-3-flash': { inputWhPerToken: 0.00015, outputWhPerToken: 0.0015 },
+	'gemini-3.1-pro-preview': { inputWhPerToken: 0.00055, outputWhPerToken: 0.0055 },
+	'gemini-3.5-flash': { inputWhPerToken: 0.00012, outputWhPerToken: 0.0012 },
+	'deepseek-v4-flash': { inputWhPerToken: 0.000080, outputWhPerToken: 0.00080 },
+	'deepseek-v4-pro': { inputWhPerToken: 0.00020, outputWhPerToken: 0.0020 },
+	'grok-4.5': { inputWhPerToken: 0.00060, outputWhPerToken: 0.0060 },
+	'glm-5': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'glm-5.1': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'glm-5.2': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'glm-5-turbo': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'glm-4.7': { inputWhPerToken: 0.00030, outputWhPerToken: 0.0030 },
+	'kimi-k3': { inputWhPerToken: 0.00055, outputWhPerToken: 0.0055 },
+	'kimi-k2.7-code': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'kimi-k2.6': { inputWhPerToken: 0.00035, outputWhPerToken: 0.0035 },
+	'qwen3.7-max': { inputWhPerToken: 0.00050, outputWhPerToken: 0.0050 },
+	'qwen3.7-plus': { inputWhPerToken: 0.00030, outputWhPerToken: 0.0030 },
+	'qwen3.6-plus': { inputWhPerToken: 0.00030, outputWhPerToken: 0.0030 },
+	'minimax-m3': { inputWhPerToken: 0.00030, outputWhPerToken: 0.0030 },
+	'minimax-m2.7': { inputWhPerToken: 0.00030, outputWhPerToken: 0.0030 },
+	'mimo-v2.5': { inputWhPerToken: 0.000080, outputWhPerToken: 0.00080 },
+	'mimo-v2.5-pro': { inputWhPerToken: 0.00020, outputWhPerToken: 0.0020 },
+	'raptor-mini': { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
+	'mai-code-1-flash': { inputWhPerToken: 0.000040, outputWhPerToken: 0.00040 },
 };
 
 const DEFAULT_PRICING: ModelPricing = { inputPerMillion: 2.50, outputPerMillion: 10.00 };
@@ -73,28 +181,26 @@ export const GRID_CARBON_INTENSITY_KG_PER_KWH = 0.39;
 // ─── Model name resolution ───────────────────────────────────────────────────
 
 /**
- * Resolve a model name to a pricing key via fuzzy matching.
- * Order matters: specific matches must come before general ones.
+ * Resolve a model name to a pricing key (model id in pricing.json).
+ * First checks exact match, then falls back to fuzzy alias matching.
  */
 export function resolveModelPricingKey(modelName: string): string {
-	const lower = modelName.toLowerCase();
-	if (MODEL_PRICING[modelName]) { return modelName; }
+	_ensurePricingLoaded();
 
-	if (lower.includes('claude') && lower.includes('opus')) { return 'claude-opus-4.6'; }
-	if (lower.includes('claude') && lower.includes('sonnet') && (lower.includes('4') || lower.includes('3-7'))) { return 'claude-sonnet-4'; }
-	if (lower.includes('claude') && lower.includes('haiku') && lower.includes('3-5')) { return 'claude-3-5-haiku'; }
-	if (lower.includes('claude') && lower.includes('sonnet')) { return 'claude-sonnet-3.5'; }
-	if (lower.includes('gpt-4o-mini')) { return 'gpt-4o-mini'; }
-	if (lower.includes('gpt-4o')) { return 'gpt-4o'; }
-	if (lower.includes('gpt-4.1-nano')) { return 'gpt-4.1-nano'; }
-	if (lower.includes('gpt-4.1')) { return 'gpt-4.1'; }
-	if (lower.includes('gpt-4')) { return 'gpt-4'; }
-	if (lower.includes('gemini') && lower.includes('pro') && (lower.includes('2.5') || lower.includes('3'))) { return 'gemini-2.5-pro'; }
-	if (lower.includes('gemini') && lower.includes('flash') && (lower.includes('2.5') || lower.includes('3'))) { return 'gemini-2.5-flash'; }
-	if (lower.includes('gemini') && lower.includes('pro')) { return 'gemini-2.5-pro'; }
-	if (lower.includes('gemini') && lower.includes('flash')) { return 'gemini-2.5-flash'; }
+	// Exact match (most common case)
+	if (_pricingMap[modelName]) { return modelName; }
 
-	return 'gpt-4o';
+	// Fuzzy match via aliases
+	const normalized = modelName.toLowerCase().replace(/[-_.\s]/g, '');
+	if (_idByAlias[normalized]) { return _idByAlias[normalized]; }
+
+	// Provider/vendor prefixes — strip them and try again
+	const stripped = modelName.includes('/') ? modelName.split('/').pop()! : modelName;
+	const strippedAlias = stripped.toLowerCase().replace(/[-_.\s]/g, '');
+	if (_idByAlias[strippedAlias]) { return _idByAlias[strippedAlias]; }
+
+	// Fallback to generic gpt-4o
+	return 'gpt-5.4';
 }
 
 // ─── Cost / Energy estimation ────────────────────────────────────────────────
@@ -103,9 +209,11 @@ export function estimateCost(
 	promptTokens: number,
 	completionTokens: number,
 	cachedTokens: number = 0,
-	modelName: string = 'gpt-4o',
+	modelName: string = 'gpt-5.4',
 ): CostEstimate {
-	const pricing = MODEL_PRICING[resolveModelPricingKey(modelName)] || DEFAULT_PRICING;
+	_ensurePricingLoaded();
+
+	const pricing = _pricingMap[resolveModelPricingKey(modelName)] || DEFAULT_PRICING;
 	const inputCost = (promptTokens / 1_000_000) * pricing.inputPerMillion;
 	const outputCost = (completionTokens / 1_000_000) * pricing.outputPerMillion;
 	let cacheReadCost: number | undefined;
@@ -118,7 +226,7 @@ export function estimateCost(
 export function estimateEnergy(
 	promptTokens: number,
 	completionTokens: number,
-	modelName: string = 'gpt-4o',
+	modelName: string = 'gpt-5.4',
 ): EnergyEstimate {
 	const energy = MODEL_ENERGY[resolveModelPricingKey(modelName)] || DEFAULT_ENERGY;
 	return {
