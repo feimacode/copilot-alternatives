@@ -170,16 +170,26 @@ function getWslUserDataDir(): string | undefined {
 }
 
 function detectAppName(): string | undefined {
-	// Detect from env or process
-	const appName = process.env['VSCODE_PORTABLE']
-		? undefined  // portable mode has different structure
-		: process.env['VSCODE_QUALITY'] === 'insider'
-			? 'Code - Insiders'
-			: process.env['VSCODE_QUALITY'] === 'oss'
-				? 'Code - OSS'
-				: 'Code';
+	// Portable mode has a different directory structure — skip
+	if (process.env['VSCODE_PORTABLE']) {
+		return undefined;
+	}
 
-	return appName;
+	// Primary: use vscode.env.appName which is always accurate at runtime.
+	// e.g. "Visual Studio Code", "Visual Studio Code - Insiders", "Code - OSS"
+	const runtimeName = vscode.env.appName;
+	if (runtimeName) {
+		if (runtimeName.includes('Insiders')) { return 'Code - Insiders'; }
+		if (runtimeName.includes('OSS')) { return 'Code - OSS'; }
+		// Stable or any other branded build (e.g. "Visual Studio Code")
+		return 'Code';
+	}
+
+	// Fallback: VSCODE_QUALITY env var (may not always be set in extension host)
+	if (process.env['VSCODE_QUALITY'] === 'insider') { return 'Code - Insiders'; }
+	if (process.env['VSCODE_QUALITY'] === 'oss') { return 'Code - OSS'; }
+
+	return 'Code';
 }
 
 /**
