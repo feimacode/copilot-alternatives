@@ -577,10 +577,10 @@
 		"watch": "tsc -watch -p ./",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"package": "vsce package --allow-star-activation",
-		"package:linux": "vsce package --target linux-x64 --allow-star-activation",
-		"package:win": "vsce package --target win32-x64 --allow-star-activation",
-		"package:mac-arm": "vsce package --target darwin-arm64 --allow-star-activation"
+		"package": "vsce package --readme-path EXTENSION_README.md --allow-star-activation",
+		"package:linux": "vsce package --readme-path EXTENSION_README.md --target linux-x64 --allow-star-activation",
+		"package:win": "vsce package --readme-path EXTENSION_README.md --target win32-x64 --allow-star-activation",
+		"package:mac-arm": "vsce package --readme-path EXTENSION_README.md --target darwin-arm64 --allow-star-activation"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",

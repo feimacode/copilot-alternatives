@@ -10,6 +10,7 @@ tsconfig.json
 !out/**/*.js
 .github/**
 docs/**
+README.md
 
 # Exclude all node_modules, then re-include only the runtime files needed
 node_modules/**
