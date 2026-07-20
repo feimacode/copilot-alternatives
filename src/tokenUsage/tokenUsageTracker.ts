@@ -59,6 +59,8 @@ export class TokenUsageTracker implements vscode.Disposable {
 	activate(context: vscode.ExtensionContext): void {
 		this._context = context;
 
+		this.registerGitHubSessionListener();
+
 		// Purge stale globalState keys from retired tier-2/3 watchers
 		void context.globalState.update('tw.logIds', undefined);
 		void context.globalState.update('tw.logPositions', undefined);
@@ -95,9 +97,17 @@ export class TokenUsageTracker implements vscode.Disposable {
 		}
 	}
 
-	private async _resolveEntitlementSilently(): Promise<void> {
+	registerGitHubSessionListener(): void {
+		if ((this as any)._sessionChangeListener) { return; }
+		(this as any)._sessionChangeListener = vscode.authentication.onDidChangeSessions(event => {
+			if (event.provider.id !== 'github') { return; }
+			void this._resolveEntitlementSilently(true);
+		});
+	}
+
+	private async _resolveEntitlementSilently(forceRefresh = false): Promise<void> {
 		if (!this._context) { return; }
-		const entitlement = await resolveEntitlement(this._context, this._log, { interactive: false });
+		const entitlement = await resolveEntitlement(this._context, this._log, { interactive: false, forceRefresh });
 		if (entitlement) {
 			this._copilotEntitlement = entitlement;
 			this._onDidChangeEntitlement.fire();
@@ -191,6 +201,7 @@ export class TokenUsageTracker implements vscode.Disposable {
 	}
 
 	dispose(): void {
+		(this as any)._sessionChangeListener?.dispose();
 		this._chatSessionWatcher.dispose();
 		this._onDidUpdate.dispose();
 		this._onDidChangeStored.dispose();

@@ -136,6 +136,9 @@ export class VendorDashboard {
 				this._sinceDate = msg.sinceDate ?? '';
 				this.update();
 			}
+			if (msg.type === 'runCommand') {
+				void vscode.commands.executeCommand(msg.command);
+			}
 		}, null, this._disposables);
 	}
 
@@ -193,8 +196,9 @@ export class VendorDashboard {
 					${breakdownHtml}
 					</div>`;
 			} else {
+				const signInAction = `_vscode.postMessage({ type: 'runCommand', command: 'copilotAlternatives.signInGitHubForCopilotEntitlement' });`;
 				creditsProgressHtml = `<div class="sec"><div class="sec-h"><div class="sec-t">Monthly Credit Quota</div></div>
-					<div class="det">Plan unknown — run "Copilot Alternatives: Sign in with GitHub to Detect Copilot Plan" to see your quota and usage %.</div>
+					<div class="det">Plan unknown — <a href="#" class="cmd-link" onclick="event.preventDefault(); ${signInAction}">Sign in with GitHub</a> to see your quota and usage %.</div>
 					${breakdownHtml}
 					</div>`;
 			}

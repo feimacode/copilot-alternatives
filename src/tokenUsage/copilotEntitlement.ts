@@ -43,6 +43,7 @@ const COPILOT_TOKEN_URL = 'https://api.github.com/copilot_internal/v2/token';
 
 /** Scope candidates tried in order — reuses any session cached by Copilot Chat/CLI sign-in. */
 const SCOPE_CANDIDATES: string[][] = [
+	['user:email', 'read:user'],
 	['read:user'],
 	['user:email'],
 	['repo', 'workflow', 'read:user'],
@@ -67,12 +68,25 @@ export async function trySilentGitHubSession(log?: ILogService): Promise<vscode.
 
 /** Prompts the user to sign in with GitHub interactively. Only call this from an explicit user action (command). */
 export async function signInInteractive(log?: ILogService): Promise<vscode.AuthenticationSession | undefined> {
-	try {
-		return await vscode.authentication.getSession('github', SCOPE_CANDIDATES[0], { createIfNone: true });
-	} catch (err) {
-		log?.warn(`CopilotEntitlement: interactive sign-in failed: ${err instanceof Error ? err.message : String(err)}`);
-		return undefined;
+	// First try every scope candidate silently — the user may already have a
+	// GitHub session (from Copilot Chat, git authentication, etc.) that matches
+	// one of our scope sets. Only show a dialog if ALL silent attempts fail.
+	const silentSession = await trySilentGitHubSession(log);
+	if (silentSession) { return silentSession; }
+
+	// No cached session found — prompt interactively with a clear explanation.
+	for (const scopes of SCOPE_CANDIDATES) {
+		try {
+			return await vscode.authentication.getSession('github', scopes, {
+				createIfNone: { detail: 'Copilot Alternatives uses your GitHub identity to look up your Copilot plan and monthly credit allowance. No code, chat content, or session data is sent to GitHub.' },
+			});
+		} catch (err) {
+			log?.debug(`CopilotEntitlement: interactive session failed for scopes [${scopes.join(',')}]: ${err instanceof Error ? err.message : String(err)}`);
+			// Continue to next scope candidate
+		}
 	}
+	log?.warn('CopilotEntitlement: all interactive scope candidates failed');
+	return undefined;
 }
 
 /** Fetches the Copilot SKU string for the given GitHub access token, or null on any failure. */

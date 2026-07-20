@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { authentication } from 'vscode';
 import { skuToPlan, resolveEntitlement } from '../tokenUsage/copilotEntitlement';
+import { TokenUsageTracker } from '../tokenUsage/tokenUsageTracker';
 
 function fakeLog() {
 	return { debug() {}, info() {}, warn() {}, trace() {}, createSubLogger() { return fakeLog(); } } as any;
@@ -73,5 +74,25 @@ describe('resolveEntitlement', () => {
 		authentication.getSession = (async () => undefined) as any;
 		const cached = await resolveEntitlement(context, fakeLog(), { interactive: false });
 		expect(cached?.planName).toBe('pro');
+	});
+
+	it('retries entitlement resolution when GitHub auth sessions change', async () => {
+		const fakeMemento = { get: (_key: string, defaultValue?: unknown) => defaultValue ?? {}, update: async () => { }, keys: () => [] } as any;
+		const fakeStoragePath = '/tmp';
+		const tracker = new TokenUsageTracker(fakeMemento, fakeStoragePath, fakeLog() as any);
+		(tracker as any)._vendorFlags = { copilotDetected: true, allCopilot: false };
+		const resolveSpy = vi.spyOn(tracker as any, '_resolveEntitlementSilently').mockResolvedValue(undefined);
+
+		let changeHandler: ((event: { provider: { id: string } }) => void) | undefined;
+		const authMock = authentication as { onDidChangeSessions: unknown };
+		authMock.onDidChangeSessions = vi.fn((handler: (event: { provider: { id: string } }) => void) => {
+			changeHandler = handler;
+			return { dispose() {} };
+		}) as any;
+
+		tracker.registerGitHubSessionListener();
+		expect(changeHandler).toBeDefined();
+		await changeHandler?.({ provider: { id: 'github' } });
+		expect(resolveSpy).toHaveBeenCalledTimes(1);
 	});
 });

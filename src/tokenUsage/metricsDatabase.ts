@@ -624,6 +624,8 @@ export class MetricsDatabase {
 		await this._ready;
 
 		const todayKey = new Date().toISOString().split('T')[0];
+		const cutoff = Date.now() - days * 86400000;
+
 		const [weekTotals, monthTotals, vendorBreakdown, modelBreakdown] = await Promise.all([
 			this.getDayTotals(7),
 			this.getDayTotals(days),
@@ -652,14 +654,14 @@ export class MetricsDatabase {
 				COALESCE(SUM(estimated_cost_usd), 0) AS totalCostUsd,
 				MIN(date(timestamp / 1000, 'unixepoch')) AS firstTrackedDate
 			FROM turns
-			WHERE ${this._completeFilter()}
-		`);
+			WHERE ${this._completeFilter('timestamp >= ?')}
+		`, [cutoff]);
 
 		const counts = await this._get<{ sessionCount: number; requestCount: number }>(`
 			SELECT
 				(SELECT COUNT(*) FROM sessions) AS sessionCount,
-				(SELECT COUNT(*) FROM turns WHERE ${this._completeFilter()}) AS requestCount
-		`);
+				(SELECT COUNT(*) FROM turns WHERE ${this._completeFilter('timestamp >= ?')}) AS requestCount
+		`, [cutoff]);
 
 		const safeAllTime = allTime ?? { totalPromptTokens: 0, totalCompletionTokens: 0, totalCostUsd: 0, firstTrackedDate: null };
 		const safeCounts = counts ?? { sessionCount: 0, requestCount: 0 };

@@ -1,21 +1,25 @@
 # Cost Estimates
 
-The extension estimates the cost of each chat interaction based on token usage and bundled pricing tables. Here's how it works.
+The extension estimates the cost of each chat interaction from token usage and bundled pricing tables. The values are best used for trends and comparisons rather than as a billing statement.
+
+![Usage dashboard with cost trend](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/usage-dashboard.png)
+
+*The overview dashboard shows daily cost movement, vendor share, and budget projection so you can spot expensive models or days quickly.*
 
 ---
 
 ## How Estimates Are Calculated
 
-For each chat turn, the extension records the number of **input tokens** and **output tokens** from VS Code's session store. It then multiplies the token counts by the per-token price from a bundled pricing table:
+For each chat turn, the extension records the number of **input tokens** and **output tokens** from VS Code’s session store and applies the bundled per-token price:
 
 ```
-estimated_cost = (input_tokens × input_price_per_token) 
+estimated_cost = (input_tokens × input_price_per_token)
                + (output_tokens × output_price_per_token)
 ```
 
 ### Pricing Sources
 
-The extension includes **static pricing tables** for popular models from major providers:
+The extension includes static pricing tables for popular providers and models:
 
 | Provider | Models Covered |
 |---|---|
@@ -24,88 +28,80 @@ The extension includes **static pricing tables** for popular models from major p
 | Google | Gemini Pro, Flash series |
 | DeepSeek | V4, Flash, R1 |
 | Mistral | Large, Codestral |
-| Others | General vendor-level average as fallback |
+| Others | vendor-level average as fallback |
 
-Pricing data is updated with each extension release. It does not fetch live pricing from provider APIs.
+These prices are updated with each extension release and are not fetched live from provider APIs.
 
 ---
 
 ## GitHub Copilot: Credits, not dollars
 
-GitHub Copilot plans are billed in **AI credits**, not a per-token dollar rate, so Copilot usage is handled differently from BYOK/API providers:
+GitHub Copilot plans are billed in **AI credits**, not a per-token dollar rate. The extension handles this differently from BYOK/API providers:
 
-- When a chat turn reports a **real, GitHub-provided credit count**, the extension stores and displays that number as-is — it is not an estimate.
-- When a real figure isn't available for a turn, the extension falls back to an **estimated** credit count derived from token usage and a model-aware heuristic (`estimateCopilotCredits`). Real reported credits always take priority and are never overwritten by an estimate.
-- Anywhere Copilot usage is shown — status bar, dashboards, sidebar tree, session details — the extension displays **credits (cr)** instead of a `$` estimate for Copilot-vendor data.
-- If you've resolved your Copilot plan (`Sign in with GitHub to Detect Copilot Plan`), the Monthly Credit Quota tile shows consumption against your actual monthly allowance instead of a token-based cost projection.
+- when a turn reports a real GitHub-provided credit count, it stores that number directly
+- if a real figure is missing, it falls back to an estimate derived from tokens and model-aware heuristics
+- any Copilot usage shown in the UI is displayed as **credits (cr)** rather than a dollar estimate
 
-Because credit-to-dollar conversion rates aren't public/stable, the extension does **not** attempt to translate Copilot credits into a dollar figure — credits are shown on their own scale.
+![Copilot credits view](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/copilot-credits.png)
+
+*The Copilot credits panel is the easiest way to see how your current cycle compares to your monthly allowance.*
 
 ---
 
 ## Model Matching
 
-The extension uses a layered resolver to match your model ID to a pricing entry:
+The extension tries to match each model ID to a pricing entry in layers:
 
-1. **Vendor prefix** — Models with a vendor prefix (e.g., `openai/gpt-4o`) are matched by the vendor portion
-2. **Heuristic matching** — Model names are fuzzy-matched against known pricing entries (e.g., `claude-sonnet-4-20250514` matches `Claude Sonnet 4`)
-3. **Vendor-level fallback** — If no specific match is found, a vendor-level average price is used
-4. **Unknown fallback** — If the vendor can't be determined, a conservative default rate is applied
+1. **vendor prefix** — for IDs like `openai/gpt-4o`
+2. **heuristic matching** — by model name and family
+3. **vendor-level fallback** — if the exact model is unknown
+4. **unknown fallback** — if the provider cannot be determined reliably
 
-### Check Your Model's Resolution
-
-If you're unsure how your model was priced:
-1. Open the **Output** panel (`Ctrl+Shift+U`)
-2. Select **Copilot Alternatives** from the dropdown
-3. Look for log messages showing model → pricing key resolution
+If you want to verify how a model was resolved, check the **Copilot Alternatives** output channel in the VS Code Output panel.
 
 ---
 
-## Accuracy
+## Accuracy and Caveats
 
-### What's Included
-- Input token costs
-- Output token costs
+### Included in the estimate
 
-### What's NOT Included
-- **Cached input** — Some providers offer discounted pricing for cached/repeated input tokens. The extension doesn't track cache hit rates and always prices at full rate
-- **Batch/API discounts** — Volume discounts, reserved capacity, or enterprise agreements are not reflected
-- **Free quota** — If your provider offers free included quota, estimates may show costs for usage that was actually free
-- **Special pricing** — Promotional credits, student plans, or custom negotiated rates
-- **Taxes and fees** — Only the raw per-token cost is estimated
+- input token cost
+- output token cost
+
+### Not included
+
+- cached-input discounts
+- volume or enterprise discounts
+- free quota that is already included in a plan
+- promotional credits or special negotiated rates
+- taxes or fees
 
 ### Interpretation
 
 | Scenario | Accuracy |
 |---|---|
-| Standard API pricing (pay-as-you-go) | Good — matches published rates |
-| Subscription plans with included quota | Overestimate — doesn't account for included free usage |
-| Enterprise agreements | Overestimate — doesn't reflect custom rates |
-| Cached prompt tokens | Overestimate — always prices as full-rate input |
+| standard pay-as-you-go API pricing | good |
+| subscription plans with included quota | may overestimate |
+| enterprise agreements | may overestimate |
+| cached prompt tokens | may overestimate |
 
 **Estimates are approximate.** Use them to understand trends and compare providers, not as a billing statement.
-
 
 ---
 
 ## FAQ
 
 ### Why does my cost show $0.00?
-This is normal if you're using GitHub Copilot with a subscription plan — Copilot usage is tracked and displayed in **AI credits (cr)** instead of a dollar estimate, since Copilot plans aren't billed per-token. Look for the credits figure alongside or in place of cost in dashboards and the sidebar.
+This is normal for GitHub Copilot usage. Copilot is displayed in **AI credits (cr)** rather than dollars.
 
-### Why is the estimated cost higher than my bill?
-The estimate always assumes pay-as-you-go API pricing. If you're on a subscription plan with included quota, your actual cost may be lower. For GitHub Copilot specifically, see the credits figure instead — it does not use dollar-based pricing at all.
+### Why is the estimate higher than my bill?
+The estimate assumes a standard pay-as-you-go quote. If your provider includes free quota or a special plan, your actual bill may be lower.
 
-### Why don't my Copilot credits match GitHub's own usage page?
-Small differences are expected:
-- **Estimate fallback** — if a turn didn't report a real credit count, the extension estimates it from tokens, which won't exactly match GitHub's billed figure
-- **Rolling windows vs. billing cycle** — the extension's 24h/7d/30d windows are always rolling from "now", while GitHub's usage page resets on your billing cycle start day
-- **Local-only data** — the extension only sees sessions run from this machine's VS Code chat session store; usage from other machines or IDEs isn't included
-
-Treat the extension's numbers as a local trend indicator, and GitHub's own usage page as the authoritative billing source.
+### Why don’t my Copilot credits match GitHub’s page?
+Small differences are expected because the extension uses local session data, rolling windows, and estimate fallbacks where GitHub reported credits are missing.
 
 ### Can I add custom pricing?
-Not currently. Custom pricing would require editing the bundled pricing tables. This is a planned feature.
+Not yet. Custom pricing would require editing the bundled pricing tables.
 
 ---
 

@@ -146,7 +146,11 @@ export function activate(context: vscode.ExtensionContext) {
 			if (entitlement) {
 				vscode.window.showInformationMessage(`GitHub Copilot plan detected: ${entitlement.planName} (~${entitlement.monthlyCreditsIncluded} credits/mo).`);
 			} else {
-				vscode.window.showWarningMessage('Could not determine your GitHub Copilot plan. Sign-in may have been cancelled or the plan could not be recognized.');
+				vscode.window.showWarningMessage(
+					'Could not determine your GitHub Copilot plan. ' +
+					'If you cancelled the sign-in dialog, try again. ' +
+					'If the problem persists, make sure you have a GitHub Copilot subscription and VS Code is connected to github.com.'
+				);
 			}
 		})
 	);
