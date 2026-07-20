@@ -10,6 +10,7 @@ import { TokenUsageStorage, TokenSource, TrackedUsageEvent } from './tokenUsageS
 import { MetricsService } from './metricsService';
 import { estimateCost, resolveModelPricingKey } from './tokenCostEstimator';
 import { ILogService } from '../platform/log/common/logService';
+import { CopilotEntitlement, resolveEntitlement } from './copilotEntitlement';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -40,6 +41,13 @@ export class TokenUsageTracker implements vscode.Disposable {
 	private readonly _onDidChangeStored: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 	readonly onDidChangeStored: vscode.Event<void> = this._onDidChangeStored.event;
 
+	private readonly _onDidChangeEntitlement: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+	readonly onDidChangeEntitlement: vscode.Event<void> = this._onDidChangeEntitlement.event;
+
+	private _context: vscode.ExtensionContext | undefined;
+	private _copilotEntitlement: CopilotEntitlement | undefined;
+	private _vendorFlags: { copilotDetected: boolean; allCopilot: boolean } = { copilotDetected: false, allCopilot: false };
+
 	constructor(globalState: vscode.Memento, globalStoragePath: string, logService: ILogService) {
 		this._log = logService;
 		const dbPath = path.join(globalStoragePath, 'copilot-alternatives-metrics.db');
@@ -49,6 +57,8 @@ export class TokenUsageTracker implements vscode.Disposable {
 	}
 
 	activate(context: vscode.ExtensionContext): void {
+		this._context = context;
+
 		// Purge stale globalState keys from retired tier-2/3 watchers
 		void context.globalState.update('tw.logIds', undefined);
 		void context.globalState.update('tw.logPositions', undefined);
@@ -57,18 +67,52 @@ export class TokenUsageTracker implements vscode.Disposable {
 
 		// ── Activation order ─────────────────────────
 		// 1. Quick import (deferred, non-blocking) — gets recent data into DB
-		setImmediate(() => { void this._metricsService.quickImport().catch(err =>
-			this._log.warn(`Quick import failed: ${err instanceof Error ? err.message : String(err)}`)
-		); });
+		setImmediate(() => { void this._metricsService.quickImport()
+			.then(() => this._refreshVendorFlags())
+			.catch(err => this._log.warn(`Quick import failed: ${err instanceof Error ? err.message : String(err)}`))
+		; });
 		// 2. Background catch-up (async, non-blocking) — full historical data
-		this._metricsService.backgroundImport().catch(err =>
-			this._log.warn(`Background import failed: ${err instanceof Error ? err.message : String(err)}`)
-		);
+		this._metricsService.backgroundImport()
+			.then(() => this._refreshVendorFlags())
+			.catch(err => this._log.warn(`Background import failed: ${err instanceof Error ? err.message : String(err)}`));
 
 		// 3. File watcher for real-time updates
 		this._chatSessionWatcher.setMetricsService(this._metricsService);
 		this._chatSessionWatcher.activate(context);
 		this._chatSessionWatcher.onEvent(event => this._onChatSessionStoreEvent(event));
+	}
+
+	/** Recomputes cached vendor-usage flags and, if Copilot usage is newly detected, attempts silent entitlement resolution. */
+	private async _refreshVendorFlags(): Promise<void> {
+		try {
+			const wasDetected = this._vendorFlags.copilotDetected;
+			this._vendorFlags = await this._metricsService.getVendorUsageFlags();
+			if (this._vendorFlags.copilotDetected && !wasDetected) {
+				void this._resolveEntitlementSilently();
+			}
+		} catch (err) {
+			this._log.debug(`Vendor flags refresh failed: ${err instanceof Error ? err.message : String(err)}`);
+		}
+	}
+
+	private async _resolveEntitlementSilently(): Promise<void> {
+		if (!this._context) { return; }
+		const entitlement = await resolveEntitlement(this._context, this._log, { interactive: false });
+		if (entitlement) {
+			this._copilotEntitlement = entitlement;
+			this._onDidChangeEntitlement.fire();
+		}
+	}
+
+	/** Interactively prompts GitHub sign-in (with popup) to (re)resolve Copilot entitlement. For use from an explicit command only. */
+	async signInForCopilotEntitlement(): Promise<CopilotEntitlement | undefined> {
+		if (!this._context) { return undefined; }
+		const entitlement = await resolveEntitlement(this._context, this._log, { interactive: true, forceRefresh: true });
+		if (entitlement) {
+			this._copilotEntitlement = entitlement;
+			this._onDidChangeEntitlement.fire();
+		}
+		return entitlement;
 	}
 
 	// ── Public API ──────────────────────────────────────────────────────────
@@ -78,6 +122,9 @@ export class TokenUsageTracker implements vscode.Disposable {
 	/** @deprecated Use metricsService instead for DB-backed queries */
 	get storage(): TokenUsageStorage { return this._storage; }
 	get metricsService(): MetricsService { return this._metricsService; }
+	get copilotEntitlement(): CopilotEntitlement | undefined { return this._copilotEntitlement; }
+	/** Cached vendor-usage flags, recomputed after each import pass (not on every call). */
+	get vendorUsageFlags(): { copilotDetected: boolean; allCopilot: boolean } { return this._vendorFlags; }
 
 	/**
 	 * Force-reload all existing data from disk. Resets all seen-event tracking
@@ -93,6 +140,8 @@ export class TokenUsageTracker implements vscode.Disposable {
 		this._sessionCost = 0;
 
 		this._chatSessionWatcher.reloadAll();
+
+		await this._refreshVendorFlags();
 
 		this._log.info('ReloadAll: complete');
 		this._onDidUpdate.fire();

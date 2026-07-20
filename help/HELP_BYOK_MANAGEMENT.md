@@ -110,3 +110,11 @@ If you prefer to edit the configuration directly, click the **{}** icon in the s
 - Verify the key is valid and has not expired
 - Check the provider's status page for service outages
 - Try removing and re-adding the provider
+
+---
+
+## See Also
+
+- [Getting Started](HELP_GETTING_STARTED.md) — Installation, sidebar overview, and first steps
+- [Token Usage Tracking](HELP_TOKEN_USAGE.md) — Dashboards, status bar, and Copilot credit tracking in depth
+- [Session Analytics](HELP_SESSION_ANALYTICS.md) — Browsing and filtering your chat session history

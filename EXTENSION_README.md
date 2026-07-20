@@ -1,6 +1,6 @@
 # Copilot & BYOK Usage Tracker
 
-[![License: MIT](https://img.shields.io/github/license/feimacode/copilot-alternatives)](https://github.com/feimacode/copilot-alternatives/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/github/license/feimacode/copilot-alternatives)](https://github.com/feimacode/copilot-alternatives/blob/master/LICENSE)
 
 Track token usage and costs across GitHub Copilot, BYOK providers, and chat models — all in one place. Manage BYOK providers visually. Browse 100+ AI coding tools, plans, and CLI agents.
 
@@ -13,14 +13,19 @@ Track token usage and costs across GitHub Copilot, BYOK providers, and chat mode
 See exactly how many tokens you're consuming and what it costs — per vendor, per model, per day.
 
 - **Real-time tracking** — Automatically reads VS Code's chat session store; no manual setup required
+- **GitHub Copilot AI credits** — Copilot usage is tracked in **AI credits (cr)**, matching how Copilot plans are actually billed, using real GitHub-reported credit counts when available and falling back to a model-aware estimate otherwise
+- **Monthly Credit Quota** — Sign in with GitHub to resolve your Copilot plan and see credit consumption against your actual monthly allowance, with a rolling 24h / 7 day / 30 day credits breakdown
 - **Rich dashboards** — Chart.js-powered overview, vendor, and model dashboards with stacked bars, donut charts, and trend lines
 - **Daily / weekly / monthly views** — Switch time ranges with one click, or pick a custom "since" date
-- **Status bar indicator** — Always-visible today's token count and estimated cost; hover for 24h, week, and month summaries
-- **Yearly Token Budget** — Set your own yearly budget target and see projected spend at a glance
+- **Status bar indicator** — Always-visible today's token count and estimated cost; hover for 24h, week, and month summaries (plus Copilot credits, if detected)
+- **My Yearly Budget** — Set your own yearly budget target and see projected spend at a glance
 - **Export** — Dump your usage data for external analysis
 
-<!-- SCREENSHOT: usage-dashboard.png — Main overview dashboard showing token charts, vendor donut, and Jensen benchmark -->
-![Usage Dashboard](https://raw.githubusercontent.com/feimacode/copilot-alternatives/main/assets/screenshots/usage-dashboard.png)
+<!-- SCREENSHOT: usage-dashboard.png — Main overview dashboard showing token charts, vendor donut, and My Yearly Budget -->
+![Usage Dashboard](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/usage-dashboard.png)
+
+<!-- SCREENSHOT: copilot-credits.png — Monthly Credit Quota tile with 24h/7d/30d credits breakdown and GitHub entitlement sign-in -->
+![Copilot Credits](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/copilot-credits.png)
 
 ### 🔑 BYOK Provider Manager
 
@@ -33,7 +38,7 @@ Bring Your Own Key — add, edit, and remove chat language model providers witho
 - **Auto-refresh** — Sidebar updates instantly when providers are added, edited, or removed externally
 
 <!-- SCREENSHOT: byok-editor.png — BYOK provider creation form in the webview editor -->
-![BYOK Editor](https://raw.githubusercontent.com/feimacode/copilot-alternatives/main/assets/screenshots/byok-editor.png)
+![BYOK Editor](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/byok-editor.png)
 
 ### 📝 Session History & Analytics
 
@@ -42,10 +47,11 @@ Browse your past chat sessions with full turn-by-turn detail.
 - **Session list** — All sessions in the sidebar, filterable by vendor, model, or date
 - **Turn detail** — Input/output tokens, tool calls, timing (latency, TTFT), prompt category breakdowns
 - **Session dashboard** — Rich webview showing voting, token distribution, and per-turn tables
+- **Credits or cost** — Sessions from GitHub Copilot show AI credits consumed; sessions from other vendors show estimated $ cost
 - **Copy session IDs** — Quickly grab a session ID for bug reports or sharing
 
 <!-- SCREENSHOT: session-dashboard.png — Session detail view showing turns, tokens, timing, and tool calls -->
-![Session Dashboard](https://raw.githubusercontent.com/feimacode/copilot-alternatives/main/assets/screenshots/session-dashboard.png)
+![Session Dashboard](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/session-dashboard.png)
 
 ### 📚 AI Tools Directory
 
@@ -57,7 +63,7 @@ Browse 100+ AI coding tools, plans, and CLI agents from the sidebar.
 - Enterprise Solutions, Model Providers, Pricing Comparisons
 
 <!-- SCREENSHOT: sidebar-directory.png — Sidebar tree view showing BYOK providers, usage stats, and directory categories -->
-![Sidebar Directory](https://raw.githubusercontent.com/feimacode/copilot-alternatives/main/assets/screenshots/sidebar-directory.png)
+![Sidebar Directory](https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/assets/screenshots/sidebar-directory.png)
 
 ---
 
@@ -96,7 +102,8 @@ All settings are under `copilotAlternatives.tokenUsage.*`:
 | `Show Model Usage` | Open per-model cost and token breakdown |
 | `Show Overview Usage` | Open the overview dashboard |
 | `Export Token Usage Data` | Export usage data to file |
-| `Reload Token Usage Data` | Clear cache and reimport from disk |
+| `Refresh Stats DB from local sessions` | Clear cache and reimport from disk |
+| `Sign in with GitHub to Detect Copilot Plan` | Resolve your Copilot plan to show a monthly credit quota |
 | `Debug Token Usage` | Dump internal state to output channel |
 
 ### BYOK Management
@@ -116,7 +123,7 @@ All settings are under `copilotAlternatives.tokenUsage.*`:
 | Command | Description |
 |---|---|
 | `Show Session Details` | Open a session's detailed turn-by-turn view |
-| `Filter Sessions` | Open session filter (vendor, model, date) |
+| `Toggle Session Filter` | Open session filter (vendor, model, date) |
 | `Clear Session Filter` | Remove active session filter |
 | `Copy Session ID` | Copy a session's unique ID to clipboard |
 
@@ -141,13 +148,25 @@ All settings are under `copilotAlternatives.tokenUsage.*`:
 
 Costs are estimated using **static pricing tables** bundled in the extension for popular models (GPT-4o, Claude, Gemini, DeepSeek, etc.). The extension matches your model ID to the closest known pricing entry. If an exact match isn't found, it falls back to a vendor-level average. Estimates are approximate — actual billing depends on your provider's specific pricing tier.
 
+### How is GitHub Copilot usage tracked, since it isn't billed per-token?
+
+GitHub Copilot plans are billed in **AI credits**, not a per-token dollar rate. The extension shows **credits (cr)** for Copilot usage instead of a `$` estimate — in the status bar, dashboards, sidebar, and session details. Real GitHub-reported credit counts are used whenever available; otherwise credits are estimated from token usage. Run `Sign in with GitHub to Detect Copilot Plan` to resolve your plan and see a Monthly Credit Quota tile showing consumption against your actual monthly allowance. This lookup is best-effort (via an undocumented internal endpoint) and may occasionally be unavailable.
+
+Signing in only reuses (or requests) a standard GitHub authentication session to look up your plan name and monthly credit allowance — no code, chat content, or session data is ever sent as part of this lookup.
+
+### Why don't my Copilot credits match GitHub's own usage page?
+
+Small differences are expected: the extension estimates credits from tokens when a turn didn't report a real credit count; its 24h/7d/30d windows roll from "now" rather than resetting on your billing cycle start day; and it only sees sessions run from this machine's VS Code chat session store. Treat the extension's numbers as a local trend indicator, and GitHub's own usage page as the authoritative billing source.
+
 ### Will this slow down VS Code?
 
 **No.** Usage data is stored in a lightweight SQLite database. The background file watcher only scans the most recent session files (configurable via `watcherWindowDays`, default 1 day). Historical backfill runs once on activation, and you can limit how far back it goes via `backfillDays` (default 60 days).
 
 ### Where is my data stored? Can I delete it?
 
-Everything lives in a SQLite database inside VS Code's `globalStorage` directory. To reset all data, run **`Reload Token Usage Data`** from the command palette — this clears the database and reimports from disk.
+Everything lives in a SQLite database inside VS Code's `globalStorage` directory. To reset all data, run **`Refresh Stats DB from local sessions`** from the command palette — this clears the database and reimports from disk. Note this is a full rebuild: it wipes the entire database first, then reimports only session files within your current `backfillDays` window (by file last-modified time). If you rely on older history, increase `backfillDays` before reloading.
+
+> You normally never need to run this — the live watcher and startup backfill keep your data current automatically. Only use it if your data looks stale, missing, or out of sync.
 
 ### Do I need to configure anything?
 
@@ -183,9 +202,9 @@ The directory is a **curated, bundled catalog** shipped with each extension rele
 ## 📖 Resources
 
 - [GitHub Repository](https://github.com/feimacode/copilot-alternatives) — Source code, issues, and contributions
-- [BYOK Templates](https://github.com/feimacode/copilot-alternatives/tree/main/byok-templates) — Pre-configured provider templates
-- [CHANGELOG](https://github.com/feimacode/copilot-alternatives/blob/main/CHANGELOG.md) — Release history
-- [License (MIT)](https://github.com/feimacode/copilot-alternatives/blob/main/LICENSE)
+- [BYOK Templates](https://github.com/feimacode/copilot-alternatives/tree/master/byok-templates) — Pre-configured provider templates
+- [CHANGELOG](https://github.com/feimacode/copilot-alternatives/blob/master/CHANGELOG.md) — Release history
+- [License (MIT)](https://github.com/feimacode/copilot-alternatives/blob/master/LICENSE)
 
 ---
 

@@ -222,6 +222,12 @@
 				"icon": "$(bug)"
 			},
 			{
+				"command": "copilotAlternatives.signInGitHubForCopilotEntitlement",
+				"title": "Sign in with GitHub to Detect Copilot Plan",
+				"category": "Copilot Alternatives",
+				"icon": "$(github)"
+			},
+			{
 				"command": "copilotAlternatives.showVendorUsage",
 				"title": "Show Vendor Usage",
 				"category": "Copilot Alternatives",

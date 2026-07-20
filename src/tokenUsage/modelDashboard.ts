@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TokenUsageTracker } from './tokenUsageTracker';
 import { formatTokenCount, formatCost, formatCostCompact } from './tokenCostEstimator';
+import { formatCredits } from './copilotCreditEstimator';
 
 // ─── Vendor color palette ─────────────────────────────────────────────────────
 
@@ -164,6 +165,7 @@ export class ModelDashboard {
     private async _render(): Promise<string> {
 		const vendor = this._activeVendor;
 		const modelId = this._activeModel;
+		const isCopilot = vendor === 'copilot';
         const s = await this._tracker.metricsService.getModelViewSummary(vendor, modelId, this._days);
 		const models = s.models;
 		const promptBreakdowns = s.promptBreakdowns;
@@ -178,6 +180,7 @@ export class ModelDashboard {
 		let totalTokens: number;
 		let totalRequests: number;
 		let totalCost: number;
+		let totalCredits: number;
 		if (modelId) {
 			const m = models.find(m => m.modelId === modelId);
 			totalPromptTokens = m?.promptTokens ?? 0;
@@ -185,13 +188,17 @@ export class ModelDashboard {
 			totalTokens = totalPromptTokens + totalCompletionTokens;
 			totalRequests = m?.requestCount ?? 0;
 			totalCost = m?.costUsd ?? 0;
+			totalCredits = m?.credits ?? 0;
 		} else {
 			totalPromptTokens = models.reduce((s, m) => s + m.promptTokens, 0);
 			totalCompletionTokens = models.reduce((s, m) => s + m.completionTokens, 0);
 			totalTokens = totalPromptTokens + totalCompletionTokens;
 			totalRequests = models.reduce((s, m) => s + m.requestCount, 0);
 			totalCost = models.reduce((s, m) => s + m.costUsd, 0);
+			totalCredits = models.reduce((s, m) => s + m.credits, 0);
 		}
+
+
 
 		// Daily usage — build lookup maps from DB data
 		const dailyTokensMap: Record<string, number> = {};
@@ -220,6 +227,7 @@ export class ModelDashboard {
 			completionTokens: m.completionTokens,
 			totalTokens: m.promptTokens + m.completionTokens,
 			costUsd: m.costUsd,
+			credits: m.credits,
 			requestCount: m.requestCount,
 			inPct: totalTokens > 0 ? m.promptTokens / totalTokens : 0,
 			outPct: totalTokens > 0 ? m.completionTokens / totalTokens : 0,
@@ -263,7 +271,7 @@ export class ModelDashboard {
 			})),
 			hasPromptData,
 			totalTokens, totalPromptTokens, totalCompletionTokens,
-			totalRequests, totalCost,
+			totalRequests, totalCost, totalCredits, isCopilot,
 			modelCount: models.length,
 		});
 
@@ -305,7 +313,9 @@ ${!vendor && !modelId ? `<div class="sec">
   <div class="card"><div class="lbl">Tokens</div><div class="val">${formatTokenCount(totalTokens)}</div><div class="det">${formatTokenCount(totalPromptTokens)} in / ${formatTokenCount(totalCompletionTokens)} out</div></div>
   <div class="card"><div class="lbl">Requests</div><div class="val">${totalRequests.toLocaleString()}</div><div class="det">${modelId ? `Model: ${modelId}` : `${models.length} model(s)`}</div></div>
   <div class="card"><div class="lbl">Models</div><div class="val">${models.length}</div><div class="det">Active in last ${this._days} days</div></div>
-  <div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>
+  ${isCopilot
+				? `<div class="card"><div class="lbl">AI Credits (est.)</div><div class="val">${formatCredits(totalCredits)}</div><div class="det">Estimated GitHub Copilot credits</div></div>`
+				: `<div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>`}
 </div>
 
 <!-- Usage Over Time -->
@@ -327,7 +337,7 @@ ${!modelId ? `<div class="sec">
       <th data-sort="modelId">Model</th><th data-sort="requestCount">Requests</th>
       <th data-sort="totalTokens" class="sorted">Total Tokens</th>
       <th data-sort="promptTokens">Input</th><th data-sort="completionTokens">Output</th>
-      <th>I/O Ratio</th><th data-sort="costUsd">Estimate</th>
+      <th>I/O Ratio</th><th data-sort="${isCopilot ? 'credits' : 'costUsd'}">${isCopilot ? 'AI Credits' : 'Estimate'}</th>
     </tr></thead>
     <tbody id="modelTbody">${modelEntries.map(m => `<tr>
       <td><span class="dot" style="background:${vendorColor(m.vendor)}"></span>${m.modelId}</td>
@@ -335,7 +345,7 @@ ${!modelId ? `<div class="sec">
       <td><strong>${formatTokenCount(m.totalTokens)}</strong></td>
       <td>${formatTokenCount(m.promptTokens)}</td><td>${formatTokenCount(m.completionTokens)}</td>
       <td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:${Math.round(m.inPct * 100)}%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:${Math.round(m.outPct * 100)}%"></span></span><span style="font-size:9px;color:var(--muted)">${Math.round(m.inPct * 100)}/${Math.round(m.outPct * 100)}</span></span></td>
-      <td>${formatCostCompact(m.costUsd)}</td>
+      <td>${isCopilot ? formatCredits(m.credits) : formatCostCompact(m.costUsd)}</td>
     </tr>`).join('')}</tbody>
   </table>
   ${models.length === 0 ? '<div class="empty">No model data yet.</div>' : ''}
@@ -415,11 +425,12 @@ function sortModelTable(col){
 function renderTable(){
   document.getElementById('modelTbody').innerHTML = _modelEntries.map(function(m){
     var inPct=(D.totalTokens>0?m.promptTokens/D.totalTokens:0)*100,outPct=(D.totalTokens>0?m.completionTokens/D.totalTokens:0)*100;
-    return '<tr><td><span class="dot" style="background:'+(D.allVendors.includes(m.vendor)?getComputedStyle(document.body).getPropertyValue('--blue').trim():'#94a3b8')+'"></span>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(m.costUsd)+'</td></tr>';
+    return '<tr><td><span class="dot" style="background:'+(D.allVendors.includes(m.vendor)?getComputedStyle(document.body).getPropertyValue('--blue').trim():'#94a3b8')+'"></span>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(D.isCopilot ? m.credits : m.costUsd)+'</td></tr>';
   }).join('');
 }
 function _fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);}
-function _fmtC(n){return '$'+n.toFixed(4);}
+function _fmtC(n){return D.isCopilot ? _fmtCredits(n) : ('$'+n.toFixed(4));}
+function _fmtCredits(n){return n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(Math.round(n));}
 function updateSortHeaders(){document.querySelectorAll('#modelTbl th').forEach(function(th){th.classList.remove('sorted');if(th.dataset.sort===sortCol)th.classList.add('sorted');});}
 document.querySelectorAll('#modelTbl th[data-sort]').forEach(function(th){th.addEventListener('click',function(){sortModelTable(th.dataset.sort);});});
 }

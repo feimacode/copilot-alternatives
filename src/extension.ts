@@ -22,6 +22,8 @@ import { VSCodeLogTarget, ConsoleLogTarget } from './platform/log/vscode/logServ
 import { logVendorMapping } from './tokenUsage/vendorResolver';
 
 export function activate(context: vscode.ExtensionContext) {
+	const activationStart = Date.now();
+
 	// ─── Logging ───────────────────────────────────────────────────────
 	const logChannel = vscode.window.createOutputChannel('Copilot Alternatives', { log: true });
 	context.subscriptions.push(logChannel);
@@ -74,8 +76,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const tokenStatusBar = new TokenUsageStatusBar(tokenTracker);
 	tokenTracker.onDidUpdate(() => tokenStatusBar.update());
+	tokenTracker.onDidChangeEntitlement(() => {
+		tokenStatusBar.update();
+		if (VendorDashboard.currentPanel) {
+			VendorDashboard.currentPanel.update();
+		}
+		if (ModelDashboard.currentPanel) {
+			ModelDashboard.currentPanel.update();
+		}
+		if (TokenUsageDashboard.currentPanel) {
+			TokenUsageDashboard.currentPanel.update();
+		}
+	});
 	// Refresh dashboard when stored data changes (if dashboard is open)
 	tokenTracker.onDidChangeStored(() => {
+		tokenStatusBar.update();
 		if (TokenUsageDashboard.currentPanel) {
 			TokenUsageDashboard.currentPanel.update();
 		}
@@ -121,6 +136,17 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			if (SessionDashboard.currentPanel) {
 				SessionDashboard.currentPanel.update();
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('copilotAlternatives.signInGitHubForCopilotEntitlement', async () => {
+			const entitlement = await tokenTracker.signInForCopilotEntitlement();
+			if (entitlement) {
+				vscode.window.showInformationMessage(`GitHub Copilot plan detected: ${entitlement.planName} (~${entitlement.monthlyCreditsIncluded} credits/mo).`);
+			} else {
+				vscode.window.showWarningMessage('Could not determine your GitHub Copilot plan. Sign-in may have been cancelled or the plan could not be recognized.');
 			}
 		})
 	);
@@ -368,6 +394,11 @@ export function activate(context: vscode.ExtensionContext) {
 			openDirectory(context);
 		})
 	);
+
+	// activate() itself is fully synchronous — token usage imports (quickImport/
+	// backgroundImport) run afterward via setImmediate/promise chains and log
+	// their own elapsed time separately.
+	logService.info(`Copilot Alternatives extension activated in ${Date.now() - activationStart}ms (synchronous setup only; background imports continue asynchronously)`);
 }
 
 // ─── Legacy webview (kept as fallback) ──────────────────────────────────────

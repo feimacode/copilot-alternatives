@@ -12,6 +12,7 @@ import { IChatLanguageModelEntry, IChatLanguageModelModel } from '../byok/types'
 import { TokenUsageTracker } from '../tokenUsage/tokenUsageTracker';
 import { SessionSummary } from '../tokenUsage/metricsDatabase';
 import { formatTokenCount, resolveModelPricingKey } from '../tokenUsage/tokenCostEstimator';
+import { formatCredits } from '../tokenUsage/copilotCreditEstimator';
 
 /** Stored session filter state shared across the tree provider's lifecycle. */
 export interface SessionFilter {
@@ -145,7 +146,12 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 			const sessions = await this._tokenTracker.metricsService.listSessions(this._sessionFilter.days, {
 				modelName: this._sessionFilter.modelName,
 			});
-			const totalCost7d = sessions.reduce((s, sess) => s + sess.costUsd, 0);
+			const totalCreditsSession = sessions.reduce((s, sess) => s + (sess.credits || 0), 0);
+			const totalCostSession = sessions.reduce((s, sess) => s + (sess.session_vendor === 'copilot' ? 0 : sess.costUsd), 0);
+			const costParts: string[] = [];
+			if (totalCreditsSession > 0) { costParts.push(`${formatCredits(totalCreditsSession)} cr`); }
+			if (totalCostSession > 0 || costParts.length === 0) { costParts.push(`$${totalCostSession.toFixed(2)}`); }
+			const costLabel = costParts.join(' + ');
 			const extraDesc = this._sessionFilter.modelName
 				? ` · ${this._sessionFilter.modelName}`
 				: '';
@@ -154,8 +160,8 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				'session-section',
 				'Session Stats',
 				undefined,
-				`last ${this._sessionFilter.days}d${extraDesc} · ${sessions.length} sessions | $${totalCost7d.toFixed(2)}`,
-				`${sessions.length} sessions, $${totalCost7d.toFixed(2)} cost — last ${this._sessionFilter.days} days`,
+				`last ${this._sessionFilter.days}d${extraDesc} · ${sessions.length} sessions | ${costLabel}`,
+				`${sessions.length} sessions, ${costLabel} — last ${this._sessionFilter.days} days`,
 			));
 		}
 
@@ -370,6 +376,8 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 			const shortId = s.session_id.length > 8 ? s.session_id.substring(0, 8) : s.session_id;
 			const vendorModel = [s.session_vendor, s.session_model_name].filter(Boolean).join('/') || 'unknown';
 			const formattedTokens = formatTokenCount(s.totalTokens);
+			const isCopilot = s.session_vendor === 'copilot';
+			const costOrCredits = isCopilot ? `${formatCredits(s.credits)} cr` : `$${s.costUsd.toFixed(2)}`;
 
 			return new TreeNode(
 				'sessionNode',
@@ -377,7 +385,7 @@ export class TreeProvider implements vscode.TreeDataProvider<TreeNode> {
 				`${dateStr} · ${shortId}`,
 				s,
 				`${s.request_count} turns · ${vendorModel}`,
-				`${s.request_count} turns, ${formattedTokens} tokens, $${s.costUsd.toFixed(2)} — ${vendorModel}`,
+				`${s.request_count} turns, ${formattedTokens} tokens, ${costOrCredits} — ${vendorModel}`,
 			);
 		});
 	}

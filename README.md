@@ -4,6 +4,17 @@ A curated collection of GitHub Copilot alternatives for developers, teams, and o
 
 Recent changes to AI coding assistant pricing, usage limits, and licensing models have prompted many developers to re-evaluate their tooling choices. This repository aims to provide an objective reference for the growing ecosystem of AI-powered coding tools.
 
+> ### 🧩 Try the companion VS Code extension
+>
+> This repo also ships a free, open-source VS Code extension — **[Copilot & BYOK Usage Tracker](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives)** — that puts this directory in your sidebar and tracks your own usage:
+>
+> - Track GitHub Copilot **AI credits** and BYOK token/cost usage, per vendor and per model
+> - See a **Monthly Credit Quota** tile against your actual Copilot plan allowance
+> - Manage BYOK providers visually — no hand-editing `chatLanguageModels.json`
+> - Browse this entire 100+ tool directory from the Activity Bar
+>
+> 📖 See [`EXTENSION_README.md`](EXTENSION_README.md) for full feature details, or install it directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives).
+
 The focus is on solutions that support one or more of the following:
 
 - AI-powered IDEs

@@ -7,9 +7,10 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg, ModelDayTotal, ModelPromptBreakdown, SessionSummary, SessionDetail, SessionFilterOptions } from './metricsDatabase';
+import { MetricsDatabase, DashboardSummary, VendorAgg, ModelAgg, ModelDayTotal, ModelPromptBreakdown, SessionSummary, SessionDetail, SessionFilterOptions, CopilotCreditsSummary } from './metricsDatabase';
 import { parseSessionFile, computeFileHash, ParsedSession } from './sessionStoreImporter';
 import { estimateCost, resolveModelPricingKey } from './tokenCostEstimator';
+import { estimateCopilotCredits } from './copilotCreditEstimator';
 import { ILogService } from '../platform/log/common/logService';
 
 // ─── WSL detection ──────────────────────────────────────────────────────────
@@ -235,7 +236,12 @@ export class MetricsService implements vscode.Disposable {
 	async quickImport(): Promise<void> {
 		const days = this._backfillDays();
 		this._log.info(`MetricsService: quick import (backfill: ${days} days)`);
+
+		// findMostRecentWorkspaceDir is synchronous (fs.readdirSync/statSync) —
+		// it blocks the extension host thread for its duration.
+		const enumStart = Date.now();
 		const candidates = findMostRecentWorkspaceDir(this._log);
+		this._log.info(`MetricsService: quick import — enumerated ${candidates.length} candidate file(s) in ${Date.now() - enumStart}ms (blocking fs scan)`);
 		if (candidates.length === 0) {
 			this._log.debug('MetricsService: no files found for quick import');
 			return;
@@ -243,11 +249,14 @@ export class MetricsService implements vscode.Disposable {
 
 		const startTime = Date.now();
 		let imported = 0;
+		let parseMs = 0;
 
 		try {
 			await this._db.runInTransaction(async () => {
 				for (const c of candidates) {
+					const parseStart = Date.now();
 					const parsed = parseSessionFile(c.path);
+					parseMs += Date.now() - parseStart;
 					if (!parsed) { continue; }
 
 					// Estimate costs for each request
@@ -258,6 +267,9 @@ export class MetricsService implements vscode.Disposable {
 							0,
 							resolveModelPricingKey(req.model_id)
 						).totalCost;
+						if (req.vendor === 'copilot' && req.copilot_credits == null) {
+							req.copilot_credits = estimateCopilotCredits(req.model_id, req.prompt_tokens, req.completion_tokens);
+						}
 					}
 
 					await this._db.upsertSession(parsed.sessionRow);
@@ -274,7 +286,7 @@ export class MetricsService implements vscode.Disposable {
 		}
 
 		const elapsed = Date.now() - startTime;
-		this._log.info(`MetricsService: quick import done — ${imported} files in ${elapsed}ms`);
+		this._log.info(`MetricsService: quick import done — ${imported} files in ${elapsed}ms (parsing: ${parseMs}ms blocking, remainder: async DB I/O)`);
 	}
 
 	// ── Layer 2: Background catch-up (async, ~2-5s) ─────────────────────
@@ -287,17 +299,24 @@ export class MetricsService implements vscode.Disposable {
 		await new Promise<void>(resolve => {
 			setImmediate(async () => {
 				try {
+					// Synchronous fs.readdirSync/statSync walk over every workspaceStorage
+					// root — blocks the extension host thread for its full duration.
+					const enumStart = Date.now();
 					const allFiles = enumerateAllJsonlFiles(this._log);
+					const enumMs = Date.now() - enumStart;
 					if (allFiles.length === 0) {
-						this._log.debug('MetricsService: no files for background import');
+						this._log.debug(`MetricsService: no files for background import (enumeration took ${enumMs}ms)`);
 						resolve();
 						return;
 					}
 
+					const diffStart = Date.now();
 					const changedFiles = await this._db.findChangedFiles(allFiles);
-					this._log.info(`MetricsService: background import — ${allFiles.length} files total, ${changedFiles.length} changed`);
+					const diffMs = Date.now() - diffStart;
+					this._log.info(`MetricsService: background import — ${allFiles.length} files total, ${changedFiles.length} changed (enumeration: ${enumMs}ms blocking, diff query: ${diffMs}ms async)`);
 
 					let imported = 0;
+					let parseMs = 0;
 					const BATCH_SIZE = 10;
 
 					for (let i = 0; i < changedFiles.length; i += BATCH_SIZE) {
@@ -306,7 +325,9 @@ export class MetricsService implements vscode.Disposable {
 						try {
 							await this._db.runInTransaction(async () => {
 								for (const fp of batch) {
+									const parseStart = Date.now();
 									const parsed = parseSessionFile(fp);
+									parseMs += Date.now() - parseStart;
 									if (!parsed) { continue; }
 
 									for (const req of parsed.turnRows) {
@@ -316,6 +337,9 @@ export class MetricsService implements vscode.Disposable {
 											0,
 											resolveModelPricingKey(req.model_id)
 										).totalCost;
+										if (req.vendor === 'copilot' && req.copilot_credits == null) {
+											req.copilot_credits = estimateCopilotCredits(req.model_id, req.prompt_tokens, req.completion_tokens);
+										}
 									}
 
 									await this._db.upsertSession(parsed.sessionRow);
@@ -335,7 +359,7 @@ export class MetricsService implements vscode.Disposable {
 					}
 
 					const elapsed = Date.now() - startTime;
-					this._log.info(`MetricsService: background import done — ${imported} files imported in ${elapsed}ms`);
+					this._log.info(`MetricsService: background import done — ${imported} files imported in ${elapsed}ms total (parsing: ${parseMs}ms blocking, remainder: async DB I/O + setImmediate yields)`);
 				} catch (err) {
 					this._log.warn(`MetricsService: background import failed: ${err instanceof Error ? err.message : String(err)}`);
 				}
@@ -353,8 +377,10 @@ export class MetricsService implements vscode.Disposable {
 	 * (unchanged, empty, or unparseable).
 	 */
 	async importSingleFile(filePath: string): Promise<boolean> {
+		const startTime = Date.now();
 		try {
 			// Quick skip: check if file is already tracked and unchanged
+			// (fs.statSync is synchronous/blocking, but this is a single stat call)
 			const stat = fs.statSync(filePath);
 			if (stat.size === 0) { return false; }
 
@@ -364,7 +390,11 @@ export class MetricsService implements vscode.Disposable {
 				return false;
 			}
 
+			// parseSessionFile is fully synchronous (fs.readFileSync + JSON parsing) —
+			// blocks the extension host thread for the duration of the parse.
+			const parseStart = Date.now();
 			const parsed = parseSessionFile(filePath);
+			const parseMs = Date.now() - parseStart;
 			if (!parsed) { return false; }
 
 			for (const req of parsed.turnRows) {
@@ -374,6 +404,9 @@ export class MetricsService implements vscode.Disposable {
 					0,
 					resolveModelPricingKey(req.model_id)
 				).totalCost;
+				if (req.vendor === 'copilot' && req.copilot_credits == null) {
+					req.copilot_credits = estimateCopilotCredits(req.model_id, req.prompt_tokens, req.completion_tokens);
+				}
 			}
 
 			await this._db.runInTransaction(async () => {
@@ -384,7 +417,8 @@ export class MetricsService implements vscode.Disposable {
 				await this._db.markFileProcessed(parsed.filePath, parsed.fileSize, parsed.fileMtime, parsed.fileHash);
 			});
 
-			this._log.debug(`MetricsService: imported ${path.basename(filePath)} (${parsed.turnRows.length} requests)`);
+			const elapsed = Date.now() - startTime;
+			this._log.info(`MetricsService: imported ${path.basename(filePath)} (${parsed.turnRows.length} requests) in ${elapsed}ms (parsing: ${parseMs}ms blocking, remainder: async DB I/O)`);
 			return true;
 		} catch (err) {
 			this._log.warn(`MetricsService: import failed for ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
@@ -398,14 +432,20 @@ export class MetricsService implements vscode.Disposable {
 	// Uses the copilotAlternatives.tokenUsage.backfillDays setting.
 	async rebuildAll(): Promise<void> {
 		const days = this._backfillDays();
+		const startTime = Date.now();
 		this._log.info(`MetricsService: rebuilding all data (backfill: ${days} days)...`);
 		await this._db.clearAllData();
 
+		// Synchronous fs.readdirSync/statSync walk — blocks the extension host
+		// thread for its full duration.
+		const enumStart = Date.now();
 		const allFiles = enumerateAllJsonlFiles(this._log);
-		this._log.info(`MetricsService: rebuilding from ${allFiles.length} files`);
+		const enumMs = Date.now() - enumStart;
+		this._log.info(`MetricsService: rebuilding from ${allFiles.length} files (enumeration: ${enumMs}ms blocking)`);
 
 		const BATCH_SIZE = 10;
 		let imported = 0;
+		let parseMs = 0;
 
 		for (let i = 0; i < allFiles.length; i += BATCH_SIZE) {
 			const batch = allFiles.slice(i, i + BATCH_SIZE);
@@ -413,7 +453,9 @@ export class MetricsService implements vscode.Disposable {
 			try {
 				await this._db.runInTransaction(async () => {
 						for (const c of batch) {
+							const parseStart = Date.now();
 							const parsed = parseSessionFile(c.path);
+							parseMs += Date.now() - parseStart;
 							if (!parsed) { continue; }
 
 							for (const req of parsed.turnRows) {
@@ -423,6 +465,9 @@ export class MetricsService implements vscode.Disposable {
 									0,
 									resolveModelPricingKey(req.model_id)
 								).totalCost;
+								if (req.vendor === 'copilot' && req.copilot_credits == null) {
+									req.copilot_credits = estimateCopilotCredits(req.model_id, req.prompt_tokens, req.completion_tokens);
+								}
 							}
 
 							await this._db.upsertSession(parsed.sessionRow);
@@ -440,7 +485,8 @@ export class MetricsService implements vscode.Disposable {
 			await new Promise<void>(r => setImmediate(r));
 		}
 
-		this._log.info(`MetricsService: rebuild complete — ${imported} files imported`);
+		const elapsed = Date.now() - startTime;
+		this._log.info(`MetricsService: rebuild complete — ${imported} files imported in ${elapsed}ms total (enumeration: ${enumMs}ms + parsing: ${parseMs}ms blocking, remainder: async DB I/O + setImmediate yields)`);
 	}
 
 	// ── Dashboard queries ────────────────────────────────────────────────
@@ -497,6 +543,45 @@ export class MetricsService implements vscode.Disposable {
 	async getAllVendors(): Promise<string[]> {
 		const vendors = await this._db.getVendorBreakdown(30);
 		return vendors.map(v => v.vendor).sort();
+	}
+
+	/**
+	 * Copilot-usage detection flags, computed from all-time distinct vendors (not
+	 * time-windowed): `copilotDetected` is true if any request ever used the
+	 * `copilot` vendor; `allCopilot` is true if `copilot` is the ONLY vendor used.
+	 */
+	async getVendorUsageFlags(): Promise<{ copilotDetected: boolean; allCopilot: boolean }> {
+		const vendors = await this._db.getDistinctVendors();
+		const copilotDetected = vendors.includes('copilot');
+		const allCopilot = copilotDetected && vendors.length === 1;
+		return { copilotDetected, allCopilot };
+	}
+
+	/** Estimated GitHub Copilot AI credits used since `cycleStartMs` (defaults to start of current calendar month). */
+	async getCopilotCreditsSummary(cycleStartMs?: number): Promise<CopilotCreditsSummary> {
+		const start = cycleStartMs ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+		return this._db.getCopilotCreditsSummary(start);
+	}
+
+	/** Rolling 24h / 7d / 30d Copilot credit totals, for tooltip and dashboard breakdowns. */
+	async getCopilotCreditsWindows(): Promise<{ day: CopilotCreditsSummary; week: CopilotCreditsSummary; month: CopilotCreditsSummary }> {
+		const now = Date.now();
+		const [day, week, month] = await Promise.all([
+			this._db.getCopilotCreditsSummary(now - 24 * 60 * 60 * 1000),
+			this._db.getCopilotCreditsSummary(now - 7 * 24 * 60 * 60 * 1000),
+			this._db.getCopilotCreditsSummary(now - 30 * 24 * 60 * 60 * 1000),
+		]);
+		return { day, week, month };
+	}
+
+	/** Daily totals grouped by vendor, optionally filtered to a single vendor. */
+	async getDayTotalsByVendor(days: number, vendor?: string) {
+		return this._db.getDayTotalsByVendor(days, vendor);
+	}
+
+	/** Model breakdown for an arbitrary window, optionally filtered by vendor. */
+	async getModelBreakdown(days: number, vendor?: string): Promise<ModelAgg[]> {
+		return this._db.getModelBreakdown(days, vendor);
 	}
 
 	// ── Session list / detail queries ───────────────────────────────────

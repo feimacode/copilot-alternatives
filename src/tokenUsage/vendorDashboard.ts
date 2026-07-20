@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TokenUsageTracker } from './tokenUsageTracker';
 import { formatTokenCount, formatCost, formatCostCompact } from './tokenCostEstimator';
+import { formatCredits } from './copilotCreditEstimator';
+import { renderCreditsBreakdownHtml } from './creditsSectionHtml';
 
 // ─── Color helpers ───────────────────────────────────────────────────────────
 
@@ -92,6 +94,9 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .bar-io-fill{display:inline-block;height:100%;border-radius:4px}
 .bar-io-fill.in{background:var(--blue)}
 .bar-io-fill.out{background:var(--accent)}
+.jb{background:var(--bg);border-radius:8px;height:24px;overflow:hidden;margin-top:6px}
+.jb-f{height:100%;background:linear-gradient(90deg,var(--accent),#fb923c);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;min-width:40px;transition:width .4s}
+.jb-m{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
 .chart-wrap{position:relative;min-height:200px}
 .chart-wrap canvas{width:100%!important;height:100%!important}
 .ch2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -158,6 +163,7 @@ export class VendorDashboard {
     private async _render(): Promise<string> {
 		const vendor = this._activeVendor;
 		const color = vendorColor(vendor);
+		const isCopilot = vendor === 'copilot';
         const s = await this._tracker.metricsService.getVendorViewSummary(vendor, this._days);
 		const models = s.models;
 		const dailyByModel = s.dailyByModel;
@@ -167,6 +173,32 @@ export class VendorDashboard {
 		const totalTokens = totalPromptTokens + totalCompletionTokens;
 		const totalRequests = models.reduce((sum, m) => sum + m.requestCount, 0);
 		const totalCost = models.reduce((sum, m) => sum + m.costUsd, 0);
+		const totalCredits = models.reduce((sum, m) => sum + m.credits, 0);
+
+		let creditsProgressHtml = '';
+		if (isCopilot) {
+			const [creditsSummary, creditsWindows] = await Promise.all([
+				this._tracker.metricsService.getCopilotCreditsSummary(),
+				this._tracker.metricsService.getCopilotCreditsWindows(),
+			]);
+			const breakdownHtml = renderCreditsBreakdownHtml(creditsWindows, models);
+			const entitlement = this._tracker.copilotEntitlement;
+			if (entitlement) {
+				const pct = entitlement.monthlyCreditsIncluded > 0
+					? Math.min(100, Math.round((creditsSummary.totalCredits / entitlement.monthlyCreditsIncluded) * 100))
+					: 0;
+				creditsProgressHtml = `<div class="sec"><div class="sec-h"><div class="sec-t">Monthly Credit Quota (${entitlement.planName} plan)</div></div>
+					<div class="jb"><div class="jb-f" style="width:${pct}%">${pct}%</div></div>
+					<div class="jb-m"><span>Used this cycle: ${formatCredits(creditsSummary.totalCredits)}</span><span>Included: ${formatCredits(entitlement.monthlyCreditsIncluded)}</span></div>
+					${breakdownHtml}
+					</div>`;
+			} else {
+				creditsProgressHtml = `<div class="sec"><div class="sec-h"><div class="sec-t">Monthly Credit Quota</div></div>
+					<div class="det">Plan unknown — run "Copilot Alternatives: Sign in with GitHub to Detect Copilot Plan" to see your quota and usage %.</div>
+					${breakdownHtml}
+					</div>`;
+			}
+		}
 
 		// Daily usage — build lookup maps from DB data
 		const dailyTokensMap: Record<string, number> = {};
@@ -194,6 +226,7 @@ export class VendorDashboard {
 			completionTokens: m.completionTokens,
 			totalTokens: m.promptTokens + m.completionTokens,
 			costUsd: m.costUsd,
+			credits: m.credits,
 			requestCount: m.requestCount,
 			inPct: totalTokens > 0 ? m.promptTokens / totalTokens : 0,
 			outPct: totalTokens > 0 ? m.completionTokens / totalTokens : 0,
@@ -228,7 +261,7 @@ export class VendorDashboard {
 			modelDailyStack: modelIds.map(mid => rangeDates.map(d => modelDailyMap[mid]?.[d] ?? 0)),
 			modelColors: modelIds.map((mid, i) => modelColor(mid, i)),
 			totalTokens, totalPromptTokens, totalCompletionTokens,
-			totalRequests, totalCost,
+			totalRequests, totalCost, totalCredits, isCopilot,
 			modelCount: models.length,
 		});
 
@@ -260,8 +293,12 @@ export class VendorDashboard {
   <div class="card"><div class="lbl">Tokens</div><div class="val">${formatTokenCount(totalTokens)}</div><div class="det">${formatTokenCount(totalPromptTokens)} in / ${formatTokenCount(totalCompletionTokens)} out</div></div>
   <div class="card"><div class="lbl">Requests</div><div class="val">${totalRequests.toLocaleString()}</div><div class="det">Across ${models.length} model(s)</div></div>
   <div class="card"><div class="lbl">Models</div><div class="val">${models.length}</div><div class="det">Active in last ${this._days} days</div></div>
-  <div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>
+  ${isCopilot
+				? `<div class="card"><div class="lbl">AI Credits (est.)</div><div class="val">${formatCredits(totalCredits)}</div><div class="det">Estimated GitHub Copilot credits</div></div>`
+				: `<div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(totalCost)}</div><div class="det">Estimated from token pricing</div></div>`}
 </div>
+
+${creditsProgressHtml}
 
 <!-- Usage Over Time -->
 <div class="sec">
@@ -282,14 +319,14 @@ export class VendorDashboard {
       <th data-sort="modelId">Model</th><th data-sort="requestCount">Requests</th>
       <th data-sort="totalTokens" class="sorted">Total Tokens</th>
       <th data-sort="promptTokens">Input</th><th data-sort="completionTokens">Output</th>
-      <th>I/O Ratio</th><th data-sort="costUsd">Estimate</th>
+      <th>I/O Ratio</th><th data-sort="${isCopilot ? 'credits' : 'costUsd'}">${isCopilot ? 'AI Credits' : 'Estimate'}</th>
     </tr></thead>
     <tbody id="modelTbody">${modelEntries.map(m => `<tr>
       <td>${m.modelId}</td><td>${m.requestCount.toLocaleString()}</td>
       <td><strong>${formatTokenCount(m.totalTokens)}</strong></td>
       <td>${formatTokenCount(m.promptTokens)}</td><td>${formatTokenCount(m.completionTokens)}</td>
       <td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:${Math.round(m.inPct * 100)}%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:${Math.round(m.outPct * 100)}%"></span></span><span style="font-size:9px;color:var(--muted)">${Math.round(m.inPct * 100)}/${Math.round(m.outPct * 100)}</span></span></td>
-      <td>${formatCostCompact(m.costUsd)}</td>
+      <td>${isCopilot ? formatCredits(m.credits) : formatCostCompact(m.costUsd)}</td>
     </tr>`).join('')}</tbody>
   </table>
   ${models.length === 0 ? '<div class="empty">No model data for this vendor yet.</div>' : ''}
@@ -376,11 +413,12 @@ function sortModelTable(col){
 function renderTable(){
   document.getElementById('modelTbody').innerHTML = _modelEntries.map(function(m){
     var inPct=(D.totalTokens>0?m.promptTokens/D.totalTokens:0)*100,outPct=(D.totalTokens>0?m.completionTokens/D.totalTokens:0)*100;
-    return '<tr><td>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(m.costUsd)+'</td></tr>';
+    return '<tr><td>'+m.modelId+'</td><td>'+m.requestCount.toLocaleString()+'</td><td><strong>'+_fmt(m.totalTokens)+'</strong></td><td>'+_fmt(m.promptTokens)+'</td><td>'+_fmt(m.completionTokens)+'</td><td><span class="bar-wrap"><span class="bar-io-track"><span class="bar-io-fill in" style="width:'+Math.round(inPct)+'%"></span></span><span class="bar-io-track"><span class="bar-io-fill out" style="width:'+Math.round(outPct)+'%"></span></span><span style="font-size:9px;color:var(--muted)">'+Math.round(inPct)+'/'+Math.round(outPct)+'</span></span></td><td>'+_fmtC(D.isCopilot ? m.credits : m.costUsd)+'</td></tr>';
   }).join('');
 }
 function _fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);}
-function _fmtC(n){return '$'+n.toFixed(4);}
+function _fmtC(n){return D.isCopilot ? _fmtCredits(n) : ('$'+n.toFixed(4));}
+function _fmtCredits(n){return n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(Math.round(n));}
 function updateSortHeaders(){document.querySelectorAll('#modelTbl th').forEach(function(th){th.classList.remove('sorted');if(th.dataset.sort===sortCol)th.classList.add('sorted');});}
 document.querySelectorAll('#modelTbl th[data-sort]').forEach(function(th){th.addEventListener('click',function(){sortModelTable(th.dataset.sort);});});
 }

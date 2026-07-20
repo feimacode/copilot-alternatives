@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { TokenUsageTracker } from './tokenUsageTracker';
 import { SessionDetail, TurnRow } from './metricsDatabase';
 import { formatTokenCount, formatCost, formatCostCompact, resolveModelPricingKey } from './tokenCostEstimator';
+import { formatCredits } from './copilotCreditEstimator';
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ export class SessionDashboard {
 	private _renderDetail(detail: SessionDetail): string {
 		const s = detail.session;
 		const turns = detail.turns;
+		const isCopilot = s.session_vendor === 'copilot';
 
 		// ── Overview stats ──────────────────────────────────────────────
 		const dateStr = s.creation_date ? formatDate(s.creation_date) : 'N/A';
@@ -105,6 +107,7 @@ export class SessionDashboard {
 		const totalCompletion = turns.reduce((sum, t) => sum + t.completion_tokens, 0);
 		const totalThinking = turns.reduce((sum, t) => sum + t.thinking_tokens, 0);
 		const totalCost = turns.reduce((sum, t) => sum + (t.estimated_cost_usd ?? 0), 0);
+		const totalCredits = turns.reduce((sum, t) => sum + (t.copilot_credits ?? 0), 0);
 		const totalElapsed = turns.reduce((sum, t) => sum + (t.total_elapsed_ms ?? 0), 0);
 		const totalToolCalls = turns.reduce((sum, t) => sum + t.tool_call_count, 0);
 		const uniqueAgents = [...new Set(turns.map(t => t.agent_name).filter(Boolean))];
@@ -124,6 +127,7 @@ export class SessionDashboard {
 			completion: t.completion_tokens,
 			thinking: t.thinking_tokens,
 			cost: t.estimated_cost_usd ?? 0,
+			credits: t.copilot_credits ?? 0,
 			toolRounds: t.tool_call_rounds,
 			toolCalls: t.tool_call_count,
 			files: t.edited_file_count,
@@ -193,8 +197,8 @@ export class SessionDashboard {
     <div class="det">In ${formatTokenCount(totalPrompt)} / Out ${formatTokenCount(totalCompletion)}${totalThinking > 0 ? ` · Think ${formatTokenCount(totalThinking)}` : ''}</div>
   </div>
   <div class="card">
-    <div class="lbl">Estimate</div>
-    <div class="val">${formatCost(totalCost)}</div>
+    <div class="lbl">${isCopilot ? 'Credits' : 'Estimate'}</div>
+    <div class="val">${isCopilot ? formatCredits(totalCredits) : formatCost(totalCost)}</div>
     <div class="det">${formatMs(totalElapsed)} total</div>
   </div>
 </div>
@@ -220,7 +224,7 @@ export class SessionDashboard {
         <th data-sort="completion">Out</th>
         <th data-sort="thinking">Think</th>
         <th>Prompt %</th>
-        <th data-sort="cost">Estimate</th>
+        <th data-sort="${isCopilot ? 'credits' : 'cost'}">${isCopilot ? 'Credits' : 'Estimate'}</th>
         <th data-sort="toolCalls">Tools</th>
         <th data-sort="files">Files</th>
         <th data-sort="ttfb">TTFB</th>
@@ -234,6 +238,7 @@ export class SessionDashboard {
 
 <script>
 const turns = ${JSON.stringify(turnRows)};
+const IS_COPILOT = ${isCopilot};
 
 function formatToks(n) {
   if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
@@ -248,6 +253,11 @@ function formatElapsed(ms) {
   var m = Math.floor(ms / 60000);
   var s = Math.floor((ms % 60000) / 1000);
   return m + 'm ' + s + 's';
+}
+
+function formatCreditsJs(n) {
+  if (n >= 1000) return (n/1000).toFixed(2) + 'K cr';
+  return n.toFixed(2) + ' cr';
 }
 
 function _promptBar(t) {
@@ -284,7 +294,7 @@ function renderTable(data) {
       '<td>' + formatToks(t.completion) + '</td>' +
       '<td>' + (t.thinking > 0 ? formatToks(t.thinking) : '—') + '</td>' +
       '<td>' + _promptBar(t) + '</td>' +
-      '<td>' + (t.cost > 0 ? '$' + t.cost.toFixed(4) : '—') + '</td>' +
+      '<td>' + (IS_COPILOT ? (t.credits > 0 ? formatCreditsJs(t.credits) : '—') : (t.cost > 0 ? '$' + t.cost.toFixed(4) : '—')) + '</td>' +
       '<td title="' + (t.toolCalls > 0 ? t.toolCalls + ' tool calls across ' + t.toolRounds + ' rounds' : 'No tool calls') + '">' + (t.toolCalls > 0 ? t.toolCalls + ' / ' + t.toolRounds + 'r' : '—') + '</td>' +
       '<td>' + (t.files > 0 ? t.files : '—') + '</td>' +
       '<td>' + formatElapsed(t.ttfb) + '</td>' +

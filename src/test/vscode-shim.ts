@@ -37,6 +37,10 @@ export const commands = {
 	executeCommand: async () => undefined,
 };
 
+export const authentication = {
+	getSession: async () => undefined,
+};
+
 export const Uri = {
 	file: (path: string) => ({ fsPath: path, scheme: 'file', path }),
 	parse: (uri: string) => ({ fsPath: uri, scheme: 'file', path: uri }),

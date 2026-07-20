@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TokenUsageTracker } from './tokenUsageTracker';
 import { formatTokenCount, formatCost, formatCostCompact, estimateEnergy, estimateCO2Grams, formatEnergy, formatCO2, resolveModelPricingKey } from './tokenCostEstimator';
+import { formatCredits } from './copilotCreditEstimator';
+import { renderCreditsBreakdownHtml } from './creditsSectionHtml';
 
 // ─── Vendor color palette ─────────────────────────────────────────────────────
 
@@ -117,6 +119,7 @@ export class TokenUsageDashboard {
 	private async _renderAsync(): Promise<string> {
 		// Pull from SQLite DB (fast aggregation query)
 		const s = await this._tracker.metricsService.getDashboardSummary(this._days);
+		const { allCopilot, copilotDetected } = this._tracker.vendorUsageFlags;
 
 		// Build vendor aggregate map compatible with chart expectations
 		const vendorAggs: Record<string, { promptTokens: number; completionTokens: number; costUsd: number; apiReportedEvents: number; contextWindowEvents: number }> = {};
@@ -135,9 +138,41 @@ export class TokenUsageDashboard {
 		const modelEntries = Object.entries(modelRollup).sort((a, b) => b[1].tokens - a[1].tokens);
 
 		const dailyAvgCost = s.allTime.totalCostUsd / Math.max(1, s.allTime.daysTracked);
-		const jensenTarget = TokenUsageDashboard._yearlyBudget;
+		const yearlyBudgetTarget = TokenUsageDashboard._yearlyBudget;
 		const projectedYearly = dailyAvgCost * 365;
-		const jensenPct = Math.min(100, (projectedYearly / jensenTarget) * 100);
+		const yearlyBudgetPct = Math.min(100, (projectedYearly / yearlyBudgetTarget) * 100);
+
+		const totalCredits = s.vendorBreakdown.reduce((sum, v) => sum + v.credits, 0);
+		let creditsQuotaHtml = '';
+		let dailyCreditsMap = new Map<string, number>();
+		if (allCopilot) {
+			const copilotDayTotals = await this._tracker.metricsService.getDayTotalsByVendor(this._days, 'copilot');
+			dailyCreditsMap = new Map(copilotDayTotals.map(d => [d.date, d.credits]));
+		}
+		if (copilotDetected) {
+			const [creditsSummary, creditsWindows, copilotModels] = await Promise.all([
+				this._tracker.metricsService.getCopilotCreditsSummary(),
+				this._tracker.metricsService.getCopilotCreditsWindows(),
+				this._tracker.metricsService.getModelBreakdown(this._days, 'copilot'),
+			]);
+			const breakdownHtml = renderCreditsBreakdownHtml(creditsWindows, copilotModels);
+			const entitlement = this._tracker.copilotEntitlement;
+			if (entitlement) {
+				const pct = entitlement.monthlyCreditsIncluded > 0
+					? Math.min(100, Math.round((creditsSummary.totalCredits / entitlement.monthlyCreditsIncluded) * 100))
+					: 0;
+				creditsQuotaHtml = `<div class="sec"><div class="sec-h"><div class="sec-t">Monthly Credit Quota (${entitlement.planName} plan)</div></div>
+					<div class="jb"><div class="jb-f" style="width:${pct}%">${pct}%</div></div>
+					<div class="jb-m"><span>Used this cycle: ${formatCredits(creditsSummary.totalCredits)}</span><span>Included: ${formatCredits(entitlement.monthlyCreditsIncluded)}</span></div>
+					${breakdownHtml}
+					</div>`;
+			} else {
+				creditsQuotaHtml = `<div class="sec"><div class="sec-h"><div class="sec-t">Monthly Credit Quota</div></div>
+					<div class="det">Plan unknown — run "Copilot Alternatives: Sign in with GitHub to Detect Copilot Plan" to see your quota and usage %.</div>
+					${breakdownHtml}
+					</div>`;
+			}
+		}
 
 		// Week data for charts
 		const week = [...s.thisWeek];
@@ -178,12 +213,12 @@ export class TokenUsageDashboard {
 			weekTokens: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalPromptTokens! + weekMap.get(d)?.totalCompletionTokens! || 0),
 			weekPrompt: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalPromptTokens ?? 0),
 			weekCompletion: rangeDates.slice(-7).map(d => weekMap.get(d)?.totalCompletionTokens ?? 0),
-			weekCosts: rangeDates.slice(-7).map(d => weekMap.get(d)?.estimatedCostUsd ?? 0),
+			weekCosts: rangeDates.slice(-7).map(d => allCopilot ? (dailyCreditsMap.get(d) ?? 0) : (weekMap.get(d)?.estimatedCostUsd ?? 0)),
 			monthLabels: rangeDates.map(d => d.slice(5)),
 			monthTokens: rangeDates.map(d => monthMap.get(d)?.totalPromptTokens! + monthMap.get(d)?.totalCompletionTokens! || 0),
 			monthPrompt: rangeDates.map(d => monthMap.get(d)?.totalPromptTokens ?? 0),
 			monthCompletion: rangeDates.map(d => monthMap.get(d)?.totalCompletionTokens ?? 0),
-			monthCosts: rangeDates.map(d => monthMap.get(d)?.estimatedCostUsd ?? 0),
+			monthCosts: rangeDates.map(d => allCopilot ? (dailyCreditsMap.get(d) ?? 0) : (monthMap.get(d)?.estimatedCostUsd ?? 0)),
 			vendorNames: vendorEntries.map(([v]) => v),
 			vendorTokens: vendorEntries.map(([, a]) => a.promptTokens + a.completionTokens),
 			vendorCosts: vendorEntries.map(([, a]) => a.costUsd),
@@ -201,6 +236,7 @@ export class TokenUsageDashboard {
 			vmCosts: s.modelBreakdown.map(m => m.costUsd),
 			vmColors: s.modelBreakdown.map(m => vendorColor(vendorForModel(m.modelId))),
 			vmVendors: s.modelBreakdown.map(m => vendorForModel(m.modelId)),
+			allCopilot, totalCredits,
 		});
 
 		return /* html */`<!DOCTYPE html>
@@ -264,7 +300,7 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .tbl td{font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
 
-/* Jensen */
+/* Yearly Budget */
 .jb{background:var(--bg);border-radius:8px;height:24px;overflow:hidden;margin-top:6px}
 .jb-f{height:100%;background:linear-gradient(90deg,var(--accent),#fb923c);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;min-width:40px;transition:width .4s}
 .jb-m{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
@@ -300,9 +336,13 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 
 <div class="grid5">
   <div class="card"><div class="lbl">Today's Tokens</div><div class="val">${formatTokenCount(totalToday)}</div><div class="det">In ${formatTokenCount(today.totalPromptTokens)} / Out ${formatTokenCount(today.totalCompletionTokens)}</div></div>
-  <div class="card"><div class="lbl">Today's Estimate</div><div class="val">${formatCost(today.estimatedCostUsd)}</div><div class="det">${vendorEntries.length} vendors active</div></div>
+  ${allCopilot
+				? `<div class="card"><div class="lbl">Today's Credits</div><div class="val">${formatCredits(s.vendorBreakdown.find(v => v.vendor === 'copilot')?.credits ?? 0)}</div><div class="det">Estimated (today)</div></div>`
+				: `<div class="card"><div class="lbl">Today's Estimate</div><div class="val">${formatCost(today.estimatedCostUsd)}</div><div class="det">${vendorEntries.length} vendors active</div></div>`}
   <div class="card"><div class="lbl">Tokens</div><div class="val">${formatTokenCount(allTime.totalPromptTokens + allTime.totalCompletionTokens)}</div><div class="det">Since ${allTime.firstTrackedDate}</div></div>
-  <div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(allTime.totalCostUsd)}</div><div class="det">Avg ${formatCostCompact(dailyAvgCost)}/day</div></div>
+  ${allCopilot
+				? `<div class="card"><div class="lbl">AI Credits (est.)</div><div class="val">${formatCredits(totalCredits)}</div><div class="det">Estimated GitHub Copilot credits</div></div>`
+				: `<div class="card"><div class="lbl">Estimate</div><div class="val">${formatCost(allTime.totalCostUsd)}</div><div class="det">Avg ${formatCostCompact(dailyAvgCost)}/day</div></div>`}
   <div class="card"><div class="lbl">Vendors Tracked</div><div class="val">${vendorEntries.length}</div><div class="det">${allTime.daysTracked} days of data</div></div>
 </div>
 
@@ -313,7 +353,7 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   </div>
   <div class="ch2">
     <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">Tokens (Input / Output)</div><div class="ch"><canvas id="tokenChart"></canvas></div></div>
-    <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">Cost (USD)</div><div class="ch"><canvas id="costChart"></canvas></div></div>
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">${allCopilot ? 'AI Credits (est.)' : 'Cost (USD)'}</div><div class="ch"><canvas id="costChart"></canvas></div></div>
   </div>
 </div>
 
@@ -328,11 +368,11 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div class="ch2">
     <div><div class="ch"><canvas id="vendorDonut"></canvas></div></div>
     <div style="overflow-y:auto;max-height:200px">
-      <table class="tbl" id="vendorTbl"><thead><tr><th>Vendor</th><th>Tokens</th><th>Estimate</th><th>Source</th></tr></thead><tbody>
+      <table class="tbl" id="vendorTbl"><thead><tr><th>Vendor</th><th>Tokens</th><th>${allCopilot ? 'AI Credits' : 'Estimate'}</th><th>Source</th></tr></thead><tbody>
         ${vendorEntries.map(([v, a]) => `<tr data-v="${v}">
           <td><span class="dot" style="background:${vendorColor(v)}"></span>${v}</td>
           <td>${formatTokenCount(a.promptTokens + a.completionTokens)}</td>
-          <td>${formatCost(a.costUsd)}</td>
+          <td>${allCopilot ? formatCredits(s.vendorBreakdown.find(vb => vb.vendor === v)?.credits ?? 0) : formatCost(a.costUsd)}</td>
           <td>${a.apiReportedEvents > 0 ? `<span class="badge badge-r">API</span>` : ''}${a.contextWindowEvents > 0 ? `<span class="badge badge-c">CW</span>` : ''}</td>
         </tr>`).join('')}
       </tbody></table>
@@ -355,12 +395,13 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div style="height:220px"><canvas id="vmChart"></canvas></div>
 </div>
 
-<!-- Yearly Budget -->
-<div class="sec">
-  <div class="sec-h"><div class="sec-t">Yearly Token Budget</div><span style="font-size:10px;color:var(--muted)">$${(jensenTarget / 1000).toFixed(0)}K/year target · <a href="#" onclick="_vscode.postMessage({type:'setBudget'});return false" style="color:var(--accent);text-decoration:none">Configure</a></span></div>
-  <div class="jb"><div class="jb-f" style="width:${jensenPct.toFixed(1)}%">${jensenPct.toFixed(1)}%</div></div>
-  <div class="jb-m"><span>Projected yearly: ${formatCost(projectedYearly)}</span><span>Target: ${formatCost(jensenTarget)}</span></div>
-</div>
+<!-- Yearly Budget / Monthly Credit Quota -->
+${allCopilot ? creditsQuotaHtml : `<div class="sec">
+  <div class="sec-h"><div class="sec-t">My Yearly Budget</div><span style="font-size:10px;color:var(--muted)">$${(yearlyBudgetTarget / 1000).toFixed(0)}K/year target · <a href="#" onclick="_vscode.postMessage({type:'setBudget'});return false" style="color:var(--accent);text-decoration:none">Configure</a></span></div>
+  <div class="jb"><div class="jb-f" style="width:${yearlyBudgetPct.toFixed(1)}%">${yearlyBudgetPct.toFixed(1)}%</div></div>
+  <div class="jb-m"><span>Projected yearly: ${formatCost(projectedYearly)}</span><span>Target: ${formatCost(yearlyBudgetTarget)}</span></div>
+</div>`}
+${(!allCopilot && copilotDetected) ? creditsQuotaHtml : ''}
 
 <script>${chartJsSource()}</script>
 <script>
@@ -389,9 +430,9 @@ scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=
 // ── Cost Chart ──
 const cCtx = document.getElementById('costChart').getContext('2d');
 const costChart = new Chart(cCtx,{type:'line',data:{labels:D.monthLabels,datasets:[
-  {label:'Cost',data:D.monthCosts,borderColor:'rgba(16,185,129,.9)',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+  {label:D.allCopilot?'Credits':'Cost',data:D.monthCosts,borderColor:'rgba(16,185,129,.9)',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
 ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'$'+v.toFixed(4)}}}}});
+scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>D.allCopilot?(v>=1e3?(v/1e3).toFixed(1)+'K':String(v)):'$'+v.toFixed(4)}}}}});
 
 // ── Vendor Donut ──
 const vCtx = document.getElementById('vendorDonut').getContext('2d');

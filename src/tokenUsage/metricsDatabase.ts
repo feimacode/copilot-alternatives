@@ -108,6 +108,8 @@ export interface VendorAgg {
 	completionTokens: number;
 	totalTokens: number;
 	costUsd: number;
+	/** Estimated GitHub Copilot AI credits (only meaningful when vendor === 'copilot'). */
+	credits: number;
 	requestCount: number;
 }
 
@@ -116,7 +118,21 @@ export interface ModelAgg {
 	promptTokens: number;
 	completionTokens: number;
 	costUsd: number;
+	/** Estimated GitHub Copilot AI credits (only meaningful when vendor === 'copilot'). */
+	credits: number;
 	requestCount: number;
+}
+
+export interface CopilotModelCreditAgg {
+	modelId: string;
+	credits: number;
+	requestCount: number;
+}
+
+export interface CopilotCreditsSummary {
+	totalCredits: number;
+	requestCount: number;
+	byModel: CopilotModelCreditAgg[];
 }
 
 /** Daily totals grouped by (date, vendor) for stacked vendor time-series charts. */
@@ -127,6 +143,7 @@ export interface VendorDayTotal {
 	totalCompletionTokens: number;
 	totalTokens: number;
 	estimatedCostUsd: number;
+	credits: number;
 	requestCount: number;
 }
 
@@ -138,6 +155,7 @@ export interface ModelDayTotal {
 	totalCompletionTokens: number;
 	totalTokens: number;
 	estimatedCostUsd: number;
+	credits: number;
 	requestCount: number;
 }
 
@@ -169,6 +187,8 @@ export interface SessionSummary {
 	completionTokens: number;
 	totalTokens: number;
 	costUsd: number;
+	/** Estimated/real GitHub Copilot AI credits used by this session (0 for non-Copilot sessions). */
+	credits: number;
 	agent_ids: string | null;
 	first_turn_at: number | null;
 	last_turn_at: number | null;
@@ -541,6 +561,7 @@ export class MetricsDatabase {
 				SUM(completion_tokens) AS completionTokens,
 				SUM(prompt_tokens + completion_tokens) AS totalTokens,
 				COALESCE(SUM(estimated_cost_usd), 0) AS costUsd,
+				COALESCE(SUM(copilot_credits), 0) AS credits,
 				COUNT(*) AS requestCount
 			FROM turns
 			WHERE ${this._completeFilter('timestamp >= ?')}
@@ -561,12 +582,42 @@ export class MetricsDatabase {
 				SUM(prompt_tokens) AS promptTokens,
 				SUM(completion_tokens) AS completionTokens,
 				COALESCE(SUM(estimated_cost_usd), 0) AS costUsd,
+				COALESCE(SUM(copilot_credits), 0) AS credits,
 				COUNT(*) AS requestCount
 			FROM turns
 			WHERE ${this._completeFilter(`timestamp >= ?${vendorFilter}`)}
 			GROUP BY model_id
 			ORDER BY promptTokens + completionTokens DESC
 		`, params);
+	}
+
+	/** Distinct vendor values ever recorded (all-time, not time-windowed). Used for copilot-usage detection flags. */
+	async getDistinctVendors(): Promise<string[]> {
+		await this._ready;
+		const rows = await this._all<{ vendor: string }>(`
+			SELECT DISTINCT vendor FROM turns WHERE ${this._completeFilter()}
+		`);
+		return rows.map(r => r.vendor);
+	}
+
+	/** Estimated AI credits used by Copilot-vendor requests since `cycleStartMs`. */
+	async getCopilotCreditsSummary(cycleStartMs: number): Promise<CopilotCreditsSummary> {
+		await this._ready;
+		const byModel = await this._all<CopilotModelCreditAgg>(`
+			SELECT
+				model_id AS modelId,
+				COALESCE(SUM(copilot_credits), 0) AS credits,
+				COUNT(*) AS requestCount
+			FROM turns
+			WHERE ${this._completeFilter("vendor = 'copilot' AND timestamp >= ?")}
+			GROUP BY model_id
+			ORDER BY credits DESC
+		`, [cycleStartMs]);
+		const totals = byModel.reduce((acc, m) => ({
+			totalCredits: acc.totalCredits + m.credits,
+			requestCount: acc.requestCount + m.requestCount,
+		}), { totalCredits: 0, requestCount: 0 });
+		return { ...totals, byModel };
 	}
 
 	async getDashboardSummary(days = 30): Promise<DashboardSummary> {
@@ -651,6 +702,7 @@ export class MetricsDatabase {
 				SUM(completion_tokens) AS totalCompletionTokens,
 				SUM(prompt_tokens + completion_tokens) AS totalTokens,
 				COALESCE(SUM(estimated_cost_usd), 0) AS estimatedCostUsd,
+				COALESCE(SUM(copilot_credits), 0) AS credits,
 				COUNT(*) AS requestCount
 			FROM turns
 			WHERE ${this._completeFilter(`timestamp >= ?${vendorFilter}`)}
@@ -678,6 +730,7 @@ export class MetricsDatabase {
 				SUM(completion_tokens) AS totalCompletionTokens,
 				SUM(prompt_tokens + completion_tokens) AS totalTokens,
 				COALESCE(SUM(estimated_cost_usd), 0) AS estimatedCostUsd,
+				COALESCE(SUM(copilot_credits), 0) AS credits,
 				COUNT(*) AS requestCount
 			FROM turns
 			WHERE ${this._completeFilter(`timestamp >= ?${extraFilter}`)}
@@ -768,6 +821,7 @@ export class MetricsDatabase {
 				COALESCE(t.completion_tokens, 0) AS completionTokens,
 				COALESCE(t.total_tokens, 0) AS totalTokens,
 				COALESCE(t.cost_usd, 0) AS costUsd,
+				COALESCE(t.credits, 0) AS credits,
 				t.agent_ids,
 				t.first_turn AS first_turn_at,
 				t.last_turn AS last_turn_at
@@ -780,6 +834,7 @@ export class MetricsDatabase {
 					SUM(completion_tokens) AS completion_tokens,
 					SUM(prompt_tokens + completion_tokens) AS total_tokens,
 					COALESCE(SUM(estimated_cost_usd), 0) AS cost_usd,
+					COALESCE(SUM(copilot_credits), 0) AS credits,
 					GROUP_CONCAT(DISTINCT agent_id) AS agent_ids,
 					MIN(timestamp) AS first_turn,
 					MAX(timestamp) AS last_turn,
