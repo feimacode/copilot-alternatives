@@ -128,6 +128,7 @@ jobs:
           mkdir -p dist
           npx @vscode/vsce package \
             --target ${{ matrix.target }} \
+            --readme-path EXTENSION_README.md \
             --allow-star-activation \
             --out "dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
           echo "✅ Packaged: dist/copilot-alternatives-${{ matrix.target }}-$VERSION.vsix"
