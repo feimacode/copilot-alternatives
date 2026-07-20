@@ -26,6 +26,16 @@
 				"maxOutputTokens": 64000
 			},
 			{
+				"id": "qwen3.8-max-preview",
+				"name": "Qwen3.8 Max Preview",
+				"url": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
 				"id": "qwen3.6-plus",
 				"name": "Qwen3.6 Plus",
 				"url": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions",

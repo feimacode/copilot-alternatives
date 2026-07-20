@@ -26,6 +26,16 @@
 				"maxOutputTokens": 64000
 			},
 			{
+				"id": "qwen3.8-max-preview",
+				"name": "Qwen3.8 Max Preview",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
 				"id": "qwen3.6-plus",
 				"name": "Qwen3.6 Plus",
 				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
@@ -164,6 +174,16 @@
 				"maxOutputTokens": 64000
 			},
 			{
+				"id": "qwen3.8-max-preview",
+				"name": "Qwen3.8 Max Preview",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
 				"id": "qwen3.6-plus",
 				"name": "Qwen3.6 Plus",
 				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
@@ -294,6 +314,16 @@
 			{
 				"id": "qwen3.7-max",
 				"name": "Qwen3.7 Max",
+				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 991000,
+				"maxOutputTokens": 64000
+			},
+			{
+				"id": "qwen3.8-max-preview",
+				"name": "Qwen3.8 Max Preview",
 				"url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
 				"toolCalling": true,
 				"thinking": true,

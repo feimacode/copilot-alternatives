@@ -1,7 +1,7 @@
 {
 	"name": "ali-token-plan",
 	"displayName": "Alibaba Token Plan (Global)",
-	"description": "Alibaba Token Plan — 13 models via OpenAI-compatible API. Global endpoint for users outside China.",
+	"description": "Alibaba Token Plan — 14 models via OpenAI-compatible API. Global endpoint for users outside China.",
 	"keyUrl": "https://www.alibabacloud.com/help/en/model-studio/coding-plan",
 	"keyInstructions": "Subscribe to Alibaba Token Plan at https://www.alibabacloud.com/help/en/model-studio/coding-plan, then create an API key at DashScope console.",
 	"keyCount": 1,

@@ -6,6 +6,26 @@
 		"apiKey": "YOUR_API_KEY_HERE",
 		"models": [
 			{
+				"id": "grok-4.5",
+				"name": "Grok 4.5",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 32000
+			},
+			{
+				"id": "kimi-k3",
+				"name": "Kimi K3",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 1000000
+			},
+			{
 				"id": "kimi-k2.7-code",
 				"name": "Kimi K2.7 Code",
 				"url": "https://opencode.ai/zen/go/v1/chat/completions",
