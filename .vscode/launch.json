@@ -6,7 +6,8 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionDevelopmentKind=workspace"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
@@ -19,7 +20,8 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionDevelopmentKind=workspace"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
