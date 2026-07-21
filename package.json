@@ -2,7 +2,7 @@
 	"name": "copilot-alternatives",
 	"displayName": "Copilot Alternatives — AI Coding Tools Directory",
 	"description": "A curated collection of GitHub Copilot alternatives for developers, teams, and organizations. Browse coding plans, IDEs, CLI agents, extensions, BYOK solutions, and more.",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"publisher": "feima",
 	"license": "MIT",
 	"icon": "assets/icon.png",
