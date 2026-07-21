@@ -57,6 +57,9 @@
 		"onView:copilotAlternatives.main"
 	],
 	"main": "./out/extension.js",
+	"extensionKind": [
+		"ui"
+	],
 	"contributes": {
 		"viewsContainers": {
 			"activitybar": [

@@ -55,7 +55,7 @@ export function registerNodeActions(context: vscode.ExtensionContext): void {
 				const doc = await vscode.workspace.openTextDocument(readmeUri);
 				await vscode.window.showTextDocument(doc, { preview: false });
 			} catch {
-				vscode.window.showErrorMessage('Could not open README.md');
+				await vscode.env.openExternal(vscode.Uri.parse('https://raw.githubusercontent.com/feimacode/copilot-alternatives/master/README.md'));
 			}
 		}),
 

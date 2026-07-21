@@ -227,5 +227,4 @@ jobs:
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- \`copilot-alternatives-linux-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`copilot-alternatives-win32-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`copilot-alternatives-darwin-x64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`copilot-alternatives-darwin-arm64-$VERSION.vsix\`" >> $GITHUB_STEP_SUMMARY
