@@ -6,11 +6,12 @@ Recent changes to AI coding assistant pricing, usage limits, and licensing model
 
 > ### 🧩 Try the companion VS Code extension
 >
-> This repo also ships a free, open-source VS Code extension — **[Copilot & BYOK Usage Tracker](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives)** — that puts this directory in your sidebar and tracks your own usage:
+> This repo also ships a free, open-source VS Code extension — **[Copilot & BYOK Usage Tracker](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives)** — that puts this directory in your sidebar, tracks your usage, and manages BYOK providers:
 >
-> - Track GitHub Copilot **AI credits** and BYOK token/cost usage, per vendor and per model
+> - **Usage tracking** for GitHub Copilot **AI credits** and BYOK token/cost usage (DeepSeek, Mistral, OpenRouter, Qwen, Kimi, GLM/Z.ai, MiniMax, MiMo, and more), per vendor and per model
+> - **Session history & analysis** — browse past chat sessions with full turn-by-turn token, latency, and tool-call detail
 > - See a **Monthly Credit Quota** tile against your actual Copilot plan allowance
-> - Manage BYOK providers visually — no hand-editing `chatLanguageModels.json`
+> - **BYOK key management** — add, edit, and remove providers visually, no hand-editing `chatLanguageModels.json`
 > - Browse this entire 100+ tool directory from the Activity Bar
 >
 > 📖 See [`EXTENSION_README.md`](EXTENSION_README.md) for full feature details, or install it directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=feima.copilot-alternatives).

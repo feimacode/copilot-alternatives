@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### 📣 Marketplace Metadata
+
+- **Rebranded `displayName`/`description`** to lead with the extension's real differentiators — BYOK usage tracking, key management, and session history/analysis — matching the branding already used in `EXTENSION_README.md` and the repo README (`Copilot & BYOK Usage Tracker`). Extension `name`/id is unchanged.
+- **Expanded `keywords`** with feature-intent terms (usage tracking, session history, session analysis, credits, dashboard, key management, etc.) and provider names (DeepSeek, Mistral, OpenRouter, Qwen, Kimi, GLM/Z.ai, MiniMax, MiMo, and more) so the extension surfaces for provider-specific searches like "deepseek byok" or "kimi usage tracking".
+- **Added `Visualization` category** alongside `AI`/`Other` to reflect the chart-based dashboards.
+
 ## [0.1.6] — 2026-07-20
 
 ### ✨ Copilot Credit Tracking

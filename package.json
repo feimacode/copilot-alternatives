@@ -1,7 +1,7 @@
 {
 	"name": "copilot-alternatives",
-	"displayName": "Copilot Alternatives — AI Coding Tools Directory",
-	"description": "A curated collection of GitHub Copilot alternatives for developers, teams, and organizations. Browse coding plans, IDEs, CLI agents, extensions, BYOK solutions, and more.",
+	"displayName": "Copilot & BYOK Usage Tracker",
+	"description": "BYOK usage tracking, cost dashboard, and session analysis for GitHub Copilot & BYOK (DeepSeek, Mistral, OpenRouter, Qwen, Kimi, GLM/Z.ai, MiniMax, MiMo). Manage providers visually; browse 100+ AI coding tools.",
 	"version": "0.1.8",
 	"publisher": "feima",
 	"license": "MIT",
@@ -25,6 +25,7 @@
 	},
 	"categories": [
 		"AI",
+		"Visualization",
 		"Other"
 	],
 	"keywords": [
@@ -46,7 +47,34 @@
 		"directory",
 		"claude",
 		"gemini",
-		"ollama"
+		"ollama",
+		"usage tracking",
+		"usage tracker",
+		"token usage",
+		"cost tracking",
+		"session history",
+		"session analysis",
+		"analytics",
+		"dashboard",
+		"credits",
+		"ai credits",
+		"key management",
+		"api keys",
+		"model management",
+		"deepseek",
+		"mistral",
+		"openrouter",
+		"byteplus",
+		"qwen",
+		"alibaba",
+		"kimi",
+		"moonshot",
+		"z.ai",
+		"glm",
+		"zhipu",
+		"mimo",
+		"xiaomi",
+		"minimax"
 	],
 	"repository": {
 		"type": "git",
