@@ -114,37 +114,39 @@ describe('chatLanguageModels.json files on disk are valid', () => {
 // ---------------------------------------------------------------------------
 
 describe('OpenCode Go templates', () => {
-	it('has a single-key variant with 2 groups (OpenAI + Anthropic)', () => {
+	it('has a single-key variant with 3 groups (OpenAI + Responses + Anthropic)', () => {
 		const t = loadTemplates(TEMPLATES_DIR).find(t => t.displayName === 'OpenCode Go (single key)');
 		expect(t).toBeDefined();
 		if (t) {
 			expect(getKeyCount(t)).toBe(1);
-			expect(t.chatLanguageModels.length).toBe(2);
+			expect(t.chatLanguageModels.length).toBe(3);
 			const apiTypes = t.chatLanguageModels.map(g => g.apiType);
 			expect(apiTypes).toContain('chat-completions');
+			expect(apiTypes).toContain('responses');
 			expect(apiTypes).toContain('messages');
 		}
 	});
 
-	it('has a multi-key variant with 6 groups (2 per account)', () => {
+	it('has a multi-key variant with 9 groups (3 per account)', () => {
 		const t = loadTemplates(TEMPLATES_DIR).find(t => t.displayName === 'OpenCode Go (multi-key)');
 		expect(t).toBeDefined();
 		if (t) {
 			expect(getKeyCount(t)).toBe(3);
-			expect(t.chatLanguageModels.length).toBe(6);
+			expect(t.chatLanguageModels.length).toBe(9);
 			expect(getKeyLabels(t)).toEqual(['Account 1', 'Account 2', 'Account 3']);
 		}
 	});
 
-	it('multi-key variant has 2 groups per account', () => {
+	it('multi-key variant has 3 groups per account', () => {
 		const t = loadTemplates(TEMPLATES_DIR).find(t => t.displayName === 'OpenCode Go (multi-key)');
 		expect(t).toBeDefined();
 		if (t) {
 			for (const acc of [1, 2, 3]) {
 				const accountGroups = t.chatLanguageModels.filter(g => g.name.includes(`OpenCode Go ${acc}`));
-				expect(accountGroups.length).toBe(2);
+				expect(accountGroups.length).toBe(3);
 				const apiTypes = accountGroups.map(g => g.apiType);
 				expect(apiTypes).toContain('chat-completions');
+				expect(apiTypes).toContain('responses');
 				expect(apiTypes).toContain('messages');
 			}
 		}

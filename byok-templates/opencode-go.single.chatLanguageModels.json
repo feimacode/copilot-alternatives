@@ -6,14 +6,34 @@
 		"apiKey": "YOUR_API_KEY_HERE",
 		"models": [
 			{
-				"id": "grok-4.5",
-				"name": "Grok 4.5",
+				"id": "glm-5.3",
+				"name": "GLM-5.3",
 				"url": "https://opencode.ai/zen/go/v1/chat/completions",
 				"toolCalling": true,
 				"thinking": true,
 				"vision": false,
-				"maxInputTokens": 256000,
-				"maxOutputTokens": 32000
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5.3-flash",
+				"name": "GLM-5.3 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "glm-5.2",
+				"name": "GLM-5.2",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
 			},
 			{
 				"id": "kimi-k3",
@@ -46,6 +66,16 @@
 				"maxOutputTokens": 16000
 			},
 			{
+				"id": "deepseek-v4.1-flash",
+				"name": "DeepSeek V4.1 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 384000
+			},
+			{
 				"id": "deepseek-v4-pro",
 				"name": "DeepSeek V4 Pro",
 				"url": "https://opencode.ai/zen/go/v1/chat/completions",
@@ -66,6 +96,26 @@
 				"maxOutputTokens": 384000
 			},
 			{
+				"id": "mimo-v2.6-pro",
+				"name": "MiMo V2.6 Pro",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
+				"id": "mimo-v2.6-flash",
+				"name": "MiMo V2.6 Flash",
+				"url": "https://opencode.ai/zen/go/v1/chat/completions",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": true,
+				"maxInputTokens": 1000000,
+				"maxOutputTokens": 128000
+			},
+			{
 				"id": "mimo-v2.5-pro",
 				"name": "MiMo V2.5 Pro",
 				"url": "https://opencode.ai/zen/go/v1/chat/completions",
@@ -84,6 +134,34 @@
 				"vision": true,
 				"maxInputTokens": 1000000,
 				"maxOutputTokens": 128000
+			}
+		]
+	},
+	{
+		"name": "OpenCode Go - Responses",
+		"vendor": "customendpoint",
+		"apiType": "responses",
+		"apiKey": "YOUR_API_KEY_HERE",
+		"models": [
+			{
+				"id": "grok-4.7",
+				"name": "Grok 4.7",
+				"url": "https://opencode.ai/zen/go/v1/responses",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 32000
+			},
+			{
+				"id": "grok-4.6",
+				"name": "Grok 4.6",
+				"url": "https://opencode.ai/zen/go/v1/responses",
+				"toolCalling": true,
+				"thinking": true,
+				"vision": false,
+				"maxInputTokens": 256000,
+				"maxOutputTokens": 32000
 			}
 		]
 	},
@@ -114,8 +192,8 @@
 				"maxOutputTokens": 128000
 			},
 			{
-				"id": "qwen3.7-max",
-				"name": "Qwen3.7 Max",
+				"id": "qwen3.8-max",
+				"name": "Qwen3.8 Max",
 				"url": "https://opencode.ai/zen/go/v1/messages",
 				"toolCalling": true,
 				"thinking": true,
@@ -124,8 +202,8 @@
 				"maxOutputTokens": 64000
 			},
 			{
-				"id": "qwen3.7-plus",
-				"name": "Qwen3.7 Plus",
+				"id": "qwen3.8-flash",
+				"name": "Qwen3.8 Flash",
 				"url": "https://opencode.ai/zen/go/v1/messages",
 				"toolCalling": true,
 				"thinking": true,
@@ -134,8 +212,8 @@
 				"maxOutputTokens": 64000
 			},
 			{
-				"id": "qwen3.6-plus",
-				"name": "Qwen3.6 Plus",
+				"id": "qwen3.7-plus",
+				"name": "Qwen3.7 Plus",
 				"url": "https://opencode.ai/zen/go/v1/messages",
 				"toolCalling": true,
 				"thinking": true,

@@ -21,7 +21,7 @@ byok-templates/
 ├── opencode-go.single.byok.json              # UI metadata
 ├── opencode-go.single.chatLanguageModels.json  # copy-paste ready array
 ├── opencode-go.multi.byok.json               # multi-key metadata
-├── opencode-go.multi.chatLanguageModels.json   # multi-key array (6 groups)
+├── opencode-go.multi.chatLanguageModels.json   # multi-key array (9 groups)
 ├── clinepass.single.byok.json                  # ClinePass single-key metadata
 ├── clinepass.single.chatLanguageModels.json     # ClinePass single-key array
 ├── clinepass.multi.byok.json                   # ClinePass multi-key metadata
@@ -140,25 +140,29 @@ This format **exactly matches** what VS Code's `chatLanguageModels.json` schema 
 
 For multi-key templates (e.g. `opencode-go.multi`, `clinepass.multi`), add `keyCount` and `keyLabels` to the `.byok.json` file.
 
-### OpenCode Go — Two Groups Per Key (Anthropic + OpenAI API)
+### OpenCode Go — Three Groups Per Key (OpenAI + Responses + Anthropic API)
 
-OpenCode Go models use two different API formats:
-- **Chat Completions** (`/v1/chat/completions`) — for Kimi, DeepSeek, MiMo
+OpenCode Go models use three different API formats:
+- **Chat Completions** (`/v1/chat/completions`) — for GLM, Kimi, DeepSeek, MiMo
+- **Responses** (`/v1/responses`) — for Grok
 - **Messages** (`/v1/messages`) — for MiniMax, Qwen
 
-Since VS Code's `customendpoint` vendor requires a single `apiType` per group, each key/account is split into two groups. **You only enter the key once** — the extension applies it to both groups.
+Since VS Code's `customendpoint` vendor requires a single `apiType` per group, each key/account is split into three groups. **You only enter the key once** — the extension applies it to all groups.
 
-Example: `opencode-go.multi` creates 6 groups (2 per account):
+Example: `opencode-go.multi` creates 9 groups (3 per account):
 - `OpenCode Go 1 - OpenAI` (key 1, chat-completions)
+- `OpenCode Go 1 - Responses` (key 1, responses)
 - `OpenCode Go 1 - Anthropic` (key 1, messages)
 - `OpenCode Go 2 - OpenAI` (key 2, chat-completions)
+- `OpenCode Go 2 - Responses` (key 2, responses)
 - `OpenCode Go 2 - Anthropic` (key 2, messages)
 - `OpenCode Go 3 - OpenAI` (key 3, chat-completions)
+- `OpenCode Go 3 - Responses` (key 3, responses)
 - `OpenCode Go 3 - Anthropic` (key 3, messages)
 
 ### ClinePass — One Group Per Key
 
-ClinePass uses a single OpenAI-compatible endpoint (`https://api.cline.bot/api/v1/chat/completions`) for all models. Each API key gets its own group with all 10 models. The multi-key template creates 3 groups:
+ClinePass uses a single OpenAI-compatible endpoint (`https://api.cline.bot/api/v1/chat/completions`) for all models. Each API key gets its own group with all 12 models. The multi-key template creates 3 groups:
 
 - `ClinePass 1` (key 1)
 - `ClinePass 2` (key 2)
