@@ -295,7 +295,8 @@
 						{ "id": "localai", "name": "LocalAI", "features": ["Drop-in OpenAI API replacement", "runs local models"], "extras": {"License": "MIT", "Deployment": "Docker"}, "url": "https://localai.io" },
 						{ "id": "continue-ollama", "name": "Continue + Ollama", "features": ["VS Code/JetBrains extension + local model backend"], "extras": {"License": "Apache 2.0", "Deployment": "Local"}, "url": "https://continue.dev" },
 						{ "id": "codeium-enterprise", "name": "Codeium Enterprise", "features": ["Enterprise self-hosted deployment of Codeium"], "extras": {"License": "Proprietary", "Deployment": "On-prem / VPC"}, "url": "https://codeium.com/enterprise" },
-						{ "id": "gitea", "name": "Gitea + Copilot-like backend", "features": ["Gitea has LSP + AI integrations for self-hosted git workflows"], "extras": {"License": "MIT", "Deployment": "Self-hosted"}, "url": "https://gitea.com" }
+						{ "id": "gitea", "name": "Gitea + Copilot-like backend", "features": ["Gitea has LSP + AI integrations for self-hosted git workflows"], "extras": {"License": "MIT", "Deployment": "Self-hosted"}, "url": "https://gitea.com" },
+						{ "id": "orbi", "name": "Orbi", "features": ["Turns labeled GitHub issues into PRs", "second AI session reviews them, merges if the review passes", "BYOK"], "extras": {"License": "AGPL-3.0", "Deployment": "Self-hosted"}, "url": "https://orbi.build" }
 					]
 				}
 			]
