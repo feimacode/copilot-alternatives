@@ -334,6 +334,7 @@ On-premise and self-hosted options that keep code and data within your own infra
 | [Continue](https://continue.dev) + Ollama | Apache 2.0 | Local | VS Code/JetBrains extension + local model backend |
 | [Codeium Enterprise](https://codeium.com/enterprise) | Proprietary | On-prem / VPC | Enterprise self-hosted deployment of Codeium |
 | [Gitea + Copilot-like backend](https://gitea.com) | MIT | Self-hosted | Gitea has LSP + AI integrations for self-hosted git workflows |
+| [Orbi](https://orbi.build) | AGPL-3.0 | Self-hosted | Turns labeled GitHub issues into PRs, has a second AI session review them, merges if the review passes; BYOK |
 
 ---
 
