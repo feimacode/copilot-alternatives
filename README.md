@@ -385,6 +385,7 @@ Underlying LLM providers that power coding assistants. Many BYOK tools let you p
 | [OpenAI](https://openai.com) | GPT-4o, o3, o4-mini | No (API) | Widely supported across all tools |
 | [Google DeepMind](https://deepmind.google) | Gemini 2.5 Pro, Flash | Yes (AI Studio) | 1M+ token context, free quota via AI Studio |
 | [Mistral AI](https://mistral.ai) | Codestral, Mistral Large | No (API) | Codestral specialized for code; EU-based |
+| [Lyceum](https://lyceum.technology) | Kimi K3, GLM-5.3, Kimi K2.7 Code, DeepSeek V4 Pro | No (API) | EU-hosted open models (Paris, Finland); OpenAI- and Anthropic-compatible endpoints with setup guides for Claude Code, Codex, Cline, Aider, opencode |
 | [DeepSeek](https://deepseek.com) | DeepSeek V3, R1 | No (API) | Very cost-effective, strong code performance |
 | [Meta](https://llama.meta.com) | Llama 3.x, Llama 4 | Yes (weights) | Open weights, runs locally via Ollama / LM Studio |
 | [Qwen (Alibaba)](https://qwen.readthedocs.io) | Qwen2.5-Coder, Qwen3 | Yes (weights) | Strong coding models, open weights available |
